@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_home">Главная</string>
+    <string name="title_hosts">Хосты</string>
+    <string name="title_settings">Настройки</string>
+    <string name="btn_continue">Продолжить</string>
+    <string name="text_welcome">Привет в zaprett! Это приложение предназначено для обхода цензуры и иных блокировок. Для полноценной работоспособности необходимо установить Magisk модуль.</string>
+    <string name="btn_use_root">Использовать модуль</string>
+    <string name="error_root_title">Root не получен</string>
+    <string name="error_root_message">Не получилось получить root доступ. Дайте права root для использования модуля Magisk</string>
+    <string name="error_no_module_title">Модуль не установлен</string>
+    <string name="error_no_module_message">Magisk модуль zaprett не найден. Пожалуйста, установите его</string>
+    <string name="snack_reload">Перезагружаем zaprett...</string>
+    <string name="snack_module_disabled">Модуль Magisk отключен! Не получилось выполнить действие</string>
+    <string name="title_strategy">Стратегия</string>
+    <string name="status_not_availible">Состояние zaprett неизвестно. Нажми для обновления</string>
+    <string name="status_enabled">Сервис zaprett работает. Нажми для обновления состояния</string>
+    <string name="status_disabled">Сервис zaprett не работает. Нажми для обновления состояния</string>
+    <string name="status_crashed">Сервис zaprett вероятно крашнулся. Нажмите кнопку перезапуска ниже</string>
+    <string name="btn_update_on_boot">Обновлять статус при запуске Главной страницы</string>
+    <string name="btn_start_service">Запустить сервис</string>
+    <string name="btn_stop_service">Остановить сервис</string>
+    <string name="btn_restart_service">Перезапустить сервис</string>
+    <string name="btn_autorestart">Переодически перезапускать сервис</string>
+    <string name="snack_already_started">Сервис уже запущен.</string>
+    <string name="snack_starting_service">Запускаем сервис...</string>
+    <string name="snack_no_service">Сервис не запущен</string>
+    <string name="snack_stopping_service">Останавливаем сервис...</string>
+    <string name="error_no_storage_title">Нет разрешения</string>
+    <string name="error_no_storage_message">Для правильной работы приложения необходимо разрешение на доступ к хранилищу</string>
+    <string name="btn_show_full_path">Показывать полный путь к листу</string>
+    <string name="pls_reboot_snack">Перезагрузите устройство для вступления изменений в силу</string>
+    <string name="pls_restart_snack">Перезапустите zaprett для вступления изменений в силу</string>
+</resources>
