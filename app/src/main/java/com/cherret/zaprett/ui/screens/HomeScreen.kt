@@ -56,12 +56,15 @@ fun HomeScreen() {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(Unit) {
         if (sharedPreferences.getBoolean("use_module", false) && sharedPreferences.getBoolean("update_on_boot", false)) {
-            if (getStatus()) {
-                cardText.value = R.string.status_enabled
+            getStatus {
+                if (it) {
+                    cardText.value = R.string.status_enabled
+                }
+                else {
+                    cardText.value = R.string.status_disabled
+                }
             }
-            else {
-                cardText.value = R.string.status_disabled
-            }
+
         }
     }
     Scaffold(
@@ -164,12 +167,15 @@ fun HomeScreen() {
 fun onCardClick(context: Context, cardText: MutableState<Int>, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
     val sharedPreferences = context.getSharedPreferences("settings", MODE_PRIVATE)
     if (sharedPreferences.getBoolean("use_module", false)) {
-        if (getStatus()) {
-            cardText.value = R.string.status_enabled
+        getStatus {
+            if (it) {
+                cardText.value = R.string.status_enabled
+            }
+            else {
+                cardText.value = R.string.status_disabled
+            }
         }
-        else {
-            cardText.value = R.string.status_disabled
-        }
+
     }
     else {
         scope.launch {
@@ -180,14 +186,16 @@ fun onCardClick(context: Context, cardText: MutableState<Int>, snackbarHostState
 
 fun onBtnStartService(context: Context, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
     if (context.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("use_module", false)) {
-        if (getStatus()) {
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_already_started))
-            }
-        } else {
-            startService()
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.btn_start_service))
+        getStatus {
+            if (it) {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.snack_already_started))
+                }
+            } else {
+                startService {}
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.snack_starting_service))
+                }
             }
         }
     } else {
@@ -199,15 +207,17 @@ fun onBtnStartService(context: Context, snackbarHostState: SnackbarHostState, sc
 
 fun onBtnStopService(context: Context, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
     if (context.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("use_module", false)) {
-        if (getStatus()) {
-            stopService()
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.btn_stop_service))
+        getStatus {
+            if (it) {
+                stopService{}
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.snack_stopping_service))
+                }
             }
-        }
-        else {
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_no_service))
+            else {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.snack_no_service))
+                }
             }
         }
     }
@@ -220,7 +230,7 @@ fun onBtnStopService(context: Context, snackbarHostState: SnackbarHostState, sco
 
 fun onBtnRestart(context: Context, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
     if (context.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("use_module", false)) {
-        restartService()
+        restartService{}
         scope.launch {
             snackbarHostState.showSnackbar(context.getString(R.string.snack_reload))
         }

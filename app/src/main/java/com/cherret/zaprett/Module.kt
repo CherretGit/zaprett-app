@@ -9,38 +9,40 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Properties
 
-fun checkRoot(): Boolean {
-    val result = Shell.cmd("ls /").exec()
-    Shell.getShell().close()
-    return result.isSuccess
+fun checkRoot(callback: (Boolean) -> Unit) {
+    Shell.cmd("ls /").submit { result ->
+        callback(result.isSuccess)
+    }
 }
 
-fun checkModuleInstallation(): Boolean {
-    val result = Shell.cmd("zaprett").exec()
-    Shell.getShell().close()
-    return result.out.toString().contains("zaprett")
+fun checkModuleInstallation(callback: (Boolean) -> Unit) {
+    Shell.cmd("zaprett").submit { result ->
+        callback(result.out.toString().contains("zaprett"))
+    }
 }
 
-
-fun getStatus(): Boolean {
-    val result = Shell.cmd("zaprett status").exec()
-    Shell.getShell().close()
-    return result.out.toString().contains("working")
+fun getStatus(callback: (Boolean) -> Unit) {
+    Shell.cmd("zaprett status").submit { result ->
+        callback(result.out.toString().contains("working"))
+    }
 }
 
-fun startService() {
-    Shell.cmd("zaprett start").exec()
-    Shell.getShell().close()
+fun startService(callback: (Boolean) -> Unit) {
+    Shell.cmd("zaprett start").submit { result ->
+        callback(result.isSuccess)
+    }
 }
 
-fun stopService() {
-    Shell.cmd("zaprett stop").exec()
-    Shell.getShell().close()
+fun stopService(callback: (Boolean) -> Unit) {
+    Shell.cmd("zaprett stop").submit { result ->
+        callback(result.isSuccess)
+    }
 }
 
-fun restartService() {
-    Shell.cmd("zaprett restart").exec()
-    Shell.getShell().close()
+fun restartService(callback: (Boolean) -> Unit) {
+    Shell.cmd("zaprett restart").submit { result ->
+        callback(result.isSuccess)
+    }
 }
 
 fun getConfigFile(): File {

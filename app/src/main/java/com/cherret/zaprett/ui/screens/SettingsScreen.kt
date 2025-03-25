@@ -98,7 +98,20 @@ fun SettingsScreen() {
                         )
                         Switch(
                             checked = useModule.value,
-                            onCheckedChange = { if (useModule(context, it, updateOnBoot, openNoRootDialog, openNoModuleDialog)) useModule.value = it}
+                            onCheckedChange = { isChecked ->
+                                useModule(
+                                    context,
+                                    isChecked,
+                                    updateOnBoot,
+                                    openNoRootDialog,
+                                    openNoModuleDialog
+                                ) {
+                                    if (it) {
+                                        useModule.value = isChecked
+
+                                    }
+                                }
+                            }
                         )
                     }
                     Row(
@@ -137,22 +150,26 @@ fun SettingsScreen() {
     )
 }
 
-fun useModule(context: Context, checked: Boolean, updateOnBoot: MutableState<Boolean>, openNoRootDialog: MutableState<Boolean>, openNoModuleDialog: MutableState<Boolean>): Boolean {
+fun useModule(context: Context, checked: Boolean, updateOnBoot: MutableState<Boolean>, openNoRootDialog: MutableState<Boolean>, openNoModuleDialog: MutableState<Boolean>, callback: (Boolean) -> Unit): Boolean {
     val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val editor = sharedPreferences.edit()
     if (checked) {
-        if (checkRoot()) {
-            if (checkModuleInstallation()) {
-                editor.putBoolean("use_module", true).putBoolean("update_on_boot", true).apply()
-                updateOnBoot.value = true
-                return true
-
+        checkRoot {
+            if (it) {
+                checkModuleInstallation {
+                    if (it) {
+                        editor.putBoolean("use_module", true).putBoolean("update_on_boot", true).apply()
+                        updateOnBoot.value = true
+                        callback(true)
+                    }
+                    else {
+                        openNoModuleDialog.value = true
+                    }
+                }
             }
             else {
-                openNoModuleDialog.value = true
+                openNoRootDialog.value = true
             }
-        } else {
-            openNoRootDialog.value = true
         }
     }
     else {
