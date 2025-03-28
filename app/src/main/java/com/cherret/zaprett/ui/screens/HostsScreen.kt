@@ -184,7 +184,7 @@ fun addHost(launcher: ActivityResultLauncher<Array<String>>) {
     launcher.launch(arrayOf("*/*"))
 }
 
-fun copySelectedFile(context: Context, uri: Uri?, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+fun copySelectedFile(context: Context, uri: Uri?, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {// AI Generated
     if (Environment.isExternalStorageManager()) {
         if (uri == null) return
         val contentResolver = context.contentResolver

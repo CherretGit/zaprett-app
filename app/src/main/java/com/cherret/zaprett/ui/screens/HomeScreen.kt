@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
@@ -21,12 +22,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -40,7 +44,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cherret.zaprett.R
+import com.cherret.zaprett.download
+import com.cherret.zaprett.getChangelog
 import com.cherret.zaprett.getStatus
+import com.cherret.zaprett.getUpdate
+import com.cherret.zaprett.installApk
+import com.cherret.zaprett.registerDownloadListener
 import com.cherret.zaprett.restartService
 import com.cherret.zaprett.startService
 import com.cherret.zaprett.stopService
@@ -52,9 +61,24 @@ fun HomeScreen() {
     val context = LocalContext.current
     val sharedPreferences = remember { context.getSharedPreferences("settings", MODE_PRIVATE) }
     val cardText = remember { mutableStateOf(R.string.status_not_availible) }
+    val changeLog = remember { mutableStateOf<String?>(null) }
+    val updateAvailable = remember {mutableStateOf(false)}
+    val downloadUrl = remember { mutableStateOf<String?>(null) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(Unit) {
+        if (sharedPreferences.getBoolean("auto_update", true)) {
+            getUpdate(context) {
+                if (it != null) {
+                    downloadUrl.value = it.downloadUrl.toString()
+                    getChangelog(it.changelogUrl.toString()) {
+                        changeLog.value = it
+                    }
+                    updateAvailable.value = true
+                }
+            }
+        }
         if (sharedPreferences.getBoolean("use_module", false) && sharedPreferences.getBoolean("update_on_boot", false)) {
             getStatus {
                 if (it) {
@@ -113,6 +137,36 @@ fun HomeScreen() {
                             .padding(16.dp),
                         textAlign = TextAlign.Center,
                     )
+                }
+                if (updateAvailable.value) {
+                    ElevatedCard(
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 6.dp
+                        ),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, top = 10.dp, end = 10.dp)
+                            .size(width = 140.dp, height = 70.dp),
+                        onClick = {
+                            showUpdateDialog = true
+                        }
+                    )
+                    {
+                        Text(
+                            text = stringResource(R.string.update_available),
+                            fontFamily = FontFamily(Font(R.font.unbounded, FontWeight.Normal)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+                if (showUpdateDialog) {
+                    UpdateDialog(context, downloadUrl.value.toString(), changeLog.value.toString(), onDismiss = { showUpdateDialog = false })
                 }
                 FilledTonalButton(
                     onClick = { onBtnStartService(context, snackbarHostState, scope) },
@@ -240,4 +294,31 @@ fun onBtnRestart(context: Context, snackbarHostState: SnackbarHostState, scope: 
             snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
         }
     }
+}
+
+
+
+@Composable
+fun UpdateDialog(context: Context, downloadUrl: String, changeLog: String, onDismiss: () -> Unit) {
+    AlertDialog(
+        title = { Text(text = stringResource(R.string.update_available)) },
+        text = { Text(text = changeLog) },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onDismiss()
+                val downloadId = download(context, downloadUrl)
+                registerDownloadListener(context, downloadId) { uri ->
+                    installApk(context, uri)
+                }
+            }) {
+                Text(stringResource(R.string.btn_continue))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_dismiss))
+            }
+        }
+    )
 }

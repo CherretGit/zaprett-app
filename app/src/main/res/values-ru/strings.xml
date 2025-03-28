@@ -4,6 +4,7 @@
     <string name="title_hosts">Хосты</string>
     <string name="title_settings">Настройки</string>
     <string name="btn_continue">Продолжить</string>
+    <string name="btn_dismiss">Отмена</string>
     <string name="text_welcome">Привет в zaprett! Это приложение предназначено для обхода цензуры и иных блокировок. Для полноценной работоспособности необходимо установить Magisk модуль.</string>
     <string name="btn_use_root">Использовать модуль</string>
     <string name="error_root_title">Root не получен</string>
@@ -17,11 +18,13 @@
     <string name="status_enabled">Сервис zaprett работает. Нажми для обновления состояния</string>
     <string name="status_disabled">Сервис zaprett не работает. Нажми для обновления состояния</string>
     <string name="status_crashed">Сервис zaprett вероятно крашнулся. Нажмите кнопку перезапуска ниже</string>
+    <string name="update_available">Доступно новое обновление!</string>
     <string name="btn_update_on_boot">Обновлять статус при запуске Главной страницы</string>
     <string name="btn_start_service">Запустить сервис</string>
     <string name="btn_stop_service">Остановить сервис</string>
     <string name="btn_restart_service">Перезапустить сервис</string>
     <string name="btn_autorestart">Переодически перезапускать сервис</string>
+    <string name="btn_autoupdate">Авто обновление</string>
     <string name="snack_already_started">Сервис уже запущен.</string>
     <string name="snack_starting_service">Запускаем сервис...</string>
     <string name="snack_no_service">Сервис не запущен</string>

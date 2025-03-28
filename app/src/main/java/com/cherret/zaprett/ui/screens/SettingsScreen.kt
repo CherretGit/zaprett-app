@@ -46,6 +46,7 @@ fun SettingsScreen() {
     val useModule = remember { mutableStateOf(sharedPreferences.getBoolean("use_module", false)) }
     val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", false)) }
     val autoRestart = remember { mutableStateOf(getStartOnBoot()) }
+    val autoUpdate = remember { mutableStateOf(sharedPreferences.getBoolean("auto_update", true)) }
     val openNoRootDialog = remember { mutableStateOf(false) }
     val openNoModuleDialog = remember { mutableStateOf(false) }
     showNoRootDialog(openNoRootDialog)
@@ -108,7 +109,6 @@ fun SettingsScreen() {
                                 ) {
                                     if (it) {
                                         useModule.value = isChecked
-
                                     }
                                 }
                             }
@@ -144,6 +144,21 @@ fun SettingsScreen() {
                             onCheckedChange = { if (autoRestart(context, it)) autoRestart.value = it;}
                         )
                     }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.btn_autoupdate),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = autoUpdate.value,
+                            onCheckedChange = { autoUpdate.value = it; editor.putBoolean("auto_update", it).apply()}
+                        )
+                    }
                 }
             }
         }
@@ -173,8 +188,8 @@ fun useModule(context: Context, checked: Boolean, updateOnBoot: MutableState<Boo
         }
     }
     else {
-        editor.putBoolean("use_module", false).putBoolean("update_on_boot", false)
-            .apply()
+        editor.putBoolean("use_module", false).putBoolean("update_on_boot", false).apply()
+        updateOnBoot.value = false
         return true
     }
     return false

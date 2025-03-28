@@ -23,8 +23,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -37,7 +39,7 @@ import com.cherret.zaprett.ui.screens.HomeScreen
 import com.cherret.zaprett.ui.screens.HostsScreen
 import com.cherret.zaprett.ui.screens.SettingsScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
-import com.topjohnwu.superuser.Shell
+import androidx.core.content.edit
 
 sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object home : Screen("home", R.string.title_home, Icons.Default.Home)
@@ -48,18 +50,21 @@ val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.settings)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val sharedPreferences = getSharedPreferences("settings", MODE_PRIVATE)
-        Shell.setDefaultBuilder(Shell.Builder.create()
-            .setTimeout(10))
         enableEdgeToEdge()
         setContent {
             ZaprettTheme {
+                val sharedPreferences = remember { getSharedPreferences("settings", MODE_PRIVATE) }
+                var showPermissionDialog by remember { mutableStateOf(!Environment.isExternalStorageManager()) }
+                var showWelcomeDialog by remember { mutableStateOf(sharedPreferences.getBoolean("welcome_dialog", true)) }
                 BottomBar()
-                if (!Environment.isExternalStorageManager()) {
-                    permissionDialog()
+                if (showPermissionDialog) {
+                    PermissionDialog { showPermissionDialog = false }
                 }
-                if (sharedPreferences.getBoolean("welcome_dialog", true)) {
-                    welcomeDialog()
+                if (showWelcomeDialog) {
+                    WelcomeDialog {
+                        sharedPreferences.edit() { putBoolean("welcome_dialog", false) }
+                        showWelcomeDialog = false
+                    }
                 }
             }
         }
@@ -110,69 +115,39 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun welcomeDialog() {
-        val sharedPreferences =
-            LocalContext.current.getSharedPreferences("settings", MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        val openDialog = remember { mutableStateOf(true) }
-        if (openDialog.value) {
-            AlertDialog(
-                title = {
-                    Text(text = stringResource(R.string.app_name))
-                },
-                text = {
-                    Text(text = stringResource(R.string.text_welcome))
-                },
-                onDismissRequest = {
-                    editor.putBoolean("welcome_dialog", false).apply()
-                    openDialog.value = false
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            editor.putBoolean("welcome_dialog", false).apply()
-                            openDialog.value = false
-                        }
-                    ) {
-                        Text(stringResource(R.string.btn_continue))
-                    }
-                },
-            )
-        }
+    fun WelcomeDialog(onDismiss: () -> Unit) {
+        AlertDialog(
+            title = { Text(text = stringResource(R.string.app_name)) },
+            text = { Text(text = stringResource(R.string.text_welcome)) },
+            onDismissRequest = onDismiss,
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
     }
 
     @Composable
-    fun permissionDialog() {
-        val openDialog = remember { mutableStateOf(true) }
-        if (openDialog.value) {
-            AlertDialog(
-                title = {
-                    Text(text = stringResource(R.string.error_no_storage_title))
-                },
-                text = {
-                    Text(text = stringResource(R.string.error_no_storage_message))
-                },
-                onDismissRequest = {
-                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                    val uri = Uri.fromParts("package", packageName, null)
-                    intent.setData(uri)
-                    startActivity(intent)
-                    openDialog.value = false
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                            val uri = Uri.fromParts("package", packageName, null)
-                            intent.setData(uri)
-                            startActivity(intent)
-                            openDialog.value = false
-                        }
-                    ) {
-                        Text(stringResource(R.string.btn_continue))
+    fun PermissionDialog(onDismiss: () -> Unit) {
+        val context = LocalContext.current
+        AlertDialog(
+            title = { Text(text = stringResource(R.string.error_no_storage_title)) },
+            text = { Text(text = stringResource(R.string.error_no_storage_message)) },
+            onDismissRequest = onDismiss,
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                        val uri = Uri.fromParts("package", context.packageName, null)
+                        intent.data = uri
+                        context.startActivity(intent)
+                        onDismiss()
                     }
-                },
-            )
-        }
+                ) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
     }
 }
