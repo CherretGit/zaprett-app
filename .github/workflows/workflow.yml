@@ -47,6 +47,17 @@ jobs:
         $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify \
           app/build/outputs/apk/release/app-release.apk
 
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.event.inputs.tag }}
+        release_name: Release ${{ github.event.inputs.tag }}
+        draft: false
+        prerelease: false
+
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
       env:
