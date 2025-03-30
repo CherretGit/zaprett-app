@@ -1,0 +1,66 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for the release'
+        required: true
+        type: string
+      release_name:
+        description: 'Release Name'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release Description'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v2
+
+    - name: Build APK
+      run: ./gradlew assembleRelease
+
+    - name: Decode Keystore
+      run: |
+        echo "${{ secrets.KEYSTORE }}" | base64 --decode > keystore.jks
+
+    - name: Sign the APK
+      run: |
+        $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner sign \
+          --ks keystore.jks \
+          --ks-pass "pass:${{ secrets.KEY_STORE_PASSWORD }}" \
+          --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
+          --out app/build/outputs/apk/release/app-release.apk \
+          app/build/outputs/apk/release/app-release-unsigned.apk
+
+    - name: Verify APK signature
+      run: |
+        $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify \
+          app/build/outputs/apk/release/app-release.apk
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.event.inputs.tag }}
+        name: ${{ github.event.inputs.release_name }}
+        body: ${{ github.event.inputs.release_notes }}
+        files: |
+          app/build/outputs/apk/release/app-release.apk
