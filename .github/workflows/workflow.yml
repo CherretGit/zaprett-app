@@ -43,7 +43,9 @@ jobs:
           app/build/outputs/apk/release/app-release-unsigned.apk
 
     - name: Verify APK signature
-      run: apksigner verify app/build/outputs/apk/release/app-release.apk
+      run: |
+        $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify \
+          app/build/outputs/apk/release/app-release.apk
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
