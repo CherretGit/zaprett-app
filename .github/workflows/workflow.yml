@@ -54,10 +54,6 @@ jobs:
       run: |
         $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify \
           app/build/outputs/apk/release/app-release.apk
-    - name: Create Tag
-      run: |
-       git tag ${{ github.event.inputs.tag }}
-       git push origin ${{ github.event.inputs.tag }}
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       env:
