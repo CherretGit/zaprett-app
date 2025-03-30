@@ -62,6 +62,7 @@ fun HomeScreen() {
     val sharedPreferences = remember { context.getSharedPreferences("settings", MODE_PRIVATE) }
     val cardText = remember { mutableStateOf(R.string.status_not_availible) }
     val changeLog = remember { mutableStateOf<String?>(null) }
+    val newVersion = remember { mutableStateOf<String?>(null) }
     val updateAvailable = remember {mutableStateOf(false)}
     val downloadUrl = remember { mutableStateOf<String?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
@@ -75,6 +76,7 @@ fun HomeScreen() {
                     getChangelog(it.changelogUrl.toString()) {
                         changeLog.value = it
                     }
+                    newVersion.value = it.version?.toString()
                     updateAvailable.value = true
                 }
             }
@@ -144,7 +146,7 @@ fun HomeScreen() {
                             defaultElevation = 6.dp
                         ),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -166,7 +168,7 @@ fun HomeScreen() {
                     }
                 }
                 if (showUpdateDialog) {
-                    UpdateDialog(context, downloadUrl.value.toString(), changeLog.value.toString(), onDismiss = { showUpdateDialog = false })
+                    UpdateDialog(context, downloadUrl.value.toString(), changeLog.value.toString(), newVersion, onDismiss = { showUpdateDialog = false })
                 }
                 FilledTonalButton(
                     onClick = { onBtnStartService(context, snackbarHostState, scope) },
@@ -299,10 +301,10 @@ fun onBtnRestart(context: Context, snackbarHostState: SnackbarHostState, scope: 
 
 
 @Composable
-fun UpdateDialog(context: Context, downloadUrl: String, changeLog: String, onDismiss: () -> Unit) {
+fun UpdateDialog(context: Context, downloadUrl: String, changeLog: String, newVersion: MutableState<String?>, onDismiss: () -> Unit) {
     AlertDialog(
         title = { Text(text = stringResource(R.string.update_available)) },
-        text = { Text(text = changeLog) },
+        text = { Text(text = "${stringResource(R.string.alert_version)}: ${context.packageManager.getPackageInfo(context.packageName, 0).versionName} —> ${newVersion.value}\n${stringResource(R.string.alert_changelog)}:\n$changeLog") },
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
@@ -312,7 +314,7 @@ fun UpdateDialog(context: Context, downloadUrl: String, changeLog: String, onDis
                     installApk(context, uri)
                 }
             }) {
-                Text(stringResource(R.string.btn_continue))
+                Text(stringResource(R.string.btn_update))
             }
         },
         dismissButton = {
