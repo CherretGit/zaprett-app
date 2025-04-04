@@ -1,6 +1,6 @@
 {
-	"version": "1.2",
-	"versionCode": 3,
-	"downloadUrl": "https://github.com/CherretGit/zaprett-app/releases/download/1.2.0/app-release.apk",
+	"version": "1.3",
+	"versionCode": 4,
+	"downloadUrl": "https://github.com/CherretGit/zaprett-app/releases/download/1_3_0/app-release.apk",
 	"changelogUrl": "https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/changelog.md"
 }
