@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.edit
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -39,7 +40,9 @@ import com.cherret.zaprett.ui.screens.HomeScreen
 import com.cherret.zaprett.ui.screens.HostsScreen
 import com.cherret.zaprett.ui.screens.SettingsScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
-import androidx.core.content.edit
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
 
 sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object home : Screen("home", R.string.title_home, Icons.Default.Home)
@@ -48,8 +51,10 @@ sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: 
 }
 val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.settings)
 class MainActivity : ComponentActivity() {
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        firebaseAnalytics = Firebase.analytics
         enableEdgeToEdge()
         setContent {
             ZaprettTheme {

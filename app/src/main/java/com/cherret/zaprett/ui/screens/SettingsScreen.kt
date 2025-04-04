@@ -190,7 +190,7 @@ fun useModule(context: Context, checked: Boolean, updateOnBoot: MutableState<Boo
     else {
         editor.putBoolean("use_module", false).putBoolean("update_on_boot", false).apply()
         updateOnBoot.value = false
-        return true
+        callback(true)
     }
     return false
 }
