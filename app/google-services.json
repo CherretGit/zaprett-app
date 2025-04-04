@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1005804036856",
+    "project_id": "zaprett-app",
+    "storage_bucket": "zaprett-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1005804036856:android:e7db5546b8bb4daf91510d",
+        "android_client_info": {
+          "package_name": "com.cherret.zaprett"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASt83pAMxMI4txNAXaHDpX1R9crfoZAMk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
