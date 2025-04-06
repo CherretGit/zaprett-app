@@ -2,6 +2,11 @@ package com.cherret.zaprett.ui.screens
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -60,7 +66,7 @@ import kotlinx.coroutines.launch
 fun HomeScreen() {
     val context = LocalContext.current
     val sharedPreferences = remember { context.getSharedPreferences("settings", MODE_PRIVATE) }
-    val cardText = remember { mutableStateOf(R.string.status_not_availible) }
+    val cardText = remember { mutableIntStateOf(R.string.status_not_availible) }
     val changeLog = remember { mutableStateOf<String?>(null) }
     val newVersion = remember { mutableStateOf<String?>(null) }
     val updateAvailable = remember {mutableStateOf(false)}
@@ -140,7 +146,11 @@ fun HomeScreen() {
                         textAlign = TextAlign.Center,
                     )
                 }
-                if (updateAvailable.value) {
+                AnimatedVisibility(
+                    visible = updateAvailable.value,
+                    enter = fadeIn() + expandVertically(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
                     ElevatedCard(
                         elevation = CardDefaults.cardElevation(
                             defaultElevation = 6.dp
@@ -297,8 +307,6 @@ fun onBtnRestart(context: Context, snackbarHostState: SnackbarHostState, scope: 
         }
     }
 }
-
-
 
 @Composable
 fun UpdateDialog(context: Context, downloadUrl: String, changeLog: String, newVersion: MutableState<String?>, onDismiss: () -> Unit) {

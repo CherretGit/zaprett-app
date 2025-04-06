@@ -24,6 +24,7 @@
     <string name="btn_start_service">Start service</string>
     <string name="btn_stop_service">Stop service</string>
     <string name="btn_restart_service">Restart service</string>
+    <string name="btn_remove_host">Remove</string>
     <string name="btn_autorestart">Restart service periodicaly</string>
     <string name="btn_autoupdate">Autoupdate</string>
     <string name="alert_version">Version</string>

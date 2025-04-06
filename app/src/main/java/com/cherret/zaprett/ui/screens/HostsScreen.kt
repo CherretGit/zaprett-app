@@ -8,10 +8,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,15 +21,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -38,6 +45,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -48,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cherret.zaprett.R
@@ -56,6 +66,7 @@ import com.cherret.zaprett.enableList
 import com.cherret.zaprett.getActiveLists
 import com.cherret.zaprett.getAllLists
 import com.cherret.zaprett.getZaprettPath
+import com.cherret.zaprett.restartService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
@@ -86,7 +97,6 @@ fun HostsScreen() {
             }
         }
     )
-
     Scaffold(
         topBar = {
             val primaryColor = MaterialTheme.colorScheme.surfaceVariant
@@ -135,7 +145,7 @@ fun HostsScreen() {
                                     defaultElevation = 6.dp
                                 ),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -161,10 +171,73 @@ fun HostsScreen() {
                                                 disableList(item)
                                             }
                                             scope.launch {
-                                                snackbarHostState.showSnackbar(context.getString(R.string.pls_restart_snack))
+                                                val result = snackbarHostState.showSnackbar(
+                                                    context.getString(R.string.pls_restart_snack),
+                                                    actionLabel = context.getString(R.string.btn_restart_service)
+                                                )
+                                                when (result) {
+                                                    SnackbarResult.ActionPerformed -> {
+                                                        restartService {}
+                                                        scope.launch {
+                                                            snackbarHostState.showSnackbar(
+                                                                context.getString(
+                                                                    R.string.snack_reload
+                                                                )
+                                                            )
+                                                        }
+                                                    }
+                                                    SnackbarResult.Dismissed -> {}
+                                                }
                                             }
                                         }
                                     )
+                                }
+                                HorizontalDivider(thickness = Dp.Hairline)
+                                Row (modifier = Modifier
+                                    .fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End) {
+                                    FilledTonalButton(
+                                        onClick = {
+                                            if (deleteHost(item)) {
+                                                allLists = getAllLists()
+                                                activeLists = getActiveLists()
+                                                checked.clear()
+                                                allLists.forEach { list ->
+                                                    checked[list] = activeLists.contains(list)
+                                                }
+                                            }
+                                            scope.launch {
+                                                val result = snackbarHostState.showSnackbar(
+                                                    context.getString(R.string.pls_restart_snack),
+                                                    actionLabel = context.getString(R.string.btn_restart_service)
+                                                )
+                                                when (result) {
+                                                    SnackbarResult.ActionPerformed -> {
+                                                        restartService {}
+                                                        scope.launch {
+                                                            snackbarHostState.showSnackbar(
+                                                                context.getString(
+                                                                    R.string.snack_reload
+                                                                )
+                                                            )
+                                                        }
+                                                    }
+                                                    SnackbarResult.Dismissed -> {}
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .padding(start = 5.dp, end = 5.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = stringResource(R.string.btn_remove_host),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Text(
+                                            stringResource(R.string.btn_remove_host)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -184,7 +257,7 @@ fun HostsScreen() {
 }
 
 fun addHost(launcher: ActivityResultLauncher<Array<String>>) {
-    launcher.launch(arrayOf("*/*"))
+    launcher.launch(arrayOf("text/plain"))
 }
 
 fun copySelectedFile(context: Context, uri: Uri?, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {// AI Generated
@@ -203,11 +276,29 @@ fun copySelectedFile(context: Context, uri: Uri?, snackbarHostState: SnackbarHos
                 }
             }
             scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.pls_restart_snack))
+                val result = snackbarHostState.showSnackbar(context.getString(R.string.pls_restart_snack), actionLabel = context.getString(R.string.btn_restart_service))
+                    when (result) {
+                        SnackbarResult.ActionPerformed -> {
+                            restartService{}
+                            scope.launch {
+                                snackbarHostState.showSnackbar(context.getString(R.string.snack_reload))
+                            }
+                        }
+                        SnackbarResult.Dismissed -> {}
+                    }
             }
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
+}
+
+fun deleteHost(item: String): Boolean {
+    val hostFile = File(item)
+    if (hostFile.exists()) {
+        hostFile.delete()
+        return true
+    }
+    return false
 }
 

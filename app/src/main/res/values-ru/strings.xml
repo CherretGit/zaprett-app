@@ -24,6 +24,7 @@
     <string name="btn_start_service">Запустить сервис</string>
     <string name="btn_stop_service">Остановить сервис</string>
     <string name="btn_restart_service">Перезапустить сервис</string>
+    <string name="btn_remove_host">Удалить</string>
     <string name="btn_autorestart">Переодически перезапускать сервис</string>
     <string name="btn_autoupdate">Авто обновление</string>
     <string name="alert_version">Версия</string>
