@@ -96,7 +96,6 @@ fun HomeScreen() {
                     cardText.value = R.string.status_disabled
                 }
             }
-
         }
     }
     Scaffold(

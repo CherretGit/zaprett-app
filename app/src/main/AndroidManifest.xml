@@ -40,6 +40,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name=".QSTileService"
+            android:exported="true"
+            android:label="@string/qs_name"
+        android:icon="@drawable/ic_launcher_monochrome"
+        android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+        <intent-filter>
+            <action android:name="android.service.quicksettings.action.QS_TILE" />
+        </intent-filter>
+    </service>
     </application>
 
 </manifest>

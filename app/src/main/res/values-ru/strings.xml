@@ -12,7 +12,7 @@
     <string name="error_root_message">Не получилось получить root доступ. Дайте права root для использования модуля Magisk</string>
     <string name="error_no_module_title">Модуль не установлен</string>
     <string name="error_no_module_message">Magisk модуль zaprett не найден. Пожалуйста, установите его</string>
-    <string name="snack_reload">Перезагружаем zaprett...</string>
+    <string name="snack_reload">Перезагружаем zaprett…</string>
     <string name="snack_module_disabled">Модуль Magisk отключен! Не получилось выполнить действие</string>
     <string name="title_strategy">Стратегия</string>
     <string name="status_not_availible">Состояние zaprett неизвестно. Нажми для обновления</string>
@@ -30,12 +30,18 @@
     <string name="alert_version">Версия</string>
     <string name="alert_changelog">Список изменений</string>
     <string name="snack_already_started">Сервис уже запущен.</string>
-    <string name="snack_starting_service">Запускаем сервис...</string>
+    <string name="snack_starting_service">Запускаем сервис…</string>
     <string name="snack_no_service">Сервис не запущен</string>
-    <string name="snack_stopping_service">Останавливаем сервис...</string>
+    <string name="snack_stopping_service">Останавливаем сервис…</string>
     <string name="error_no_storage_title">Нет разрешения</string>
     <string name="error_no_storage_message">Для правильной работы приложения необходимо разрешение на доступ к хранилищу</string>
     <string name="btn_show_full_path">Показывать полный путь к листу</string>
     <string name="pls_reboot_snack">Перезагрузите устройство для вступления изменений в силу</string>
     <string name="pls_restart_snack">Перезапустите zaprett для вступления изменений в силу</string>
+    <string name="qs_name">Zaprett</string>
+    <string name="qs_starting">Запуск…</string>
+    <string name="qs_stopping">Остановка…</string>
+    <string name="qs_not_available">Не доступно</string>
+    <string name="qs_working">Работает</string>
+    <string name="qs_not_working">Не работает</string>
 </resources>

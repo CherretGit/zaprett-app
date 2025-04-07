@@ -12,7 +12,7 @@
     <string name="error_root_message">Couldn\'t get root access. Give root access to use the Magisk module</string>
     <string name="error_no_module_title">Module is not installed</string>
     <string name="error_no_module_message">Magisk module zaprett wasn\'t found. Please install it</string>
-    <string name="snack_reload">Reloading zaprett...</string>
+    <string name="snack_reload">Reloading zaprett…</string>
     <string name="snack_module_disabled">Magisk module disabled! Cant\'t execute action</string>
     <string name="title_strategy">Strategy</string>
     <string name="status_not_availible">Status of zaprett is unknown. Tap to update</string>
@@ -30,7 +30,7 @@
     <string name="alert_version">Version</string>
     <string name="alert_changelog">Changelog</string>
     <string name="snack_already_started">Service already started.</string>
-    <string name="snack_starting_service">Starting service...</string>
+    <string name="snack_starting_service">Starting service…</string>
     <string name="snack_no_service">Service is not launched</string>
     <string name="snack_stopping_service">Stopping service...</string>
     <string name="error_no_storage_title">No permission</string>
@@ -38,4 +38,10 @@
     <string name="btn_show_full_path">Show full list\'s path</string>
     <string name="pls_reboot_snack">Reboot your device for the changes to take effect</string>
     <string name="pls_restart_snack">Restart zaprett service for the changes to take effects</string>
+    <string name="qs_name">Zaprett</string>
+    <string name="qs_starting">Starting…</string>
+    <string name="qs_stopping">Stopping…</string>
+    <string name="qs_not_available">Not available</string>
+    <string name="qs_working">Working</string>
+    <string name="qs_not_working">Not working</string>
 </resources>
