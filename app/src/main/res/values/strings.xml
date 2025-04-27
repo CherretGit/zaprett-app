@@ -2,6 +2,7 @@
     <string name="app_name" translatable="false">zaprett</string>
     <string name="title_home">Home</string>
     <string name="title_hosts">Hosts</string>
+    <string name="title_hosts_repo">Hosts Repo</string>
     <string name="title_settings">Settings</string>
     <string name="btn_continue">Continue</string>
     <string name="btn_update">Update</string>
@@ -25,6 +26,14 @@
     <string name="btn_stop_service">Stop service</string>
     <string name="btn_restart_service">Restart service</string>
     <string name="btn_remove_host">Remove</string>
+    <string name="btn_download_host">Download</string>
+    <string name="btn_add_host">Add</string>
+    <string name="btn_back">Back</string>
+    <string name="btn_install_host">Install</string>
+    <string name="btn_update_host">Update</string>
+    <string name="btn_installing_host">Installing</string>
+    <string name="btn_updating_host">Updating</string>
+    <string name="btn_installed_host">Installed</string>
     <string name="btn_autorestart">Restart service periodicaly</string>
     <string name="btn_autoupdate">Autoupdate</string>
     <string name="alert_version">Version</string>
@@ -44,4 +53,6 @@
     <string name="qs_not_available">Not available</string>
     <string name="qs_working">Working</string>
     <string name="qs_not_working">Not working</string>
+    <string name="about_title">About app</string>
+    <string name="about_text">Zaprett App By Cherret\nVersion: %1$s</string>
 </resources>

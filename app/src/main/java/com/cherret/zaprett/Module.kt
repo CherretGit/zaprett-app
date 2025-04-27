@@ -79,7 +79,7 @@ fun getStartOnBoot(): Boolean {
         } else {
             false
         }
-    } catch (e: IOException) {
+    } catch (_: IOException) {
         false
     }
 }
@@ -92,12 +92,12 @@ fun getZaprettPath(): String {
             FileInputStream(configFile).use { input ->
                 props.load(input)
             }
-            props.getProperty("zaprettdir", "/sdcard/zaprett")
+            props.getProperty("zaprettdir", Environment.getExternalStorageDirectory().path + "/zaprett")
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
     }
-    return "/sdcard/zaprett"
+    return Environment.getExternalStorageDirectory().path + "/zaprett"
 }
 
 fun getAllLists(): Array<String> {

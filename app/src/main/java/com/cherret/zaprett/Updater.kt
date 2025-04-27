@@ -23,7 +23,7 @@ import okhttp3.Response
 import okio.IOException
 import java.io.File
 
-val client = OkHttpClient()
+private val client = OkHttpClient()
 
 fun getUpdate(context: Context, callback: (UpdateInfo?) -> Unit) {
     val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
@@ -138,5 +138,5 @@ data class UpdateInfo(
     val version: String?,
     val versionCode: Int?,
     val downloadUrl: String?,
-    val changelogUrl: String?,
+    val changelogUrl: String?
 )

@@ -37,6 +37,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.cherret.zaprett.ui.screens.HomeScreen
+import com.cherret.zaprett.ui.screens.HostsRepoScreen
 import com.cherret.zaprett.ui.screens.HostsScreen
 import com.cherret.zaprett.ui.screens.SettingsScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
@@ -50,6 +51,7 @@ sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: 
     object settings : Screen("settings", R.string.title_settings, Icons.Default.Settings)
 }
 val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.settings)
+val hideNavBar = listOf("hosts_repo")
 class MainActivity : ComponentActivity() {
     private lateinit var firebaseAnalytics: FirebaseAnalytics
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,29 +82,31 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         Scaffold(
             bottomBar = {
-                NavigationBar {
-                    val navBackStackEntry = navController.currentBackStackEntryAsState().value
-                    val currentDestination = navBackStackEntry?.destination
-                    topLevelRoutes.forEach { topLevelRoute ->
-                        NavigationBarItem(
-                            icon = {
-                                Icon(
-                                    topLevelRoute.icon,
-                                    contentDescription = stringResource(id = topLevelRoute.nameResId)
-                                )
-                            },
-                            label = { Text(text = stringResource(id = topLevelRoute.nameResId)) },
-                            selected = currentDestination?.route == topLevelRoute.route,
-                            onClick = {
-                                navController.navigate(topLevelRoute.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                val navBackStackEntry = navController.currentBackStackEntryAsState().value
+                val currentDestination = navBackStackEntry?.destination
+                if (currentDestination?.route !in hideNavBar) {
+                    NavigationBar {
+                        topLevelRoutes.forEach { topLevelRoute ->
+                            NavigationBarItem(
+                                icon = {
+                                    Icon(
+                                        topLevelRoute.icon,
+                                        contentDescription = stringResource(id = topLevelRoute.nameResId)
+                                    )
+                                },
+                                label = { Text(text = stringResource(id = topLevelRoute.nameResId)) },
+                                selected = currentDestination?.route == topLevelRoute.route,
+                                onClick = {
+                                    navController.navigate(topLevelRoute.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
@@ -113,8 +117,9 @@ class MainActivity : ComponentActivity() {
                 Modifier.padding(innerPadding)
             ) {
                 composable(Screen.home.route) { HomeScreen() }
-                composable(Screen.hosts.route) { HostsScreen() }
+                composable(Screen.hosts.route) { HostsScreen(navController) }
                 composable(Screen.settings.route) { SettingsScreen() }
+                composable("hosts_repo") { HostsRepoScreen(navController) }
             }
         }
     }
