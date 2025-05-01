@@ -1,6 +1,7 @@
 # zaprett
 ## О приложении
 Приложение разработано для работы с модулем [zaprett](https://github.com/egor-white/zaprett)
+### [Официальный Telegram-канал приложения](https://t.me/zaprett_module)
 ### Данное приложение является ремейком [приложения](https://github.com/egor-white/zaprett-app) от [egor-white](https://github.com/egor-white)
 
 На данный момент приложение умеет:
