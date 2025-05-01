@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,27 +90,44 @@ fun HostsScreen(navController: NavController) {
                     contentPadding = paddingValues,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(allLists) { item ->
-                        HostItem(
-                            item = item,
-                            isChecked = checked[item] == true,
-                            onCheckedChange = { isChecked ->
-                                checked[item] = isChecked
-                                if (isChecked) enableList(item) else disableList(item)
-                                showRestartSnackbar(context, snackbarHostState, scope)
-                            },
-                            onDeleteClick = {
-                                if (deleteHost(item)) {
-                                    allLists = getAllLists()
-                                    activeLists = getActiveLists()
-                                    checked.clear()
-                                    allLists.forEach { list ->
-                                        checked[list] = activeLists.contains(list)
-                                    }
+                    when {
+                        allLists.isEmpty() != false -> {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillParentMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        stringResource(R.string.btn_no_hosts),
+                                        textAlign = TextAlign.Center
+                                    )
                                 }
-                                showRestartSnackbar(context, snackbarHostState, scope)
                             }
-                        )
+                        }
+                        else -> {
+                            items(allLists) { item ->
+                                HostItem(
+                                    item = item,
+                                    isChecked = checked[item] == true,
+                                    onCheckedChange = { isChecked ->
+                                        checked[item] = isChecked
+                                        if (isChecked) enableList(item) else disableList(item)
+                                        showRestartSnackbar(context, snackbarHostState, scope)
+                                    },
+                                    onDeleteClick = {
+                                        if (deleteHost(item)) {
+                                            allLists = getAllLists()
+                                            activeLists = getActiveLists()
+                                            checked.clear()
+                                            allLists.forEach { list ->
+                                                checked[list] = activeLists.contains(list)
+                                            }
+                                        }
+                                        showRestartSnackbar(context, snackbarHostState, scope)
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }

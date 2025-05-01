@@ -1,6 +1,7 @@
 package com.cherret.zaprett.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -108,119 +110,151 @@ fun HostsRepoScreen(navController: NavController) {
                     isRefreshing = true
                     getHostList {
                         hostLists = it
+                        isRefreshing = false
                     }
-                    isRefreshing = false
                 },
                 modifier = Modifier.fillMaxSize()
             ) {
-                if (hostLists != null) {
-                    LazyColumn(
-                        contentPadding = paddingValues,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(hostLists.orEmpty()) { item ->
-                            var isButtonEnabled by remember { mutableStateOf(!allLists.any {File(it).name == item.name})}
-                            var isInstalling by remember { mutableStateOf(false) }
-                            var isButtonUpdateEnabled by remember { mutableStateOf(true) }
-                            var isUpdateInstalling by remember { mutableStateOf(false) }
-                            ElevatedCard(
-                                elevation = CardDefaults.cardElevation(
-                                    defaultElevation = 6.dp
-                                ),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 10.dp, top = 25.dp, end = 10.dp),
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
+                LazyColumn(
+                    contentPadding = paddingValues,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    when {
+                        hostLists?.isEmpty() != false -> {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillParentMaxSize(),
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = item.name,
-                                        modifier = Modifier.weight(1f)
+                                        stringResource(R.string.btn_no_hosts),
+                                        textAlign = TextAlign.Center
                                     )
                                 }
-                                Row(verticalAlignment = Alignment.CenterVertically,
+                            }
+                        }
+                        else -> {
+                            items(hostLists.orEmpty()) { item ->
+                                var isButtonEnabled by remember { mutableStateOf(!allLists.any { File(it).name == item.name }) }
+                                var isInstalling by remember { mutableStateOf(false) }
+                                var isButtonUpdateEnabled by remember { mutableStateOf(true) }
+                                var isUpdateInstalling by remember { mutableStateOf(false) }
+                                ElevatedCard(
+                                    elevation = CardDefaults.cardElevation(
+                                        defaultElevation = 6.dp
+                                    ),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                    ),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(start = 16.dp)
+                                        .padding(start = 10.dp, top = 25.dp, end = 10.dp),
                                 ) {
-                                    Text(
-                                        text = item.description,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                HorizontalDivider(thickness = Dp.Hairline)
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
-                                    if (isUpdate[item.name] == true && allLists.any {File(it).name == item.name}) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp)
+                                    ) {
+                                        Text(
+                                            text = item.name,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp)
+                                    ) {
+                                        Text(
+                                            text = item.description,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    HorizontalDivider(thickness = Dp.Hairline)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        if (isUpdate[item.name] == true && allLists.any { File(it).name == item.name }) {
+                                            FilledTonalButton(
+                                                onClick = {
+                                                    isUpdateInstalling = true
+                                                    isButtonUpdateEnabled = false
+                                                    val downloadId = download(context, item.url)
+                                                    registerDownloadListenerHost(
+                                                        context,
+                                                        downloadId
+                                                    ) { uri ->
+                                                        val sourceFile = File(uri.path!!)
+                                                        val targetFile = File(
+                                                            getZaprettPath() + "/lists",
+                                                            uri.lastPathSegment!!
+                                                        )
+                                                        sourceFile.copyTo(targetFile, overwrite = true)
+                                                        sourceFile.delete()
+                                                        isUpdateInstalling = false
+                                                        getHostList {
+                                                            hostLists = it
+                                                        }
+                                                        isUpdate[item.name] = false
+                                                    }
+                                                },
+                                                enabled = isButtonUpdateEnabled,
+                                                modifier = Modifier
+                                                    .padding(start = 5.dp, end = 5.dp),
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Update,
+                                                    contentDescription = stringResource(R.string.btn_remove_host),
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Text(
+                                                    if (!isUpdateInstalling) stringResource(R.string.btn_update_host) else stringResource(
+                                                        R.string.btn_updating_host
+                                                    )
+                                                )
+                                            }
+                                        }
                                         FilledTonalButton(
                                             onClick = {
-                                                isUpdateInstalling = true
-                                                isButtonUpdateEnabled = false
+                                                isInstalling = true
+                                                isButtonEnabled = false
                                                 val downloadId = download(context, item.url)
-                                                registerDownloadListenerHost (context, downloadId) { uri ->
+                                                registerDownloadListenerHost(
+                                                    context,
+                                                    downloadId
+                                                ) { uri ->
                                                     val sourceFile = File(uri.path!!)
-                                                    val targetFile = File(getZaprettPath() + "/lists", uri.lastPathSegment!!)
+                                                    val targetFile = File(
+                                                        getZaprettPath() + "/lists",
+                                                        uri.lastPathSegment!!
+                                                    )
                                                     sourceFile.copyTo(targetFile, overwrite = true)
                                                     sourceFile.delete()
-                                                    isUpdateInstalling = false
+                                                    isInstalling = false
                                                     getHostList {
                                                         hostLists = it
                                                     }
-                                                    isUpdate[item.name] = false
                                                 }
                                             },
-                                            enabled = isButtonUpdateEnabled,
+                                            enabled = isButtonEnabled,
                                             modifier = Modifier
                                                 .padding(start = 5.dp, end = 5.dp),
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.Update,
+                                                imageVector = Icons.Default.InstallMobile,
                                                 contentDescription = stringResource(R.string.btn_remove_host),
                                                 modifier = Modifier.size(20.dp)
                                             )
                                             Text(
-                                                if (!isUpdateInstalling) stringResource(R.string.btn_update_host) else stringResource(R.string.btn_updating_host)
+                                                if (isButtonEnabled) stringResource(R.string.btn_install_host) else if (isInstalling) stringResource(
+                                                    R.string.btn_installing_host
+                                                ) else stringResource(R.string.btn_installed_host)
                                             )
                                         }
-                                    }
-                                    FilledTonalButton(
-                                        onClick = {
-                                            isInstalling = true
-                                            isButtonEnabled = false
-                                            val downloadId = download(context, item.url)
-                                            registerDownloadListenerHost (context, downloadId) { uri ->
-                                                val sourceFile = File(uri.path!!)
-                                                val targetFile = File(getZaprettPath() + "/lists", uri.lastPathSegment!!)
-                                                sourceFile.copyTo(targetFile, overwrite = true)
-                                                sourceFile.delete()
-                                                isInstalling = false
-                                                getHostList {
-                                                    hostLists = it
-                                                }
-                                            }
-                                        },
-                                        enabled = isButtonEnabled,
-                                        modifier = Modifier
-                                            .padding(start = 5.dp, end = 5.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.InstallMobile,
-                                            contentDescription = stringResource(R.string.btn_remove_host),
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Text(
-                                            if (isButtonEnabled) stringResource(R.string.btn_install_host) else if (isInstalling) stringResource(R.string.btn_installing_host) else stringResource(R.string.btn_installed_host)
-                                        )
                                     }
                                 }
                             }

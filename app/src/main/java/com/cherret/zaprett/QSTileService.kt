@@ -14,10 +14,6 @@ class QSTileService: TileService() {
         updateStatus()
     }
 
-    override fun onStopListening() {
-        super.onStopListening()
-    }
-
     override fun onClick() {
         super.onClick()
         if (qsTile.state == Tile.STATE_INACTIVE) {

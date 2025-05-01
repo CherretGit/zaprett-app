@@ -1,7 +1,10 @@
 package com.cherret.zaprett.ui.screens
 
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
@@ -16,6 +19,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
 import com.cherret.zaprett.checkModuleInstallation
 import com.cherret.zaprett.checkRoot
@@ -33,9 +37,60 @@ fun SettingsScreen() {
     val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", false)) }
     val autoRestart = remember { mutableStateOf(getStartOnBoot()) }
     val autoUpdate = remember { mutableStateOf(sharedPreferences.getBoolean("auto_update", true)) }
+    val sendFirebaseAnalytics = remember { mutableStateOf(sharedPreferences.getBoolean("send_firebase_analytics", true)) }
     val openNoRootDialog = remember { mutableStateOf(false) }
     val openNoModuleDialog = remember { mutableStateOf(false) }
-    var showAboutDialog by remember { mutableStateOf(false) }
+    var showAboutDialog = remember { mutableStateOf(false) }
+
+    val settingsList = listOf(
+        SettingItem(
+            title = stringResource(R.string.btn_use_root),
+            checked = useModule.value,
+            onToggle = { isChecked ->
+                useModule(
+                    context = context,
+                    checked = isChecked,
+                    updateOnBoot = updateOnBoot,
+                    openNoRootDialog = openNoRootDialog,
+                    openNoModuleDialog = openNoModuleDialog
+                ) { success ->
+                    if (success) useModule.value = isChecked
+                }
+            }
+        ),
+        SettingItem(
+            title = stringResource(R.string.btn_update_on_boot),
+            checked = updateOnBoot.value,
+            onToggle = {
+                updateOnBoot.value = it
+                editor.putBoolean("update_on_boot", it).apply()
+            }
+        ),
+        SettingItem(
+            title = stringResource(R.string.btn_autorestart),
+            checked = autoRestart.value,
+            onToggle = {
+                if (handleAutoRestart(context, it)) autoRestart.value = it
+            }
+        ),
+        SettingItem(
+            title = stringResource(R.string.btn_autoupdate),
+            checked = autoUpdate.value,
+            onToggle = {
+                autoUpdate.value = it
+                editor.putBoolean("auto_update", it).apply()
+            }
+        ),
+        SettingItem(
+            title = stringResource(R.string.btn_send_firebase_analytics),
+            checked = sendFirebaseAnalytics.value,
+            onToggle = {
+                sendFirebaseAnalytics.value = it
+                editor.putBoolean("send_firebase_analytics", it).apply()
+            }
+        )
+    )
+
 
     if (openNoRootDialog.value) {
         InfoDialog(
@@ -53,8 +108,8 @@ fun SettingsScreen() {
         )
     }
 
-    if (showAboutDialog) {
-        AboutDialog(context, onDismiss = { showAboutDialog = false })
+    if (showAboutDialog.value) {
+        AboutDialog(onDismiss = { showAboutDialog.value = false })
     }
 
     Scaffold(
@@ -80,7 +135,7 @@ fun SettingsScreen() {
                             text = { Text(stringResource(R.string.about_title)) },
                             onClick = {
                                 expanded = false
-                                showAboutDialog = true
+                                showAboutDialog.value = true
                             }
                         )
                     }
@@ -89,52 +144,29 @@ fun SettingsScreen() {
             )
         },
         content = { paddingValues ->
-            Column(modifier = Modifier.padding(paddingValues)) {
-                ElevatedCard(
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 25.dp)
-                ) {
-                    SettingsItem(
-                        title = stringResource(R.string.btn_use_root),
-                        checked = useModule.value,
-                        onCheckedChange = { isChecked ->
-                            useModule(
-                                context = context,
-                                checked = isChecked,
-                                updateOnBoot = updateOnBoot,
-                                openNoRootDialog = openNoRootDialog,
-                                openNoModuleDialog = openNoModuleDialog
-                            ) { success ->
-                                if (success) useModule.value = isChecked
-                            }
+            LazyColumn(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 25.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(settingsList) { setting ->
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Row(modifier = Modifier.clickable {
+                            setting.onToggle(!setting.checked)
+                        }) {
+                            SettingsItem(
+                                title = setting.title,
+                                checked = setting.checked,
+                                onCheckedChange = setting.onToggle
+                            )
                         }
-                    )
-                    SettingsItem(
-                        title = stringResource(R.string.btn_update_on_boot),
-                        checked = updateOnBoot.value,
-                        onCheckedChange = {
-                            updateOnBoot.value = it
-                            editor.putBoolean("update_on_boot", it).apply()
-                        }
-                    )
-                    SettingsItem(
-                        title = stringResource(R.string.btn_autorestart),
-                        checked = autoRestart.value,
-                        onCheckedChange = {
-                            if (handleAutoRestart(context, it)) autoRestart.value = it
-                        }
-                    )
-                    SettingsItem(
-                        title = stringResource(R.string.btn_autoupdate),
-                        checked = autoUpdate.value,
-                        onCheckedChange = {
-                            autoUpdate.value = it
-                            editor.putBoolean("auto_update", it).apply()
-                        }
-                    )
+                    }
                 }
             }
         }
@@ -215,13 +247,19 @@ private fun InfoDialog(title: String, message: String, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun AboutDialog(context: Context, onDismiss: () -> Unit) {
+private fun AboutDialog(onDismiss: () -> Unit) {
     AlertDialog(
         title = { Text(text = stringResource(R.string.about_title)) },
         icon = {Icon(painterResource(R.drawable.ic_launcher_monochrome), contentDescription = stringResource(R.string.app_name), modifier = Modifier
             .size(64.dp))},
-        text = { Text(text = stringResource(R.string.about_text, context.packageManager.getPackageInfo(context.packageName, 0).versionName.toString())) },
+        text = { Text(text = stringResource(R.string.about_text, BuildConfig.VERSION_NAME)) },
         onDismissRequest = onDismiss,
         confirmButton = { }
     )
 }
+
+data class SettingItem(
+    val title: String,
+    val checked: Boolean,
+    val onToggle: (Boolean) -> Unit
+)

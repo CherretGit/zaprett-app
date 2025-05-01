@@ -2,7 +2,7 @@
 <resources>
     <string name="title_home">Главная</string>
     <string name="title_hosts">Хосты</string>
-    <string name="title_hosts_repo">Репозиторий хостов</string>
+    <string name="title_hosts_repo">Репозиторий</string>
     <string name="title_settings">Настройки</string>
     <string name="btn_continue">Продолжить</string>
     <string name="btn_update">Обновить</string>
@@ -29,6 +29,7 @@
     <string name="btn_download_host">Скачать</string>
     <string name="btn_add_host">Добавить</string>
     <string name="btn_back">Назад</string>
+    <string name="btn_no_hosts">Нет хостов</string>
     <string name="btn_install_host">Установить</string>
     <string name="btn_update_host">Обновить</string>
     <string name="btn_installing_host">Установка</string>
@@ -36,8 +37,8 @@
     <string name="btn_installed_host">Установленно</string>
     <string name="btn_autorestart">Переодически перезапускать сервис</string>
     <string name="btn_autoupdate">Авто обновление</string>
-    <string name="alert_version">Версия</string>
-    <string name="alert_changelog">Список изменений</string>
+    <string name="btn_send_firebase_analytics">Отправлять аналитику Firebase</string>
+    <string name="alert_version">Version: %1$s → %2$s\nСписок изменений:\n%3$s</string>
     <string name="snack_already_started">Сервис уже запущен.</string>
     <string name="snack_starting_service">Запускаем сервис…</string>
     <string name="snack_no_service">Сервис не запущен</string>
@@ -54,5 +55,5 @@
     <string name="qs_working">Работает</string>
     <string name="qs_not_working">Не работает</string>
     <string name="about_title">О приложении</string>
-    <string name="about_text">Zaprett app От Cherret\nВерсия: %1$s</string>
+    <string name="about_text">Zaprett app от Cherret\nВерсия: %1$s</string>
 </resources>

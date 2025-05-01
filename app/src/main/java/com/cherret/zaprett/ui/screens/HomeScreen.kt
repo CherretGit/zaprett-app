@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
 import com.cherret.zaprett.download
 import com.cherret.zaprett.getChangelog
@@ -76,7 +77,7 @@ fun HomeScreen() {
 
     LaunchedEffect(Unit) {
         if (sharedPreferences.getBoolean("auto_update", true)) {
-            getUpdate(context) {
+            getUpdate() {
                 if (it != null) {
                     downloadUrl.value = it.downloadUrl.toString()
                     getChangelog(it.changelogUrl.toString()) { log -> changeLog.value = log }
@@ -285,8 +286,7 @@ fun UpdateDialog(context: Context, downloadUrl: String, changeLog: String, newVe
         title = { Text(text = stringResource(R.string.update_available)) },
         text = {
             Text(
-                text = "${stringResource(R.string.alert_version)}: ${context.packageManager.getPackageInfo(context.packageName, 0).versionName} → ${newVersion.value}\n" +
-                        "${stringResource(R.string.alert_changelog)}:\n$changeLog"
+                text = stringResource(R.string.alert_version, BuildConfig.VERSION_NAME, newVersion.value.toString(), changeLog)
             )
         },
         onDismissRequest = onDismiss,

@@ -25,7 +25,7 @@ import java.io.File
 
 private val client = OkHttpClient()
 
-fun getUpdate(context: Context, callback: (UpdateInfo?) -> Unit) {
+fun getUpdate(callback: (UpdateInfo?) -> Unit) {
     val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(UpdateInfo::class.java)
@@ -40,14 +40,11 @@ fun getUpdate(context: Context, callback: (UpdateInfo?) -> Unit) {
                     throw IOException()
                     callback(null)
                 }
-                val jsonString = response.body!!.string()
+                val jsonString = response.body.string()
                 val updateInfo = jsonAdapter.fromJson(jsonString)
-                if (updateInfo != null) {
-                    val packageVersionCode = context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode
-                    updateInfo.versionCode?.let { versionCode ->
-                        if (versionCode > packageVersionCode)
-                            callback(updateInfo)
-                    }
+                updateInfo?.versionCode?.let { versionCode ->
+                    if (versionCode > BuildConfig.VERSION_CODE)
+                        callback(updateInfo)
                 }
             }
         }
@@ -67,7 +64,7 @@ fun getChangelog(changelogUrl: String, callback: (String?) -> Unit) {
                     callback(null)
                     return
                 }
-                val changelogText = response.body!!.string()
+                val changelogText = response.body.string()
                 callback(changelogText)
             }
         }

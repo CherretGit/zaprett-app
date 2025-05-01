@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
                 val sharedPreferences = remember { getSharedPreferences("settings", MODE_PRIVATE) }
                 var showPermissionDialog by remember { mutableStateOf(!Environment.isExternalStorageManager()) }
                 var showWelcomeDialog by remember { mutableStateOf(sharedPreferences.getBoolean("welcome_dialog", true)) }
+                firebaseAnalytics.setAnalyticsCollectionEnabled(sharedPreferences.getBoolean("send_firebase_analytics", true))
                 BottomBar()
                 if (showPermissionDialog) {
                     PermissionDialog { showPermissionDialog = false }

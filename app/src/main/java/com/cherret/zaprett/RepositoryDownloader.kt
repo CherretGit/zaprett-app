@@ -40,7 +40,7 @@ fun getHostList(callback: (List<HostsInfo>?) -> Unit) {
                     throw IOException()
                     callback(null)
                 }
-                val jsonString = response.body!!.string()
+                val jsonString = response.body.string()
                 val updateInfo = jsonAdapter.fromJson(jsonString)
                 if (updateInfo != null) {
                     callback(updateInfo)

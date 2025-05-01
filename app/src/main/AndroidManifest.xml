@@ -20,6 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Zaprett"
         tools:targetApi="31">
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
