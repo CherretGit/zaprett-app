@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    kotlin("plugin.serialization") version "2.1.20"
 }
 
 android {
@@ -14,15 +15,16 @@ android {
         applicationId = "com.cherret.zaprett"
         minSdk = 30
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.8"
+        versionCode = 10
+        versionName = "1.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -50,7 +52,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation ("com.github.topjohnwu.libsu:core:6.0.0")
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
     implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")

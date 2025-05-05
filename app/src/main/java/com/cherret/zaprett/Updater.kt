@@ -13,8 +13,8 @@ import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -24,11 +24,10 @@ import okio.IOException
 import java.io.File
 
 private val client = OkHttpClient()
+private val json = Json { ignoreUnknownKeys = true }
 
 fun getUpdate(callback: (UpdateInfo?) -> Unit) {
     val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(UpdateInfo::class.java)
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
@@ -41,7 +40,7 @@ fun getUpdate(callback: (UpdateInfo?) -> Unit) {
                     callback(null)
                 }
                 val jsonString = response.body.string()
-                val updateInfo = jsonAdapter.fromJson(jsonString)
+                val updateInfo = json.decodeFromString<UpdateInfo>(jsonString)
                 updateInfo?.versionCode?.let { versionCode ->
                     if (versionCode > BuildConfig.VERSION_CODE)
                         callback(updateInfo)
@@ -74,12 +73,6 @@ fun getChangelog(changelogUrl: String, callback: (String?) -> Unit) {
 fun download(context: Context, url: String): Long {
     val fileName = url.substringAfterLast("/")
     val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-    if (Environment.isExternalStorageManager()) {
-        val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
-        if (file.exists()) {
-            file.delete()
-        }
-    }
     val request = DownloadManager.Request(url.toUri()).apply {
         setTitle(fileName)
         setDescription("Загрузка $fileName")
@@ -89,7 +82,6 @@ fun download(context: Context, url: String): Long {
     }
     return downloadManager.enqueue(request)
 }
-
 
 fun installApk(context: Context, uri: Uri) {
     val file = File(uri.path!!)
@@ -131,6 +123,7 @@ fun registerDownloadListener(context: Context, downloadId: Long, onDownloaded: (
     }
 }
 
+@Serializable
 data class UpdateInfo(
     val version: String?,
     val versionCode: Int?,

@@ -10,9 +10,8 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -23,12 +22,10 @@ import java.io.File
 import java.security.MessageDigest
 
 private val client = OkHttpClient()
+private val json = Json { ignoreUnknownKeys = true }
 
 fun getHostList(callback: (List<HostsInfo>?) -> Unit) {
     val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/hosts.json").build()
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val type = Types.newParameterizedType(List::class.java, HostsInfo::class.java)
-    val jsonAdapter = moshi.adapter<List<HostsInfo>>(type)
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
@@ -41,10 +38,8 @@ fun getHostList(callback: (List<HostsInfo>?) -> Unit) {
                     callback(null)
                 }
                 val jsonString = response.body.string()
-                val updateInfo = jsonAdapter.fromJson(jsonString)
-                if (updateInfo != null) {
-                    callback(updateInfo)
-                }
+                val hostsInfo = json.decodeFromString<List<HostsInfo>>(jsonString)
+                callback(hostsInfo)
             }
         }
     })
@@ -93,6 +88,7 @@ fun getFileSha256(file: File): String {
     return digest.digest().joinToString("") { "%02x".format(it) }
 }
 
+@Serializable
 data class HostsInfo(
     val name: String,
     val description: String,
