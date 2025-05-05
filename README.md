@@ -9,5 +9,7 @@
 * Работа с листами (добавление, включение и выключение)
 * Авто обновление приложения
 
+## [Репозиторий с хостами](https://github.com/CherretGit/zaprett-hosts-repo)
+
 ## Скриншоты:
 <img src="images/1.png" width="300"><img src="images/2.png" width="300"><img src="images/3.png" width="300"><img src="images/4.png" width="300"><img src="images/5.png" width="300">
