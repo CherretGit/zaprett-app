@@ -2,7 +2,8 @@
     <string name="app_name" translatable="false">zaprett</string>
     <string name="title_home">Home</string>
     <string name="title_hosts">Hosts</string>
-    <string name="title_hosts_repo">Repository</string>
+    <string name="title_strategies">Strategies</string>
+    <string name="title_repo">Repository</string>
     <string name="title_settings">Settings</string>
     <string name="btn_continue">Continue</string>
     <string name="btn_update">Update</string>
@@ -29,7 +30,8 @@
     <string name="btn_download_host">Download</string>
     <string name="btn_add_host">Add</string>
     <string name="btn_back">Back</string>
-    <string name="btn_no_hosts">No Hosts</string>
+    <string name="empty_list">Empty :(</string>
+    <string name="title_author">Author: %1$s</string>
     <string name="btn_install_host">Install</string>
     <string name="btn_update_host">Update</string>
     <string name="btn_installing_host">Installing</string>
@@ -44,7 +46,7 @@
     <string name="snack_no_service">Service is not launched</string>
     <string name="snack_stopping_service">Stopping service…</string>
     <string name="error_no_storage_title">No permission</string>
-    <string name="error_no_storage_message">The application requires permission to acess the storage to work properly</string>
+    <string name="error_no_storage_message">The application requires permission to access the storage to work properly</string>
     <string name="btn_show_full_path">Show full list\'s path</string>
     <string name="pls_reboot_snack">Reboot your device for the changes to take effect</string>
     <string name="pls_restart_snack">Restart zaprett service for the changes to take effects</string>

@@ -40,16 +40,16 @@ import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HostsScreen(navController: NavController) {
+fun StrategyScreen(navController: NavController) {
     val context = LocalContext.current
-    var allLists by remember { mutableStateOf(getAllLists()) }
-    var activeLists by remember { mutableStateOf(getActiveLists()) }
+    var allStrategies by remember { mutableStateOf(getAllStrategies()) }
+    var activeStrategies by remember { mutableStateOf(getActiveStrategies()) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var isRefreshing by remember { mutableStateOf(false) }
     val checked = remember {
         mutableStateMapOf<String, Boolean>().apply {
-            allLists.forEach { list -> this[list] = activeLists.contains(list) }
+            allStrategies.forEach { list -> this[list] = activeStrategies.contains(list) }
         }
     }
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -63,7 +63,7 @@ fun HostsScreen(navController: NavController) {
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.title_hosts),
+                        text = stringResource(R.string.title_strategies),
                         fontSize = 40.sp,
                         fontFamily = FontFamily(Font(R.font.unbounded, FontWeight.Normal))
                     )
@@ -76,11 +76,11 @@ fun HostsScreen(navController: NavController) {
                 isRefreshing = isRefreshing,
                 onRefresh = {
                     isRefreshing = true
-                    allLists = getAllLists()
-                    activeLists = getActiveLists()
+                    allStrategies = getAllStrategies()
+                    activeStrategies = getActiveStrategies()
                     checked.clear()
-                    allLists.forEach { list ->
-                        checked[list] = activeLists.contains(list)
+                    allStrategies.forEach { list ->
+                        checked[list] = activeStrategies.contains(list)
                     }
                     isRefreshing = false
                 },
@@ -91,7 +91,7 @@ fun HostsScreen(navController: NavController) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     when {
-                        allLists.isEmpty() != false -> {
+                        allStrategies.isEmpty() != false -> {
                             item {
                                 Box(
                                     modifier = Modifier.fillParentMaxSize(),
@@ -105,13 +105,24 @@ fun HostsScreen(navController: NavController) {
                             }
                         }
                         else -> {
-                            items(allLists) { item ->
+                            items(allStrategies) { item ->
                                 StrategyItem(
                                     item = item,
                                     isChecked = checked[item] == true,
                                     onCheckedChange = { isChecked ->
                                         checked[item] = isChecked
-                                        if (isChecked) enableList(item) else disableList(item)
+                                        if (isChecked) {
+                                            checked.keys.forEach { key ->
+                                                checked[key] = false
+                                                disableStrategy(key)
+                                            }
+                                            checked[item] = true
+                                            enableStrategy(item)
+                                        }
+                                        else {
+                                            checked[item] = false
+                                            disableStrategy(item)
+                                        }
                                         getStatus { isEnabled ->
                                             if (isEnabled) {
                                                 showRestartSnackbar(context, snackbarHostState, scope)
@@ -121,11 +132,11 @@ fun HostsScreen(navController: NavController) {
                                     onDeleteClick = {
                                         val wasChecked = checked[item] == true
                                         if (deleteStrategy(item)) {
-                                            allLists = getAllLists()
-                                            activeLists = getActiveLists()
+                                            allStrategies = getAllStrategies()
+                                            activeStrategies = getActiveStrategies()
                                             checked.clear()
-                                            allLists.forEach { list ->
-                                                checked[list] = activeLists.contains(list)
+                                            allStrategies.forEach { list ->
+                                                checked[list] = activeStrategies.contains(list)
                                             }
                                         }
                                         getStatus { isEnabled ->
@@ -203,7 +214,7 @@ private fun FloatingMenu(navController: NavController, launcher: ActivityResultL
             text = { Text(stringResource(R.string.btn_download_host)) },
             onClick = {
                 expanded = false
-                navController.navigate("repo?source=hosts") { launchSingleTop = true }
+                navController.navigate("repo?source=strategies") { launchSingleTop = true }
             },
             leadingIcon = {
                 Icon(Icons.Default.Download, contentDescription = stringResource(R.string.btn_download_host))
@@ -235,7 +246,7 @@ private fun copySelectedFile(context: Context, uri: Uri, snackbarHostState: Snac
         if (cursor.moveToFirst() && nameIndex != -1) cursor.getString(nameIndex) else "copied_file"
     } ?: "copied_file"
 
-    val outputFile = File(getZaprettPath() + "/lists", fileName)
+    val outputFile = File(getZaprettPath() + "/strategies", fileName)
 
     try {
         contentResolver.openInputStream(uri)?.use { inputStream ->

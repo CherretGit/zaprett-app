@@ -13,6 +13,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -28,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.edit
@@ -36,22 +38,25 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.cherret.zaprett.ui.screens.HomeScreen
 import com.cherret.zaprett.ui.screens.HostsRepoScreen
 import com.cherret.zaprett.ui.screens.HostsScreen
 import com.cherret.zaprett.ui.screens.SettingsScreen
+import com.cherret.zaprett.ui.screens.StrategyScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
 
-sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: ImageVector) {
     object home : Screen("home", R.string.title_home, Icons.Default.Home)
     object hosts : Screen("hosts", R.string.title_hosts, Icons.Default.Dashboard)
+    object strategies : Screen("strategies", R.string.title_strategies, Icons.Default.Dns)
     object settings : Screen("settings", R.string.title_settings, Icons.Default.Settings)
 }
-val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.settings)
-val hideNavBar = listOf("hosts_repo")
+val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.strategies, Screen.settings)
+val hideNavBar = listOf("repo?source={source}")
 class MainActivity : ComponentActivity() {
     private lateinit var firebaseAnalytics: FirebaseAnalytics
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,8 +124,19 @@ class MainActivity : ComponentActivity() {
             ) {
                 composable(Screen.home.route) { HomeScreen() }
                 composable(Screen.hosts.route) { HostsScreen(navController) }
+                composable(Screen.strategies.route) { StrategyScreen(navController) }
                 composable(Screen.settings.route) { SettingsScreen() }
-                composable("hosts_repo") { HostsRepoScreen(navController) }
+                composable(route = "repo?source={source}",arguments = listOf(navArgument("source") {})) { backStackEntry ->
+                    val source = backStackEntry.arguments?.getString("source")
+                    when (source) {
+                        "hosts" -> {
+                            HostsRepoScreen(navController, ::getAllLists, ::getHostList, "/lists")
+                        }
+                        "strategies" -> {
+                            HostsRepoScreen(navController, ::getAllStrategies, ::getStrategiesList, "/strategies")
+                        }
+                    }
+                }
             }
         }
     }

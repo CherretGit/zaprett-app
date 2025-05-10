@@ -45,6 +45,27 @@ fun getHostList(callback: (List<HostsInfo>?) -> Unit) {
     })
 }
 
+fun getStrategiesList(callback: (List<HostsInfo>?) -> Unit) {
+    val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/strategies.json").build()
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            e.printStackTrace()
+            callback(null)
+        }
+        override fun onResponse(call: Call, response: Response) {
+            response.use {
+                if (!response.isSuccessful) {
+                    throw IOException()
+                    callback(null)
+                }
+                val jsonString = response.body.string()
+                val hostsInfo = json.decodeFromString<List<HostsInfo>>(jsonString)
+                callback(hostsInfo)
+            }
+        }
+    })
+}
+
 fun registerDownloadListenerHost(context: Context, downloadId: Long, onDownloaded: (Uri) -> Unit) {// AI Generated
     val receiver = object : BroadcastReceiver() {
         @SuppressLint("Range")
@@ -92,6 +113,7 @@ fun getFileSha256(file: File): String {
 data class HostsInfo(
     val name: String,
     val description: String,
+    val author: String,
     val hash: String,
     val url: String
 )

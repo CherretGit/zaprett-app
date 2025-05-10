@@ -50,9 +50,7 @@ import androidx.navigation.NavController
 import com.cherret.zaprett.HostsInfo
 import com.cherret.zaprett.R
 import com.cherret.zaprett.download
-import com.cherret.zaprett.getAllLists
 import com.cherret.zaprett.getFileSha256
-import com.cherret.zaprett.getHostList
 import com.cherret.zaprett.getZaprettPath
 import com.cherret.zaprett.registerDownloadListenerHost
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +59,7 @@ import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HostsRepoScreen(navController: NavController) {
+fun HostsRepoScreen(navController: NavController, getAllLists: () -> Array<String>, getHostList: ((List<HostsInfo>?) -> Unit) -> Unit, targetPath: String) {
     val context = LocalContext.current
     var allLists by remember { mutableStateOf(getAllLists()) }
     var hostLists by remember { mutableStateOf<List<HostsInfo>?>(null) }
@@ -87,8 +85,8 @@ fun HostsRepoScreen(navController: NavController) {
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.title_hosts_repo),
-                        fontSize = 40.sp,
+                        text = stringResource(R.string.title_repo),
+                        fontSize = 30.sp,
                         fontFamily = FontFamily(Font(R.font.unbounded, FontWeight.Normal))
                     )
                 },
@@ -127,7 +125,7 @@ fun HostsRepoScreen(navController: NavController) {
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        stringResource(R.string.btn_no_hosts),
+                                        stringResource(R.string.empty_list),
                                         textAlign = TextAlign.Center
                                     )
                                 }
@@ -168,6 +166,17 @@ fun HostsRepoScreen(navController: NavController) {
                                             .padding(start = 16.dp)
                                     ) {
                                         Text(
+                                            text = stringResource(R.string.title_author, item.author),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp)
+                                    ) {
+                                        Text(
                                             text = item.description,
                                             modifier = Modifier.weight(1f)
                                         )
@@ -190,7 +199,7 @@ fun HostsRepoScreen(navController: NavController) {
                                                     ) { uri ->
                                                         val sourceFile = File(uri.path!!)
                                                         val targetFile = File(
-                                                            getZaprettPath() + "/lists",
+                                                            getZaprettPath() + targetPath,
                                                             uri.lastPathSegment!!
                                                         )
                                                         sourceFile.copyTo(targetFile, overwrite = true)
@@ -229,7 +238,7 @@ fun HostsRepoScreen(navController: NavController) {
                                                 ) { uri ->
                                                     val sourceFile = File(uri.path!!)
                                                     val targetFile = File(
-                                                        getZaprettPath() + "/lists",
+                                                        getZaprettPath() + targetPath,
                                                         uri.lastPathSegment!!
                                                     )
                                                     sourceFile.copyTo(targetFile, overwrite = true)

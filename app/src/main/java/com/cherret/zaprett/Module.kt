@@ -109,6 +109,15 @@ fun getAllLists(): Array<String> {
     return emptyArray()
 }
 
+fun getAllStrategies(): Array<String> {
+    val listsDir = File("${getZaprettPath()}/strategies/")
+    if (listsDir.exists() && listsDir.isDirectory) {
+        val onlyNames = listsDir.list() ?: return emptyArray()
+        return onlyNames.map { "$listsDir/$it" }.toTypedArray()
+    }
+    return emptyArray()
+}
+
 fun getActiveLists(): Array<String> {
     val configFile = File("${getZaprettPath()}/config")
     if (configFile.exists()) {
@@ -127,6 +136,24 @@ fun getActiveLists(): Array<String> {
     return emptyArray()
 }
 
+fun getActiveStrategies(): Array<String> {
+    val configFile = File("${getZaprettPath()}/config")
+    if (configFile.exists()) {
+        val props = Properties()
+        return try {
+            FileInputStream(configFile).use { input ->
+                props.load(input)
+            }
+            val activeStrategies = props.getProperty("strategy", "")
+            Log.d("Active strategies", activeStrategies)
+            if (activeStrategies.isNotEmpty()) activeStrategies.split(",").toTypedArray() else emptyArray()
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+    }
+    return emptyArray()
+}
+
 fun enableList(path: String) {
     val props = Properties()
     val configFile = getConfigFile()
@@ -136,11 +163,39 @@ fun enableList(path: String) {
                 props.load(input)
             }
         }
-        val activeLists = props.getProperty("activelists", "").split(",").toMutableList()
+        val activeLists = props.getProperty("activelists", "")
+            .split(",")
+            .filter { it.isNotBlank() }
+            .toMutableList()
         if (path !in activeLists) {
             activeLists.add(path)
         }
         props.setProperty("activelists", activeLists.joinToString(","))
+        FileOutputStream(configFile).use { output ->
+            props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+        }
+    } catch (e: IOException) {
+        throw RuntimeException(e)
+    }
+}
+
+fun enableStrategy(path: String) {
+    val props = Properties()
+    val configFile = getConfigFile()
+    try {
+        if (configFile.exists()) {
+            FileInputStream(configFile).use { input ->
+                props.load(input)
+            }
+        }
+        val activeStrategies = props.getProperty("strategy", "")
+            .split(",")
+            .filter { it.isNotBlank() }
+            .toMutableList()
+        if (path !in activeStrategies) {
+            activeStrategies.add(path)
+        }
+        props.setProperty("strategy", activeStrategies.joinToString(","))
         FileOutputStream(configFile).use { output ->
             props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
         }
@@ -158,11 +213,39 @@ fun disableList(path: String) {
                 props.load(input)
             }
         }
-        val activeLists = props.getProperty("activelists", "").split(",").toMutableList()
+        val activeLists = props.getProperty("activelists", "")
+            .split(",")
+            .filter { it.isNotBlank() }
+            .toMutableList()
         if (path in activeLists) {
             activeLists.remove(path)
         }
         props.setProperty("activelists", activeLists.joinToString(","))
+        FileOutputStream(configFile).use { output ->
+            props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+        }
+    } catch (e: IOException) {
+        throw RuntimeException(e)
+    }
+}
+
+fun disableStrategy(path: String) {
+    val props = Properties()
+    val configFile = getConfigFile()
+    try {
+        if (configFile.exists()) {
+            FileInputStream(configFile).use { input ->
+                props.load(input)
+            }
+        }
+        val activeStrategies = props.getProperty("strategy", "")
+            .split(",")
+            .filter { it.isNotBlank() }
+            .toMutableList()
+        if (path in activeStrategies) {
+            activeStrategies.remove(path)
+        }
+        props.setProperty("strategy", activeStrategies.joinToString(","))
         FileOutputStream(configFile).use { output ->
             props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
         }
