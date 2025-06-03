@@ -1,4 +1,4 @@
-package com.cherret.zaprett.ui.screens
+package com.cherret.zaprett.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.cherret.zaprett.HostsInfo
+import com.cherret.zaprett.RepoItemInfo
 import com.cherret.zaprett.R
 import com.cherret.zaprett.download
 import com.cherret.zaprett.getFileSha256
@@ -59,10 +59,10 @@ import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HostsRepoScreen(navController: NavController, getAllLists: () -> Array<String>, getHostList: ((List<HostsInfo>?) -> Unit) -> Unit, targetPath: String) {
+fun RepoScreen(navController: NavController, getAllLists: () -> Array<String>, getHostList: ((List<RepoItemInfo>?) -> Unit) -> Unit, targetPath: String) {
     val context = LocalContext.current
-    var allLists by remember { mutableStateOf(getAllLists()) }
-    var hostLists by remember { mutableStateOf<List<HostsInfo>?>(null) }
+    val allLists by remember { mutableStateOf(getAllLists()) }
+    var hostLists by remember { mutableStateOf<List<RepoItemInfo>?>(null) }
     val isUpdate = remember { mutableStateMapOf<String, Boolean>() }
     val snackbarHostState = remember { SnackbarHostState() }
     var isRefreshing by remember { mutableStateOf(false) }

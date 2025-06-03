@@ -1,0 +1,142 @@
+package com.cherret.zaprett.ui.viewmodel
+
+import android.app.Application
+import android.content.Context
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.AndroidViewModel
+import com.cherret.zaprett.R
+import com.cherret.zaprett.download
+import com.cherret.zaprett.getChangelog
+import com.cherret.zaprett.getStatus
+import com.cherret.zaprett.getUpdate
+import com.cherret.zaprett.installApk
+import com.cherret.zaprett.registerDownloadListener
+import com.cherret.zaprett.restartService
+import com.cherret.zaprett.startService
+import com.cherret.zaprett.stopService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
+    private val context = application
+    private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+
+    var cardText = mutableIntStateOf(R.string.status_not_availible)
+        private set
+
+    var changeLog = mutableStateOf<String?>(null)
+        private set
+
+    var newVersion = mutableStateOf<String?>(null)
+        private set
+
+    var updateAvailable = mutableStateOf(false)
+        private set
+
+    var downloadUrl = mutableStateOf<String?>(null)
+        private set
+
+    var showUpdateDialog = mutableStateOf(false)
+
+    fun checkForUpdate() {
+        if (prefs.getBoolean("auto_update", true)) {
+            getUpdate {
+                if (it != null) {
+                    downloadUrl.value = it.downloadUrl.toString()
+                    getChangelog(it.changelogUrl.toString()) { log -> changeLog.value = log }
+                    newVersion.value = it.version
+                    updateAvailable.value = true
+                }
+            }
+        }
+    }
+
+    fun checkServiceStatus() {
+        if (prefs.getBoolean("use_module", false) && prefs.getBoolean("update_on_boot", false)) {
+            getStatus { isEnabled ->
+                cardText.intValue = if (isEnabled) R.string.status_enabled else R.string.status_disabled
+            }
+        }
+    }
+
+    fun onCardClick(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+        if (prefs.getBoolean("use_module", false)) {
+            getStatus { isEnabled ->
+                cardText.value = if (isEnabled) R.string.status_enabled else R.string.status_disabled
+            }
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
+            }
+        }
+    }
+
+    fun onBtnStartService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+        if (prefs.getBoolean("use_module", false)) {
+            getStatus { isEnabled ->
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        context.getString(
+                            if (isEnabled) R.string.snack_already_started else R.string.snack_starting_service
+                        )
+                    )
+                }
+                if (!isEnabled) startService {}
+            }
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
+            }
+        }
+    }
+
+    fun onBtnStopService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+        if (prefs.getBoolean("use_module", false)) {
+            getStatus { isEnabled ->
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        context.getString(
+                            if (isEnabled) R.string.snack_stopping_service else R.string.snack_no_service
+                        )
+                    )
+                }
+                if (isEnabled) stopService {}
+            }
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
+            }
+        }
+    }
+
+    fun onBtnRestart(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+        if (prefs.getBoolean("use_module", false)) {
+            restartService {}
+            scope.launch {
+                snackbarHostState.showSnackbar(context.getString(R.string.snack_reload))
+            }
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
+            }
+        }
+    }
+
+    fun showUpdateDialog() {
+        showUpdateDialog.value = true
+    }
+
+    fun dismissUpdateDialog() {
+        showUpdateDialog.value = false
+    }
+
+    fun onUpdateConfirm() {
+        showUpdateDialog.value = false
+        val id = download(context, downloadUrl.value.orEmpty())
+        registerDownloadListener(context, id) { uri ->
+            installApk(context, uri)
+        }
+    }
+}

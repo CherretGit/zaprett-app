@@ -39,11 +39,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.cherret.zaprett.ui.screens.HomeScreen
-import com.cherret.zaprett.ui.screens.HostsRepoScreen
-import com.cherret.zaprett.ui.screens.HostsScreen
-import com.cherret.zaprett.ui.screens.SettingsScreen
-import com.cherret.zaprett.ui.screens.StrategyScreen
+import com.cherret.zaprett.ui.screen.HomeScreen
+import com.cherret.zaprett.ui.screen.RepoScreen
+import com.cherret.zaprett.ui.screen.HostsScreen
+import com.cherret.zaprett.ui.screen.SettingsScreen
+import com.cherret.zaprett.ui.screen.StrategyScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
                 }
                 if (showWelcomeDialog) {
                     WelcomeDialog {
-                        sharedPreferences.edit() { putBoolean("welcome_dialog", false) }
+                        sharedPreferences.edit { putBoolean("welcome_dialog", false) }
                         showWelcomeDialog = false
                     }
                 }
@@ -130,10 +130,10 @@ class MainActivity : ComponentActivity() {
                     val source = backStackEntry.arguments?.getString("source")
                     when (source) {
                         "hosts" -> {
-                            HostsRepoScreen(navController, ::getAllLists, ::getHostList, "/lists")
+                            RepoScreen(navController, ::getAllLists, ::getHostList, "/lists")
                         }
                         "strategies" -> {
-                            HostsRepoScreen(navController, ::getAllStrategies, ::getStrategiesList, "/strategies")
+                            RepoScreen(navController, ::getAllStrategies, ::getStrategiesList, "/strategies")
                         }
                     }
                 }

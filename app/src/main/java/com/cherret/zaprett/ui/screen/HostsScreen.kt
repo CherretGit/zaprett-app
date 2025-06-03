@@ -1,13 +1,16 @@
-package com.cherret.zaprett.ui.screens
+package com.cherret.zaprett.ui.screen
 
-import android.content.Context
-import android.net.Uri
-import android.os.Environment
-import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -15,9 +18,30 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.UploadFile
-import androidx.compose.material3.*
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -29,33 +53,28 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
-import com.cherret.zaprett.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
+import com.cherret.zaprett.ui.viewmodel.HostsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StrategyScreen(navController: NavController) {
+fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewModel()) {
     val context = LocalContext.current
-    var allStrategies by remember { mutableStateOf(getAllStrategies()) }
-    var activeStrategies by remember { mutableStateOf(getActiveStrategies()) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    var isRefreshing by remember { mutableStateOf(false) }
-    val checked = remember {
-        mutableStateMapOf<String, Boolean>().apply {
-            allStrategies.forEach { list -> this[list] = activeStrategies.contains(list) }
-        }
-    }
+    val allLists = viewModel.allItems
+    val checked = viewModel.checked
+    val isRefreshing = viewModel.isRefreshing
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uri?.let { copySelectedFile(context, it, snackbarHostState, scope) }
+        uri?.let { viewModel.copySelectedFile(context, "/lists", it, snackbarHostState, scope) }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
     }
 
     Scaffold(
@@ -63,7 +82,7 @@ fun StrategyScreen(navController: NavController) {
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.title_strategies),
+                        text = stringResource(R.string.title_hosts),
                         fontSize = 40.sp,
                         fontFamily = FontFamily(Font(R.font.unbounded, FontWeight.Normal))
                     )
@@ -75,14 +94,7 @@ fun StrategyScreen(navController: NavController) {
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
                 onRefresh = {
-                    isRefreshing = true
-                    allStrategies = getAllStrategies()
-                    activeStrategies = getActiveStrategies()
-                    checked.clear()
-                    allStrategies.forEach { list ->
-                        checked[list] = activeStrategies.contains(list)
-                    }
-                    isRefreshing = false
+                    viewModel.refresh()
                 },
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -91,7 +103,7 @@ fun StrategyScreen(navController: NavController) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     when {
-                        allStrategies.isEmpty() != false -> {
+                        allLists.isEmpty() -> {
                             item {
                                 Box(
                                     modifier = Modifier.fillParentMaxSize(),
@@ -105,45 +117,15 @@ fun StrategyScreen(navController: NavController) {
                             }
                         }
                         else -> {
-                            items(allStrategies) { item ->
-                                StrategyItem(
+                            items(allLists) { item ->
+                                HostItem (
                                     item = item,
                                     isChecked = checked[item] == true,
                                     onCheckedChange = { isChecked ->
-                                        checked[item] = isChecked
-                                        if (isChecked) {
-                                            checked.keys.forEach { key ->
-                                                checked[key] = false
-                                                disableStrategy(key)
-                                            }
-                                            checked[item] = true
-                                            enableStrategy(item)
-                                        }
-                                        else {
-                                            checked[item] = false
-                                            disableStrategy(item)
-                                        }
-                                        getStatus { isEnabled ->
-                                            if (isEnabled) {
-                                                showRestartSnackbar(context, snackbarHostState, scope)
-                                            }
-                                        }
+                                        viewModel.onCheckedChange(item, isChecked, snackbarHostState, scope)
                                     },
                                     onDeleteClick = {
-                                        val wasChecked = checked[item] == true
-                                        if (deleteStrategy(item)) {
-                                            allStrategies = getAllStrategies()
-                                            activeStrategies = getActiveStrategies()
-                                            checked.clear()
-                                            allStrategies.forEach { list ->
-                                                checked[list] = activeStrategies.contains(list)
-                                            }
-                                        }
-                                        getStatus { isEnabled ->
-                                            if (isEnabled && wasChecked) {
-                                                showRestartSnackbar(context, snackbarHostState, scope)
-                                            }
-                                        }
+                                        viewModel.deleteItem(item, snackbarHostState, scope)
                                     }
                                 )
                             }
@@ -160,7 +142,7 @@ fun StrategyScreen(navController: NavController) {
 }
 
 @Composable
-private fun StrategyItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit, onDeleteClick: () -> Unit) {
+private fun HostItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit, onDeleteClick: () -> Unit) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -214,7 +196,7 @@ private fun FloatingMenu(navController: NavController, launcher: ActivityResultL
             text = { Text(stringResource(R.string.btn_download_host)) },
             onClick = {
                 expanded = false
-                navController.navigate("repo?source=strategies") { launchSingleTop = true }
+                navController.navigate("repo?source=hosts") { launchSingleTop = true }
             },
             leadingIcon = {
                 Icon(Icons.Default.Download, contentDescription = stringResource(R.string.btn_download_host))
@@ -224,7 +206,7 @@ private fun FloatingMenu(navController: NavController, launcher: ActivityResultL
             text = { Text(stringResource(R.string.btn_add_host)) },
             onClick = {
                 expanded = false
-                addStrategy(launcher)
+                addHost(launcher)
             },
             leadingIcon = {
                 Icon(Icons.Default.UploadFile, contentDescription = stringResource(R.string.btn_add_host))
@@ -233,52 +215,6 @@ private fun FloatingMenu(navController: NavController, launcher: ActivityResultL
     }
 }
 
-private fun addStrategy(launcher: ActivityResultLauncher<Array<String>>) {
+private fun addHost(launcher: ActivityResultLauncher<Array<String>>) {
     launcher.launch(arrayOf("text/plain"))
-}
-
-private fun copySelectedFile(context: Context, uri: Uri, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-    if (!Environment.isExternalStorageManager()) return
-
-    val contentResolver = context.contentResolver
-    val fileName = contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        if (cursor.moveToFirst() && nameIndex != -1) cursor.getString(nameIndex) else "copied_file"
-    } ?: "copied_file"
-
-    val outputFile = File(getZaprettPath() + "/strategies", fileName)
-
-    try {
-        contentResolver.openInputStream(uri)?.use { inputStream ->
-            FileOutputStream(outputFile).use { outputStream ->
-                inputStream.copyTo(outputStream)
-            }
-        }
-        showRestartSnackbar(context, snackbarHostState, scope)
-    } catch (e: IOException) {
-        e.printStackTrace()
-    }
-}
-
-private fun deleteStrategy(item: String): Boolean {
-    val hostFile = File(item)
-    return if (hostFile.exists()) {
-        hostFile.delete()
-        true
-    } else {
-        false
-    }
-}
-
-private fun showRestartSnackbar(context: Context, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-    scope.launch {
-        val result = snackbarHostState.showSnackbar(
-            context.getString(R.string.pls_restart_snack),
-            actionLabel = context.getString(R.string.btn_restart_service)
-        )
-        if (result == SnackbarResult.ActionPerformed) {
-            restartService {}
-            snackbarHostState.showSnackbar(context.getString(R.string.snack_reload))
-        }
-    }
 }

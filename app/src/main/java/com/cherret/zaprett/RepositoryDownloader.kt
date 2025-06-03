@@ -24,7 +24,7 @@ import java.security.MessageDigest
 private val client = OkHttpClient()
 private val json = Json { ignoreUnknownKeys = true }
 
-fun getHostList(callback: (List<HostsInfo>?) -> Unit) {
+fun getHostList(callback: (List<RepoItemInfo>?) -> Unit) {
     val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/hosts.json").build()
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
@@ -38,14 +38,14 @@ fun getHostList(callback: (List<HostsInfo>?) -> Unit) {
                     callback(null)
                 }
                 val jsonString = response.body.string()
-                val hostsInfo = json.decodeFromString<List<HostsInfo>>(jsonString)
+                val hostsInfo = json.decodeFromString<List<RepoItemInfo>>(jsonString)
                 callback(hostsInfo)
             }
         }
     })
 }
 
-fun getStrategiesList(callback: (List<HostsInfo>?) -> Unit) {
+fun getStrategiesList(callback: (List<RepoItemInfo>?) -> Unit) {
     val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/strategies.json").build()
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
@@ -59,7 +59,7 @@ fun getStrategiesList(callback: (List<HostsInfo>?) -> Unit) {
                     callback(null)
                 }
                 val jsonString = response.body.string()
-                val hostsInfo = json.decodeFromString<List<HostsInfo>>(jsonString)
+                val hostsInfo = json.decodeFromString<List<RepoItemInfo>>(jsonString)
                 callback(hostsInfo)
             }
         }
@@ -110,10 +110,10 @@ fun getFileSha256(file: File): String {
 }
 
 @Serializable
-data class HostsInfo(
+data class RepoItemInfo(
     val name: String,
-    val description: String,
     val author: String,
+    val description: String,
     val hash: String,
     val url: String
 )

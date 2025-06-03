@@ -1,4 +1,4 @@
-package com.cherret.zaprett.ui.screens
+package com.cherret.zaprett.ui.screen
 
 import android.content.Context
 import androidx.compose.foundation.clickable
@@ -40,7 +40,7 @@ fun SettingsScreen() {
     val sendFirebaseAnalytics = remember { mutableStateOf(sharedPreferences.getBoolean("send_firebase_analytics", true)) }
     val openNoRootDialog = remember { mutableStateOf(false) }
     val openNoModuleDialog = remember { mutableStateOf(false) }
-    var showAboutDialog = remember { mutableStateOf(false) }
+    val showAboutDialog = remember { mutableStateOf(false) }
 
     val settingsList = listOf(
         SettingItem(
