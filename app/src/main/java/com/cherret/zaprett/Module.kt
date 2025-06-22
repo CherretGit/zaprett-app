@@ -329,3 +329,15 @@ fun disableStrategy(path: String, sharedPreferences: SharedPreferences) {
         sharedPreferences.edit { remove("active_strategy") }
     }
 }
+
+fun getModuleVersion(callback: (String) -> Unit) {
+    Shell.cmd("zaprett module-ver").submit { result ->
+        if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
+    }
+}
+
+fun getBinVersion(callback: (String) -> Unit) {
+    Shell.cmd("zaprett bin-ver").submit { result ->
+        if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
+    }
+}
