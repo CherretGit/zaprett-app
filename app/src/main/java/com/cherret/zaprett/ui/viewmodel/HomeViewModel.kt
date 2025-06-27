@@ -35,8 +35,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var updateAvailable = mutableStateOf(false)
         private set
 
-    var downloadUrl = mutableStateOf<String?>(null)
-        private set
+    private var downloadUrl = mutableStateOf<String?>(null)
 
     var showUpdateDialog = mutableStateOf(false)
 
@@ -64,7 +63,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun onCardClick(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         if (prefs.getBoolean("use_module", false)) {
             getStatus { isEnabled ->
-                cardText.value = if (isEnabled) R.string.status_enabled else R.string.status_disabled
+                cardText.intValue = if (isEnabled) R.string.status_enabled else R.string.status_disabled
             }
         } else {
             scope.launch {

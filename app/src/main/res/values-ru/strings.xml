@@ -58,4 +58,5 @@
     <string name="qs_not_working">Не работает</string>
     <string name="about_title">О приложении</string>
     <string name="about_text">Zaprett app от Cherret\nВерсия: %1$s</string>
+    <string name="error_copying_file">Ошибка при копировании файла</string>
 </resources>
