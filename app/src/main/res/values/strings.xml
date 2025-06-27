@@ -58,4 +58,5 @@
     <string name="qs_not_working">Not working</string>
     <string name="about_title">About app</string>
     <string name="about_text">Zaprett App by Cherret\nVersion: %1$s</string>
+    <string name="error_copying_file">Error while copying file</string>
 </resources>

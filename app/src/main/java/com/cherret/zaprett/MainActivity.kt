@@ -1,8 +1,10 @@
 package com.cherret.zaprett
 
-
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
@@ -33,6 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.edit
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -55,10 +58,13 @@ sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: 
     object strategies : Screen("strategies", R.string.title_strategies, Icons.Default.Dns)
     object settings : Screen("settings", R.string.title_settings, Icons.Default.Settings)
 }
+
 val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.strategies, Screen.settings)
 val hideNavBar = listOf("repo?source={source}")
+
 class MainActivity : ComponentActivity() {
     private lateinit var firebaseAnalytics: FirebaseAnalytics
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         firebaseAnalytics = Firebase.analytics
@@ -66,9 +72,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             ZaprettTheme {
                 val sharedPreferences = remember { getSharedPreferences("settings", MODE_PRIVATE) }
-                var showPermissionDialog by remember { mutableStateOf(!Environment.isExternalStorageManager()) }
-                var showWelcomeDialog by remember { mutableStateOf(sharedPreferences.getBoolean("welcome_dialog", true)) }
-                firebaseAnalytics.setAnalyticsCollectionEnabled(sharedPreferences.getBoolean("send_firebase_analytics", true))
+                var showPermissionDialog by remember {
+                    mutableStateOf(
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            !Environment.isExternalStorageManager()
+                        } else {
+                            ContextCompat.checkSelfPermission(
+                                this,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            ) != PackageManager.PERMISSION_GRANTED
+                        }
+                    )
+                }
+                var showWelcomeDialog by remember {
+                    mutableStateOf(sharedPreferences.getBoolean("welcome_dialog", true))
+                }
+                firebaseAnalytics.setAnalyticsCollectionEnabled(
+                    sharedPreferences.getBoolean("send_firebase_analytics", true)
+                )
                 BottomBar()
                 if (showPermissionDialog) {
                     PermissionDialog { showPermissionDialog = false }
@@ -126,7 +147,10 @@ class MainActivity : ComponentActivity() {
                 composable(Screen.hosts.route) { HostsScreen(navController) }
                 composable(Screen.strategies.route) { StrategyScreen(navController) }
                 composable(Screen.settings.route) { SettingsScreen() }
-                composable(route = "repo?source={source}",arguments = listOf(navArgument("source") {})) { backStackEntry ->
+                composable(
+                    route = "repo?source={source}",
+                    arguments = listOf(navArgument("source") {})
+                ) { backStackEntry ->
                     val source = backStackEntry.arguments?.getString("source")
                     when (source) {
                         "hosts" -> {
@@ -165,10 +189,22 @@ class MainActivity : ComponentActivity() {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                        val uri = Uri.fromParts("package", context.packageName, null)
-                        intent.data = uri
-                        context.startActivity(intent)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            // Android 11+: Request MANAGE_EXTERNAL_STORAGE
+                            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                            val uri = Uri.fromParts("package", context.packageName, null)
+                            intent.data = uri
+                            context.startActivity(intent)
+                        } else {
+                            // Android 10: Request legacy storage permissions
+                            requestPermissions(
+                                arrayOf(
+                                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                ),
+                                STORAGE_PERMISSION_REQUEST_CODE
+                            )
+                        }
                         onDismiss()
                     }
                 ) {
@@ -176,5 +212,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         )
+    }
+
+    companion object {
+        private const val STORAGE_PERMISSION_REQUEST_CODE = 100
     }
 }
