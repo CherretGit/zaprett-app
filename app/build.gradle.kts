@@ -15,12 +15,20 @@ android {
         applicationId = "com.cherret.zaprett"
         minSdk = 30
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.10"
+        versionCode = 12
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
     }
-
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -44,6 +52,29 @@ android {
     }
 }
 
+tasks.register<Exec>("runNdkBuild") {
+    group = "build"
+
+    val ndkDir = android.ndkDirectory
+    executable = if (System.getProperty("os.name").startsWith("Windows", ignoreCase = true)) {
+        "$ndkDir\\ndk-build.cmd"
+    } else {
+        "$ndkDir/ndk-build"
+    }
+    setArgs(listOf(
+        "NDK_PROJECT_PATH=build/intermediates/ndkBuild",
+        "NDK_LIBS_OUT=src/main/jniLibs",
+        "APP_BUILD_SCRIPT=src/main/jni/Android.mk",
+        "NDK_APPLICATION_MK=src/main/jni/Application.mk"
+    ))
+
+    println("Command: $commandLine")
+}
+
+tasks.preBuild {
+    dependsOn("runNdkBuild")
+}
+
 dependencies {
     implementation("androidx.compose.material3:material3:1.3.1")
     implementation("androidx.compose.material3:material3-window-size-class:1.3.1")
@@ -56,6 +87,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")
+    implementation("androidx.fragment:fragment-compose:1.8.8")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

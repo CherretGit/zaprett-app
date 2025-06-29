@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import androidx.core.content.ContextCompat
@@ -24,8 +25,8 @@ import java.security.MessageDigest
 private val client = OkHttpClient()
 private val json = Json { ignoreUnknownKeys = true }
 
-fun getHostList(callback: (List<RepoItemInfo>?) -> Unit) {
-    val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/hosts.json").build()
+fun getHostList(sharedPreferences: SharedPreferences, callback: (List<RepoItemInfo>?) -> Unit) {
+    val request = Request.Builder().url(sharedPreferences.getString("hosts_repo_url","https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/hosts.json")?: "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/hosts.json").build()
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
@@ -34,7 +35,6 @@ fun getHostList(callback: (List<RepoItemInfo>?) -> Unit) {
         override fun onResponse(call: Call, response: Response) {
             response.use {
                 if (!response.isSuccessful) {
-                    throw IOException()
                     callback(null)
                 }
                 val jsonString = response.body.string()
@@ -45,8 +45,8 @@ fun getHostList(callback: (List<RepoItemInfo>?) -> Unit) {
     })
 }
 
-fun getStrategiesList(callback: (List<RepoItemInfo>?) -> Unit) {
-    val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/strategies.json").build()
+fun getStrategiesList(sharedPreferences: SharedPreferences, callback: (List<RepoItemInfo>?) -> Unit) {
+    val request = Request.Builder().url(sharedPreferences.getString("strategies_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/strategies.json")?: "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/strategies.json").build()
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
@@ -55,12 +55,11 @@ fun getStrategiesList(callback: (List<RepoItemInfo>?) -> Unit) {
         override fun onResponse(call: Call, response: Response) {
             response.use {
                 if (!response.isSuccessful) {
-                    throw IOException()
                     callback(null)
                 }
                 val jsonString = response.body.string()
-                val hostsInfo = json.decodeFromString<List<RepoItemInfo>>(jsonString)
-                callback(hostsInfo)
+                val strategiesInfo = json.decodeFromString<List<RepoItemInfo>>(jsonString)
+                callback(strategiesInfo)
             }
         }
     })
@@ -114,6 +113,7 @@ data class RepoItemInfo(
     val name: String,
     val author: String,
     val description: String,
+    val type: String? = null,
     val hash: String,
     val url: String
 )

@@ -70,7 +70,7 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uri?.let { viewModel.copySelectedFile(context, "/lists", it, snackbarHostState, scope) }
+        uri?.let { viewModel.copySelectedFile(context, "/lists", it) }
     }
 
     LaunchedEffect(Unit) {

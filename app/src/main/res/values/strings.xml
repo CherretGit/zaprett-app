@@ -5,6 +5,8 @@
     <string name="title_strategies">Strategies</string>
     <string name="title_repo">Repository</string>
     <string name="title_settings">Settings</string>
+    <string name="general_section">General settings</string>
+    <string name="byedpi_section">ByeDPI settings</string>
     <string name="btn_continue">Continue</string>
     <string name="btn_update">Update</string>
     <string name="btn_dismiss">Dismiss</string>
@@ -26,6 +28,9 @@
     <string name="btn_start_service">Start service</string>
     <string name="btn_stop_service">Stop service</string>
     <string name="btn_restart_service">Restart service</string>
+    <string name="notification_zaprett_proxy" translatable="false">zaprett proxy</string>
+    <string name="notification_zaprett_description">zaprett proxy is running</string>
+    <string name="toast_no_strategy_selected">No strategy selected</string>
     <string name="btn_remove_host">Remove</string>
     <string name="btn_download_host">Download</string>
     <string name="btn_add_host">Add</string>
@@ -37,9 +42,20 @@
     <string name="btn_installing_host">Installing</string>
     <string name="btn_updating_host">Updating</string>
     <string name="btn_installed_host">Installed</string>
-    <string name="btn_autorestart">Restart service periodicaly</string>
+    <string name="btn_autorestart">Restart service periodically</string>
     <string name="btn_autoupdate">Autoupdate</string>
     <string name="btn_send_firebase_analytics">Send Firebase Analytics</string>
+    <string name="btn_repository_url_lists">Hosts repository URL</string>
+    <string name="hint_enter_repository_url_lists">Enter hosts repository URL</string>
+    <string name="btn_repository_url_strategies">Strategies repository URL</string>
+    <string name="hint_enter_repository_url_strategies">Enter strategies repository URL</string>
+    <string name="btn_ipv6">IPv6</string>
+    <string name="btn_ip">IP address</string>
+    <string name="hint_ip">Enter IP address</string>
+    <string name="btn_port">Port</string>
+    <string name="hint_port">Enter port</string>
+    <string name="btn_dns">DNS</string>
+    <string name="hint_dns">Enter DNS</string>
     <string name="alert_version">Version: %1$s → %2$s\nChangelog:\n%3$s</string>
     <string name="snack_already_started">Service already started.</string>
     <string name="snack_starting_service">Starting service…</string>
@@ -47,15 +63,24 @@
     <string name="snack_stopping_service">Stopping service…</string>
     <string name="error_no_storage_title">No permission</string>
     <string name="error_no_storage_message">The application requires permission to access the storage to work properly</string>
+    <string name="notification_permission_title">Notification Permission</string>
+    <string name="notification_permission_message">This app needs permission to send notifications</string>
     <string name="btn_show_full_path">Show full list\'s path</string>
     <string name="pls_reboot_snack">Reboot your device for the changes to take effect</string>
     <string name="pls_restart_snack">Restart zaprett service for the changes to take effects</string>
     <string name="qs_name">Zaprett</string>
     <string name="qs_starting">Starting…</string>
     <string name="qs_stopping">Stopping…</string>
+    <string name="module_version">Module version</string>
+    <string name="nfqws_version">nfqws version</string>
+    <string name="ciadpi_version">ciadpi version</string>
+    <string name="unknown_text">unknown</string>
+    <string name="service_mode">Service mode</string>
+    <string name="service_mode_nfqws" translatable="false">nfqws</string>
+    <string name="service_mode_ciadpi" translatable="false">ciadpi</string>
     <string name="qs_not_available">Not available</string>
     <string name="qs_working">Working</string>
     <string name="qs_not_working">Not working</string>
     <string name="about_title">About app</string>
-    <string name="about_text">Zaprett App by Cherret\nVersion: %1$s</string>
+    <string name="about_text">Zaprett App by Cherret, egor-white\nVersion: %1$s</string>
 </resources>

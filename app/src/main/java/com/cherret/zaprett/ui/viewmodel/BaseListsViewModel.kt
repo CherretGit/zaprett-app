@@ -60,7 +60,7 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
         }
     }
 
-    fun copySelectedFile(context: Context, path: String, uri: Uri, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+    fun copySelectedFile(context: Context, path: String, uri: Uri) {
         if (!Environment.isExternalStorageManager()) return
         val contentResolver = context.contentResolver
         val fileName = contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -68,6 +68,10 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
             if (cursor.moveToFirst() && nameIndex != -1) cursor.getString(nameIndex) else "copied_file"
         } ?: "copied_file"
 
+        val directory = File(getZaprettPath() + path)
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
         val outputFile = File(getZaprettPath() + path, fileName)
 
         try {
@@ -77,7 +81,6 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
                 }
             }
             refresh()
-            showRestartSnackbar(context, snackbarHostState, scope)
         } catch (e: IOException) {
             e.printStackTrace()
         }

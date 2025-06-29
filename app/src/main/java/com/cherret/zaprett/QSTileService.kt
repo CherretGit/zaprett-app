@@ -31,11 +31,7 @@ class QSTileService: TileService() {
         updateStatus()
     }
 
-    override fun onTileRemoved() {
-        super.onTileRemoved()
-    }
-
-    fun updateStatus() {
+    private fun updateStatus() {
         if (getSharedPreferences("settings", MODE_PRIVATE).getBoolean("use_module", false)) {
             getStatus {
                 if (it) {

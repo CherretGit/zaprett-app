@@ -1,14 +1,20 @@
 package com.cherret.zaprett
 
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -32,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -45,6 +52,9 @@ import com.cherret.zaprett.ui.screen.HostsScreen
 import com.cherret.zaprett.ui.screen.SettingsScreen
 import com.cherret.zaprett.ui.screen.StrategyScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
+import com.cherret.zaprett.ui.viewmodel.HomeViewModel
+import com.cherret.zaprett.ui.viewmodel.HostRepoViewModel
+import com.cherret.zaprett.ui.viewmodel.StrategyRepoViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
@@ -58,21 +68,61 @@ sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: 
 val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.strategies, Screen.settings)
 val hideNavBar = listOf("repo?source={source}")
 class MainActivity : ComponentActivity() {
+    private val viewModel: HomeViewModel by viewModels()
+    private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var firebaseAnalytics: FirebaseAnalytics
+    private lateinit var vpnPermissionLauncher: ActivityResultLauncher<Intent>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        vpnPermissionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                viewModel.startVpn()
+                viewModel.clearVpnPermissionRequest()
+            }
+        }
+        notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> }
         firebaseAnalytics = Firebase.analytics
         enableEdgeToEdge()
         setContent {
             ZaprettTheme {
                 val sharedPreferences = remember { getSharedPreferences("settings", MODE_PRIVATE) }
-                var showPermissionDialog by remember { mutableStateOf(!Environment.isExternalStorageManager()) }
+                var showStoragePermissionDialog by remember { mutableStateOf(!Environment.isExternalStorageManager()) }
+                var showNotificationPermissionDialog by remember {
+                    mutableStateOf(
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                    )
+                }
                 var showWelcomeDialog by remember { mutableStateOf(sharedPreferences.getBoolean("welcome_dialog", true)) }
                 firebaseAnalytics.setAnalyticsCollectionEnabled(sharedPreferences.getBoolean("send_firebase_analytics", true))
                 BottomBar()
-                if (showPermissionDialog) {
-                    PermissionDialog { showPermissionDialog = false }
+                if (showStoragePermissionDialog) {
+                    PermissionDialog(
+                        title = stringResource(R.string.error_no_storage_title),
+                        message = stringResource(R.string.error_no_storage_message),
+                        onConfirm = {
+                            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                            val uri = Uri.fromParts("package", packageName, null)
+                            intent.data = uri
+                            startActivity(intent)
+                            showStoragePermissionDialog = false
+                        },
+                        onDismiss = { showStoragePermissionDialog = false }
+                    )
                 }
+
+                if (showNotificationPermissionDialog) {
+                    PermissionDialog(
+                        title = stringResource(R.string.notification_permission_title),
+                        message = stringResource(R.string.notification_permission_message),
+                        onConfirm = {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            showNotificationPermissionDialog = false
+                        },
+                        onDismiss = { showNotificationPermissionDialog = false }
+                    )
+                }
+
                 if (showWelcomeDialog) {
                     WelcomeDialog {
                         sharedPreferences.edit { putBoolean("welcome_dialog", false) }
@@ -122,7 +172,7 @@ class MainActivity : ComponentActivity() {
                 startDestination = Screen.home.route,
                 Modifier.padding(innerPadding)
             ) {
-                composable(Screen.home.route) { HomeScreen() }
+                composable(Screen.home.route) { HomeScreen(viewModel = viewModel, vpnPermissionLauncher) }
                 composable(Screen.hosts.route) { HostsScreen(navController) }
                 composable(Screen.strategies.route) { StrategyScreen(navController) }
                 composable(Screen.settings.route) { SettingsScreen() }
@@ -130,10 +180,12 @@ class MainActivity : ComponentActivity() {
                     val source = backStackEntry.arguments?.getString("source")
                     when (source) {
                         "hosts" -> {
-                            RepoScreen(navController, ::getAllLists, ::getHostList, "/lists")
+                            val viewModel: HostRepoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                            RepoScreen(navController, viewModel)
                         }
                         "strategies" -> {
-                            RepoScreen(navController, ::getAllStrategies, ::getStrategiesList, "/strategies")
+                            val viewModel: StrategyRepoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                            RepoScreen(navController, viewModel)
                         }
                     }
                 }
@@ -156,25 +208,17 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun PermissionDialog(onDismiss: () -> Unit) {
-        val context = LocalContext.current
+    fun PermissionDialog(title: String, message: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
         AlertDialog(
-            title = { Text(text = stringResource(R.string.error_no_storage_title)) },
-            text = { Text(text = stringResource(R.string.error_no_storage_message)) },
+            title = { Text(title) },
+            text = { Text(message) },
             onDismissRequest = onDismiss,
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                        val uri = Uri.fromParts("package", context.packageName, null)
-                        intent.data = uri
-                        context.startActivity(intent)
-                        onDismiss()
-                    }
-                ) {
+                TextButton(onClick = onConfirm) {
                     Text(stringResource(R.string.btn_continue))
                 }
             }
         )
     }
+
 }

@@ -75,7 +75,7 @@ fun download(context: Context, url: String): Long {
     val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     val request = DownloadManager.Request(url.toUri()).apply {
         setTitle(fileName)
-        setDescription("Загрузка $fileName")
+        setDescription(fileName)
         setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
         setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)

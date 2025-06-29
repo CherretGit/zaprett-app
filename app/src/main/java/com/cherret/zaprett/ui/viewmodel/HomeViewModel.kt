@@ -2,13 +2,19 @@ package com.cherret.zaprett.ui.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import com.cherret.zaprett.ByeDpiVpnService
 import com.cherret.zaprett.R
+import com.cherret.zaprett.ServiceStatus
 import com.cherret.zaprett.download
+import com.cherret.zaprett.getBinVersion
 import com.cherret.zaprett.getChangelog
+import com.cherret.zaprett.getModuleVersion
 import com.cherret.zaprett.getStatus
 import com.cherret.zaprett.getUpdate
 import com.cherret.zaprett.installApk
@@ -17,13 +23,28 @@ import com.cherret.zaprett.restartService
 import com.cherret.zaprett.startService
 import com.cherret.zaprett.stopService
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    private val _requestVpnPermission = MutableStateFlow(false)
+    val requestVpnPermission = _requestVpnPermission.asStateFlow()
+    var cardText = mutableIntStateOf(R.string.status_not_availible) // MVP temporarily(maybe)
+        private set
 
-    var cardText = mutableIntStateOf(R.string.status_not_availible)
+    var moduleVer = mutableStateOf(context.getString(R.string.unknown_text))
+        private set
+
+    var nfqwsVer = mutableStateOf(context.getString(R.string.unknown_text))
+        private set
+
+    var byedpiVer = mutableStateOf(context.getString(R.string.unknown_text))
+        private set
+
+    var serviceMode = mutableIntStateOf(R.string.service_mode_ciadpi)
         private set
 
     var changeLog = mutableStateOf<String?>(null)
@@ -59,18 +80,23 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 cardText.intValue = if (isEnabled) R.string.status_enabled else R.string.status_disabled
             }
         }
+        else {
+            cardText.value = if (ByeDpiVpnService.status == ServiceStatus.Connected) R.string.status_enabled else R.string.status_disabled
+        }
     }
 
-    fun onCardClick(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+    fun onCardClick() {
         if (prefs.getBoolean("use_module", false)) {
             getStatus { isEnabled ->
                 cardText.value = if (isEnabled) R.string.status_enabled else R.string.status_disabled
             }
         } else {
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
-            }
+            cardText.value = if (ByeDpiVpnService.status == ServiceStatus.Connected) R.string.status_enabled else R.string.status_disabled
         }
+    }
+
+    fun startVpn() {
+        ContextCompat.startForegroundService(context, Intent(context, ByeDpiVpnService::class.java).apply { action = "START_VPN" })
     }
 
     fun onBtnStartService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
@@ -86,10 +112,22 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 if (!isEnabled) startService {}
             }
         } else {
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
+            if (ByeDpiVpnService.status == ServiceStatus.Disconnected || ByeDpiVpnService.status == ServiceStatus.Failed) {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.snack_starting_service))
+                }
+                _requestVpnPermission.value = true
+            }
+            else {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.snack_already_started))
+                }
             }
         }
+    }
+
+    fun clearVpnPermissionRequest() {
+        _requestVpnPermission.value = false
     }
 
     fun onBtnStopService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
@@ -105,8 +143,20 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 if (isEnabled) stopService {}
             }
         } else {
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
+            if (ByeDpiVpnService.status == ServiceStatus.Connected) {
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.snack_stopping_service)
+                    )
+                }
+                context.startService(Intent(context, ByeDpiVpnService::class.java).apply {
+                    action = "STOP_VPN"
+                })
+            }
+            else {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.snack_no_service))
+                }
             }
         }
     }
@@ -121,6 +171,18 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             scope.launch {
                 snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
             }
+        }
+    }
+
+    fun checkModuleInfo() {
+        if (prefs.getBoolean("use_module", false)) {
+            getModuleVersion { value ->
+                moduleVer.value = value
+            }
+            getBinVersion { value ->
+                nfqwsVer.value = value
+            }
+            serviceMode.intValue = R.string.service_mode_nfqws;
         }
     }
 
