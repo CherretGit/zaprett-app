@@ -12,12 +12,10 @@ import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.ui.res.stringResource
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 
 class ByeDpiVpnService : VpnService() {
