@@ -73,7 +73,7 @@
     <string name="qs_stopping">Stopping…</string>
     <string name="module_version">Module version</string>
     <string name="nfqws_version">nfqws version</string>
-    <string name="ciadpi_version">ciadpi version</string>
+    <string name="ciadpi_version">ciadpi version 0.17.1</string>
     <string name="unknown_text">unknown</string>
     <string name="service_mode">Service mode</string>
     <string name="service_mode_nfqws" translatable="false">nfqws</string>
