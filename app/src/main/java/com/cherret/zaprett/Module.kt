@@ -200,7 +200,7 @@ fun getActiveStrategy(sharedPreferences: SharedPreferences): List<String> {
 }
 
 fun enableList(path: String, sharedPreferences: SharedPreferences) {
-    if (sharedPreferences.getBoolean("use-module", false)) {
+    if (sharedPreferences.getBoolean("use_module", false)) {
         val props = Properties()
         val configFile = getConfigFile()
         try {
@@ -264,7 +264,7 @@ fun enableStrategy(path: String, sharedPreferences: SharedPreferences) {
 }
 
 fun disableList(path: String, sharedPreferences: SharedPreferences) {
-    if (sharedPreferences.getBoolean("use-module", false)) {
+    if (sharedPreferences.getBoolean("use_module", false)) {
         val props = Properties()
         val configFile = getConfigFile()
         try {
@@ -327,17 +327,5 @@ fun disableStrategy(path: String, sharedPreferences: SharedPreferences) {
     }
     else {
         sharedPreferences.edit { remove("active_strategy") }
-    }
-}
-
-fun getModuleVersion(callback: (String) -> Unit) {
-    Shell.cmd("zaprett module-ver").submit { result ->
-        if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
-    }
-}
-
-fun getBinVersion(callback: (String) -> Unit) {
-    Shell.cmd("zaprett bin-ver").submit { result ->
-        if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
     }
 }

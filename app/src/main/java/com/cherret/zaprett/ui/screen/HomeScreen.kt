@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Dangerous
@@ -114,7 +116,9 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResu
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         content = { paddingValues ->
-            Column(modifier = Modifier.padding(paddingValues)) {
+            Column(modifier = Modifier
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())) {
                 ServiceStatusCard(viewModel, cardText, snackbarHostState, scope)
                 UpdateCard(updateAvailable) { viewModel.showUpdateDialog() }
                 if (showUpdateDialog) {

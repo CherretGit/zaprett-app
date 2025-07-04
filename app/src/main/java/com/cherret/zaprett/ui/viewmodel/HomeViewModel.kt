@@ -41,7 +41,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var nfqwsVer = mutableStateOf(context.getString(R.string.unknown_text))
         private set
 
-    var byedpiVer = mutableStateOf(context.getString(R.string.unknown_text))
+    var byedpiVer = mutableStateOf("0.17.1")
         private set
 
     var serviceMode = mutableIntStateOf(R.string.service_mode_ciadpi)
@@ -201,4 +201,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             installApk(context, uri)
         }
     }
+
+    fun parseArgs(ip: String, port: String, lines: List<String>): Array<String> {
+        val regex = Regex("""--?\S+(?:=(?:[^"'\s]+|"[^"]*"|'[^']*'))?|[^\s]+""")
+        val parsedArgs = lines
+            .flatMap { line -> regex.findAll(line).map { it.value } }
+        return arrayOf("ciadpi", "--ip", ip, "--port", port) + parsedArgs
+    }
+
 }
