@@ -4,8 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.material3.SnackbarHostState
-import com.cherret.zaprett.ByeDpiVpnService
-import com.cherret.zaprett.ServiceStatus
+import com.cherret.zaprett.byedpi.ByeDpiVpnService
+import com.cherret.zaprett.byedpi.ServiceStatus
 import com.cherret.zaprett.disableStrategy
 import com.cherret.zaprett.enableStrategy
 import com.cherret.zaprett.getActiveByeDPIStrategies

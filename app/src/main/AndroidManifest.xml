@@ -55,7 +55,7 @@
         </intent-filter>
     </service>
         <service
-            android:name=".ByeDpiVpnService"
+            android:name=".byedpi.ByeDpiVpnService"
             android:exported="true"
             android:permission="android.permission.BIND_VPN_SERVICE"
             android:foregroundServiceType="specialUse">

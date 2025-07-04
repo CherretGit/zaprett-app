@@ -1,4 +1,4 @@
-package com.cherret.zaprett
+package com.cherret.zaprett.byedpi
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -13,6 +13,12 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import com.cherret.zaprett.MainActivity
+import com.cherret.zaprett.byedpi.NativeBridge
+import com.cherret.zaprett.R
+import com.cherret.zaprett.byedpi.ServiceStatus
+import com.cherret.zaprett.byedpi.TProxyService
+import com.cherret.zaprett.getActiveStrategy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,7 +36,7 @@ class ByeDpiVpnService : VpnService() {
     @SuppressLint("ForegroundServiceType")
     override fun onCreate() {
         super.onCreate()
-        sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        sharedPreferences = getSharedPreferences("settings", MODE_PRIVATE)
         createNotificationChannel()
     }
 

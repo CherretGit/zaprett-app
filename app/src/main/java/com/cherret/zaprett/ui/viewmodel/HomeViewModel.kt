@@ -8,9 +8,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import com.cherret.zaprett.ByeDpiVpnService
+import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
-import com.cherret.zaprett.ServiceStatus
+import com.cherret.zaprett.byedpi.ServiceStatus
 import com.cherret.zaprett.download
 import com.cherret.zaprett.getBinVersion
 import com.cherret.zaprett.getChangelog

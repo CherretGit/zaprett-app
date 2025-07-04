@@ -20,7 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep class com.cherret.zaprett.TProxyService {
+-keep class com.cherret.zaprett.byedpi.TProxyService {
     native long[] TProxyGetStats();
     native void TProxyStartService(java.lang.String, int);
     native void TProxyStopService();

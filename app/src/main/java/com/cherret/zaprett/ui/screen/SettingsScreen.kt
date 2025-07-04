@@ -22,9 +22,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cherret.zaprett.BuildConfig
-import com.cherret.zaprett.ByeDpiVpnService
+import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
-import com.cherret.zaprett.ServiceStatus
+import com.cherret.zaprett.byedpi.ServiceStatus
 import com.cherret.zaprett.checkModuleInstallation
 import com.cherret.zaprett.checkRoot
 import com.cherret.zaprett.getStartOnBoot

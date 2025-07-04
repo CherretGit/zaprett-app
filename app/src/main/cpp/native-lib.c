@@ -18,7 +18,7 @@ JNIEXPORT jint JNI_OnLoad(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_cherret_zaprett_NativeBridge_jniCreateSocket(
+Java_com_cherret_zaprett_byedpi_NativeBridge_jniCreateSocket(
         JNIEnv *env,
         __attribute__((unused)) jobject thiz,
         jobjectArray args) {
@@ -61,7 +61,7 @@ Java_com_cherret_zaprett_NativeBridge_jniCreateSocket(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_cherret_zaprett_NativeBridge_jniStartProxy(
+Java_com_cherret_zaprett_byedpi_NativeBridge_jniStartProxy(
         __attribute__((unused)) JNIEnv *env,
         __attribute__((unused)) jobject thiz) {
 
@@ -76,7 +76,7 @@ Java_com_cherret_zaprett_NativeBridge_jniStartProxy(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_cherret_zaprett_NativeBridge_jniStopProxy(
+Java_com_cherret_zaprett_byedpi_NativeBridge_jniStopProxy(
         __attribute__((unused)) JNIEnv *env,
         __attribute__((unused)) jobject thiz) {
 
