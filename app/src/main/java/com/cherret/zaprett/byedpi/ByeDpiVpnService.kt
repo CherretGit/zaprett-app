@@ -157,6 +157,7 @@ class ByeDpiVpnService : VpnService() {
     private fun stopProxy() {
         try {
             vpnInterface?.close()
+            vpnInterface = null
             NativeBridge().stopProxy()
             TProxyService.TProxyStopService()
             status = ServiceStatus.Disconnected
