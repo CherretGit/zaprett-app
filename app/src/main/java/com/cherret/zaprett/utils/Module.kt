@@ -1,4 +1,4 @@
-package com.cherret.zaprett
+package com.cherret.zaprett.utils
 
 import android.content.SharedPreferences
 import android.os.Environment

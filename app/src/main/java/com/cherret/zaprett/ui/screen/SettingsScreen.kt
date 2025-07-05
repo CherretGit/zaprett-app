@@ -25,10 +25,11 @@ import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ServiceStatus
-import com.cherret.zaprett.checkModuleInstallation
-import com.cherret.zaprett.checkRoot
-import com.cherret.zaprett.getStartOnBoot
-import com.cherret.zaprett.setStartOnBoot
+import com.cherret.zaprett.utils.checkModuleInstallation
+import com.cherret.zaprett.utils.checkRoot
+import com.cherret.zaprett.utils.getStartOnBoot
+import com.cherret.zaprett.utils.setStartOnBoot
+import com.cherret.zaprett.utils.stopService
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +67,10 @@ fun SettingsScreen() {
                     openNoRootDialog = openNoRootDialog,
                     openNoModuleDialog = openNoModuleDialog
                 ) { success ->
-                    if (success) useModule.value = isChecked
+                    if (success) {
+                        useModule.value = isChecked
+                        if (!isChecked) stopService {  }
+                    }
                 }
             }
         ),

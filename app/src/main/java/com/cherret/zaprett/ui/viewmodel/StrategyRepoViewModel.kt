@@ -1,10 +1,10 @@
 package com.cherret.zaprett.ui.viewmodel
 
 import android.app.Application
-import com.cherret.zaprett.RepoItemInfo
-import com.cherret.zaprett.getAllByeDPIStrategies
-import com.cherret.zaprett.getAllNfqwsStrategies
-import com.cherret.zaprett.getStrategiesList
+import com.cherret.zaprett.utils.RepoItemInfo
+import com.cherret.zaprett.utils.getAllByeDPIStrategies
+import com.cherret.zaprett.utils.getAllNfqwsStrategies
+import com.cherret.zaprett.utils.getStrategiesList
 
 class StrategyRepoViewModel(application: Application): BaseRepoViewModel(application) {
     override fun getInstalledLists(): Array<String> =

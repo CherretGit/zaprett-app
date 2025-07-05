@@ -1,4 +1,4 @@
-package com.cherret.zaprett
+package com.cherret.zaprett.utils
 
 import android.annotation.SuppressLint
 import android.app.DownloadManager
@@ -13,6 +13,7 @@ import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import com.cherret.zaprett.BuildConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.Call

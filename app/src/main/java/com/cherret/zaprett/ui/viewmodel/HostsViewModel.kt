@@ -3,11 +3,11 @@ package com.cherret.zaprett.ui.viewmodel
 import android.app.Application
 import android.content.Context
 import androidx.compose.material3.SnackbarHostState
-import com.cherret.zaprett.disableList
-import com.cherret.zaprett.enableList
-import com.cherret.zaprett.getActiveLists
-import com.cherret.zaprett.getAllLists
-import com.cherret.zaprett.getStatus
+import com.cherret.zaprett.utils.disableList
+import com.cherret.zaprett.utils.enableList
+import com.cherret.zaprett.utils.getActiveLists
+import com.cherret.zaprett.utils.getAllLists
+import com.cherret.zaprett.utils.getStatus
 import kotlinx.coroutines.CoroutineScope
 import java.io.File
 

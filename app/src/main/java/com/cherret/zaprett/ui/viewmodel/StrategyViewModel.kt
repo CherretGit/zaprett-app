@@ -6,13 +6,13 @@ import android.content.SharedPreferences
 import androidx.compose.material3.SnackbarHostState
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.byedpi.ServiceStatus
-import com.cherret.zaprett.disableStrategy
-import com.cherret.zaprett.enableStrategy
-import com.cherret.zaprett.getActiveByeDPIStrategies
-import com.cherret.zaprett.getActiveNfqwsStrategies
-import com.cherret.zaprett.getAllByeDPIStrategies
-import com.cherret.zaprett.getAllNfqwsStrategies
-import com.cherret.zaprett.getStatus
+import com.cherret.zaprett.utils.disableStrategy
+import com.cherret.zaprett.utils.enableStrategy
+import com.cherret.zaprett.utils.getActiveByeDPIStrategies
+import com.cherret.zaprett.utils.getActiveNfqwsStrategies
+import com.cherret.zaprett.utils.getAllByeDPIStrategies
+import com.cherret.zaprett.utils.getAllNfqwsStrategies
+import com.cherret.zaprett.utils.getStatus
 import kotlinx.coroutines.CoroutineScope
 import java.io.File
 

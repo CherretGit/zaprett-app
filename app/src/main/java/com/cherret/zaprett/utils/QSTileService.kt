@@ -1,7 +1,8 @@
-package com.cherret.zaprett
+package com.cherret.zaprett.utils
 
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import com.cherret.zaprett.R
 
 class QSTileService: TileService() {
     override fun onTileAdded() {

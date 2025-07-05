@@ -14,7 +14,7 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.cherret.zaprett.MainActivity
 import com.cherret.zaprett.R
-import com.cherret.zaprett.getActiveStrategy
+import com.cherret.zaprett.utils.getActiveStrategy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

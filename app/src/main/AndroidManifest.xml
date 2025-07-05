@@ -45,7 +45,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".QSTileService"
+            android:name=".utils.QSTileService"
             android:exported="true"
             android:label="@string/qs_name"
         android:icon="@drawable/ic_launcher_monochrome"

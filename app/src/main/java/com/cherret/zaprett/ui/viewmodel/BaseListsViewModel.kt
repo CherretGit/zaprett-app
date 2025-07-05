@@ -13,8 +13,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
-import com.cherret.zaprett.getZaprettPath
-import com.cherret.zaprett.restartService
+import com.cherret.zaprett.utils.getZaprettPath
+import com.cherret.zaprett.utils.restartService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
