@@ -21,6 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lan
+import androidx.compose.material.icons.filled.MultipleStop
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -61,8 +63,8 @@ import com.google.firebase.analytics.analytics
 
 sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: ImageVector) {
     object home : Screen("home", R.string.title_home, Icons.Default.Home)
-    object hosts : Screen("hosts", R.string.title_hosts, Icons.Default.Dashboard)
-    object strategies : Screen("strategies", R.string.title_strategies, Icons.Default.Dns)
+    object hosts : Screen("hosts", R.string.title_hosts, Icons.Default.Lan)
+    object strategies : Screen("strategies", R.string.title_strategies, Icons.Default.MultipleStop)
     object settings : Screen("settings", R.string.title_settings, Icons.Default.Settings)
 }
 val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.strategies, Screen.settings)
