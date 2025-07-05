@@ -2,6 +2,7 @@ package com.cherret.zaprett
 
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -18,8 +19,6 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lan
 import androidx.compose.material.icons.filled.MultipleStop
@@ -32,13 +31,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -57,6 +56,7 @@ import com.cherret.zaprett.ui.theme.ZaprettTheme
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
 import com.cherret.zaprett.ui.viewmodel.HostRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.StrategyRepoViewModel
+import com.cherret.zaprett.utils.checkModuleInstallation
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
@@ -88,6 +88,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             ZaprettTheme {
                 val sharedPreferences = remember { getSharedPreferences("settings", MODE_PRIVATE) }
+                LaunchedEffect(Unit) {
+
+                    checkModuleInstallation { result ->
+                        if (getSharedPreferences("settings", Context.MODE_PRIVATE).getBoolean("use_module", false) && !result) sharedPreferences.edit {
+                            putBoolean(
+                                "use_module",
+                                false
+                            )
+                        }
+                    }
+                }
                 var showStoragePermissionDialog by remember { mutableStateOf(!Environment.isExternalStorageManager()) }
                 var showNotificationPermissionDialog by remember {
                     mutableStateOf(
@@ -134,6 +145,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 
     @Composable
     fun BottomBar() {

@@ -102,6 +102,11 @@ fun installApk(context: Context, uri: Uri) {
 }
 
 fun registerDownloadListener(context: Context, downloadId: Long, onDownloaded: (Uri) -> Unit) {// AI Generated
+    if (!context.packageManager.canRequestPackageInstalls()){
+        val packageUri = Uri.fromParts("package", context.packageName, null)
+        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, packageUri)
+        context.startActivity(intent)
+    }
     val receiver = object : BroadcastReceiver() {
         @SuppressLint("Range")
         override fun onReceive(context: Context?, intent: Intent?) {
