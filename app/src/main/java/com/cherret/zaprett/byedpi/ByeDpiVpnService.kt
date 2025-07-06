@@ -37,9 +37,10 @@ class ByeDpiVpnService : VpnService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        startForeground(NOTIFICATION_ID, createNotification())
         return when (intent?.action) {
             "START_VPN" -> {
-                startForeground(NOTIFICATION_ID, createNotification())
                 setupProxy()
                 START_STICKY
             }
@@ -51,8 +52,6 @@ class ByeDpiVpnService : VpnService() {
             else -> {
                 START_NOT_STICKY
             }
-        }.also { result ->
-            super.onStartCommand(intent, flags, startId)
         }
     }
 
