@@ -37,9 +37,9 @@ class ByeDpiVpnService : VpnService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
         return when (intent?.action) {
             "START_VPN" -> {
+                startForeground(NOTIFICATION_ID, createNotification())
                 setupProxy()
                 START_STICKY
             }
@@ -51,6 +51,8 @@ class ByeDpiVpnService : VpnService() {
             else -> {
                 START_NOT_STICKY
             }
+        }.also { result ->
+            super.onStartCommand(intent, flags, startId)
         }
     }
 
@@ -99,7 +101,6 @@ class ByeDpiVpnService : VpnService() {
 
     private fun setupProxy() {
         if (getActiveStrategy(sharedPreferences).isNotEmpty()) {
-            startForeground(NOTIFICATION_ID, createNotification())
             try {
                 startSocksProxy()
                 startByeDpi()
@@ -107,14 +108,15 @@ class ByeDpiVpnService : VpnService() {
             } catch (e: Exception) {
                 Log.e("proxy", "Failed to start")
                 status = ServiceStatus.Failed
+                stopSelf()
             }
-        }
-        else {
+        } else {
             Toast.makeText(
                 this@ByeDpiVpnService,
                 getString(R.string.toast_no_strategy_selected),
                 Toast.LENGTH_SHORT
             ).show()
+            stopSelf()
         }
     }
 
