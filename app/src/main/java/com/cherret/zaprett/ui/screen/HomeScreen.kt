@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -61,6 +62,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -148,7 +150,8 @@ private fun ServiceStatusCard(viewModel: HomeViewModel, cardText: MutableState<I
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp, top = 25.dp, end = 10.dp)
-            .height(150.dp),
+            //.height(150.dp)
+            .wrapContentHeight(),
         onClick = { viewModel.onCardClick() }
     ) {
         Row (
@@ -169,6 +172,9 @@ private fun ServiceStatusCard(viewModel: HomeViewModel, cardText: MutableState<I
             Text(
                 text = stringResource(cardText.value),
                 fontFamily = FontFamily(Font(R.font.unbounded, FontWeight.Normal)),
+                fontSize = 16.sp,
+                //maxLines = 3,
+                //overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
