@@ -29,6 +29,7 @@ private val json = Json { ignoreUnknownKeys = true }
 
 fun getUpdate(callback: (UpdateInfo?) -> Unit) {
     val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
+    //val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/Test3/refs/heads/main/update.json").build()
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
@@ -94,19 +95,9 @@ fun installApk(context: Context, uri: Uri) {
         }
         context.startActivity(intent)
     }
-    else {
-        val packageUri = Uri.fromParts("package", context.packageName, null)
-        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, packageUri)
-        context.startActivity(intent)
-    }
 }
 
 fun registerDownloadListener(context: Context, downloadId: Long, onDownloaded: (Uri) -> Unit) {// AI Generated
-    if (!context.packageManager.canRequestPackageInstalls()){
-        val packageUri = Uri.fromParts("package", context.packageName, null)
-        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, packageUri)
-        context.startActivity(intent)
-    }
     val receiver = object : BroadcastReceiver() {
         @SuppressLint("Range")
         override fun onReceive(context: Context?, intent: Intent?) {

@@ -3,6 +3,10 @@ package com.cherret.zaprett.ui.viewmodel
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Debug
+import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
@@ -242,9 +246,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onUpdateConfirm() {
         showUpdateDialog.value = false
-        val id = download(context, downloadUrl.value.orEmpty())
-        registerDownloadListener(context, id) { uri ->
-            installApk(context, uri)
+        if (context.packageManager.canRequestPackageInstalls()){
+            val id = download(context, downloadUrl.value.orEmpty())
+            registerDownloadListener(context, id) { uri ->
+                installApk(context, uri)
+            }
+        }
+        else {
+            val packageUri = Uri.fromParts("package", context.packageName, null)
+            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, packageUri).addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
         }
     }
 
