@@ -3,6 +3,7 @@ package com.cherret.zaprett.ui.viewmodel
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -12,6 +13,7 @@ import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ServiceStatus
 import com.cherret.zaprett.utils.download
+import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getBinVersion
 import com.cherret.zaprett.utils.getChangelog
 import com.cherret.zaprett.utils.getModuleVersion
@@ -113,10 +115,19 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             }
         } else {
             if (ByeDpiVpnService.status == ServiceStatus.Disconnected || ByeDpiVpnService.status == ServiceStatus.Failed) {
-                scope.launch {
-                    snackbarHostState.showSnackbar(context.getString(R.string.snack_starting_service))
+                if (getActiveStrategy(prefs).isNotEmpty()) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(context.getString(R.string.snack_starting_service))
+                    }
+                    _requestVpnPermission.value = true
                 }
-                _requestVpnPermission.value = true
+                else {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.toast_no_strategy_selected),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
             else {
                 scope.launch {
