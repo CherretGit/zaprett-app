@@ -4,6 +4,11 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +40,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _requestVpnPermission = MutableStateFlow(false)
     val requestVpnPermission = _requestVpnPermission.asStateFlow()
     var cardText = mutableIntStateOf(R.string.status_not_availible) // MVP temporarily(maybe)
+        private set
+    var cardIcon = mutableStateOf(Icons.AutoMirrored.Filled.Help)
         private set
 
     var moduleVer = mutableStateOf(context.getString(R.string.unknown_text))
@@ -79,21 +86,49 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun checkServiceStatus() {
         if (prefs.getBoolean("use_module", false) && prefs.getBoolean("update_on_boot", false)) {
             getStatus { isEnabled ->
-                cardText.intValue = if (isEnabled) R.string.status_enabled else R.string.status_disabled
+                if (isEnabled){
+                    cardText.value = R.string.status_enabled
+                    cardIcon.value = Icons.Filled.CheckCircle
+                }
+                else {
+                    cardText.value = R.string.status_disabled
+                    cardIcon.value = Icons.Filled.Cancel
+                }
             }
         }
         else {
-            cardText.value = if (ByeDpiVpnService.status == ServiceStatus.Connected) R.string.status_enabled else R.string.status_disabled
+            if (ByeDpiVpnService.status == ServiceStatus.Connected){
+                cardText.value = R.string.status_enabled
+                cardIcon.value = Icons.Filled.CheckCircle
+            }
+            else {
+                cardText.value = R.string.status_disabled
+                cardIcon.value = Icons.Filled.Cancel
+            }
         }
     }
 
     fun onCardClick() {
         if (prefs.getBoolean("use_module", false)) {
             getStatus { isEnabled ->
-                cardText.value = if (isEnabled) R.string.status_enabled else R.string.status_disabled
+                if (isEnabled){
+                    cardText.value = R.string.status_enabled
+                    cardIcon.value = Icons.Filled.CheckCircle
+                }
+                else {
+                    cardText.value = R.string.status_disabled
+                    cardIcon.value = Icons.Filled.Cancel
+                }
             }
         } else {
-            cardText.value = if (ByeDpiVpnService.status == ServiceStatus.Connected) R.string.status_enabled else R.string.status_disabled
+            if (ByeDpiVpnService.status == ServiceStatus.Connected){
+                cardText.value = R.string.status_enabled
+                cardIcon.value = Icons.Filled.CheckCircle
+            }
+            else {
+                cardText.value = R.string.status_disabled
+                cardIcon.value = Icons.Filled.Cancel
+            }
         }
     }
 
