@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
                                 val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                                 val uri = Uri.fromParts("package", applicationContext.packageName, null)
                                 intent.data = uri
-                                applicationContext.startActivity(intent)
+                                startActivity(intent)
                             } else {
                                 requestPermissions(
                                     arrayOf(
