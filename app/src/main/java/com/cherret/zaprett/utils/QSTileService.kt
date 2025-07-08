@@ -1,7 +1,8 @@
-package com.cherret.zaprett
+package com.cherret.zaprett.utils
 
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import com.cherret.zaprett.R
 
 class QSTileService: TileService() {
     override fun onTileAdded() {
@@ -31,11 +32,7 @@ class QSTileService: TileService() {
         updateStatus()
     }
 
-    override fun onTileRemoved() {
-        super.onTileRemoved()
-    }
-
-    fun updateStatus() {
+    private fun updateStatus() {
         if (getSharedPreferences("settings", MODE_PRIVATE).getBoolean("use_module", false)) {
             getStatus {
                 if (it) {

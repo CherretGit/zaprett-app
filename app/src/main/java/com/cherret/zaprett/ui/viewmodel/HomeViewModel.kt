@@ -2,28 +2,62 @@ package com.cherret.zaprett.ui.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Debug
+import android.provider.Settings
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
-import com.cherret.zaprett.download
-import com.cherret.zaprett.getChangelog
-import com.cherret.zaprett.getStatus
-import com.cherret.zaprett.getUpdate
-import com.cherret.zaprett.installApk
-import com.cherret.zaprett.registerDownloadListener
-import com.cherret.zaprett.restartService
-import com.cherret.zaprett.startService
-import com.cherret.zaprett.stopService
+import com.cherret.zaprett.byedpi.ServiceStatus
+import com.cherret.zaprett.utils.download
+import com.cherret.zaprett.utils.getActiveStrategy
+import com.cherret.zaprett.utils.getBinVersion
+import com.cherret.zaprett.utils.getChangelog
+import com.cherret.zaprett.utils.getModuleVersion
+import com.cherret.zaprett.utils.getStatus
+import com.cherret.zaprett.utils.getUpdate
+import com.cherret.zaprett.utils.installApk
+import com.cherret.zaprett.utils.registerDownloadListener
+import com.cherret.zaprett.utils.restartService
+import com.cherret.zaprett.utils.startService
+import com.cherret.zaprett.utils.stopService
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    private val _requestVpnPermission = MutableStateFlow(false)
+    val requestVpnPermission = _requestVpnPermission.asStateFlow()
+    var cardText = mutableIntStateOf(R.string.status_not_availible) // MVP temporarily(maybe)
+        private set
+    var cardIcon = mutableStateOf(Icons.AutoMirrored.Filled.Help)
+        private set
 
-    var cardText = mutableIntStateOf(R.string.status_not_availible)
+    var moduleVer = mutableStateOf(context.getString(R.string.unknown_text))
+        private set
+
+    var nfqwsVer = mutableStateOf(context.getString(R.string.unknown_text))
+        private set
+
+    var byedpiVer = mutableStateOf("0.17.1")
+        private set
+
+    var serviceMode = mutableIntStateOf(R.string.service_mode_ciadpi)
         private set
 
     var changeLog = mutableStateOf<String?>(null)
@@ -35,7 +69,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var updateAvailable = mutableStateOf(false)
         private set
 
-    private var downloadUrl = mutableStateOf<String?>(null)
+    var downloadUrl = mutableStateOf<String?>(null)
+        private set
 
     var showUpdateDialog = mutableStateOf(false)
 
@@ -55,21 +90,54 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun checkServiceStatus() {
         if (prefs.getBoolean("use_module", false) && prefs.getBoolean("update_on_boot", false)) {
             getStatus { isEnabled ->
-                cardText.intValue = if (isEnabled) R.string.status_enabled else R.string.status_disabled
+                if (isEnabled){
+                    cardText.value = R.string.status_enabled
+                    cardIcon.value = Icons.Filled.CheckCircle
+                }
+                else {
+                    cardText.value = R.string.status_disabled
+                    cardIcon.value = Icons.Filled.Cancel
+                }
+            }
+        }
+        else {
+            if (ByeDpiVpnService.status == ServiceStatus.Connected){
+                cardText.value = R.string.status_enabled
+                cardIcon.value = Icons.Filled.CheckCircle
+            }
+            else {
+                cardText.value = R.string.status_disabled
+                cardIcon.value = Icons.Filled.Cancel
             }
         }
     }
 
-    fun onCardClick(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+    fun onCardClick() {
         if (prefs.getBoolean("use_module", false)) {
             getStatus { isEnabled ->
-                cardText.intValue = if (isEnabled) R.string.status_enabled else R.string.status_disabled
+                if (isEnabled){
+                    cardText.value = R.string.status_enabled
+                    cardIcon.value = Icons.Filled.CheckCircle
+                }
+                else {
+                    cardText.value = R.string.status_disabled
+                    cardIcon.value = Icons.Filled.Cancel
+                }
             }
         } else {
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
+            if (ByeDpiVpnService.status == ServiceStatus.Connected){
+                cardText.value = R.string.status_enabled
+                cardIcon.value = Icons.Filled.CheckCircle
+            }
+            else {
+                cardText.value = R.string.status_disabled
+                cardIcon.value = Icons.Filled.Cancel
             }
         }
+    }
+
+    fun startVpn() {
+        ContextCompat.startForegroundService(context, Intent(context, ByeDpiVpnService::class.java).apply { action = "START_VPN" })
     }
 
     fun onBtnStartService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
@@ -85,10 +153,31 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 if (!isEnabled) startService {}
             }
         } else {
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
+            if (ByeDpiVpnService.status == ServiceStatus.Disconnected || ByeDpiVpnService.status == ServiceStatus.Failed) {
+                if (getActiveStrategy(prefs).isNotEmpty()) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(context.getString(R.string.snack_starting_service))
+                    }
+                    _requestVpnPermission.value = true
+                }
+                else {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.toast_no_strategy_selected),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            else {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.snack_already_started))
+                }
             }
         }
+    }
+
+    fun clearVpnPermissionRequest() {
+        _requestVpnPermission.value = false
     }
 
     fun onBtnStopService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
@@ -104,8 +193,20 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 if (isEnabled) stopService {}
             }
         } else {
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_module_disabled))
+            if (ByeDpiVpnService.status == ServiceStatus.Connected) {
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.snack_stopping_service)
+                    )
+                }
+                context.startService(Intent(context, ByeDpiVpnService::class.java).apply {
+                    action = "STOP_VPN"
+                })
+            }
+            else {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.snack_no_service))
+                }
             }
         }
     }
@@ -123,6 +224,18 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun checkModuleInfo() {
+        if (prefs.getBoolean("use_module", false)) {
+            getModuleVersion { value ->
+                moduleVer.value = value
+            }
+            getBinVersion { value ->
+                nfqwsVer.value = value
+            }
+            serviceMode.intValue = R.string.service_mode_nfqws;
+        }
+    }
+
     fun showUpdateDialog() {
         showUpdateDialog.value = true
     }
@@ -133,9 +246,25 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onUpdateConfirm() {
         showUpdateDialog.value = false
-        val id = download(context, downloadUrl.value.orEmpty())
-        registerDownloadListener(context, id) { uri ->
-            installApk(context, uri)
+        if (context.packageManager.canRequestPackageInstalls()){
+            val id = download(context, downloadUrl.value.orEmpty())
+            registerDownloadListener(context, id) { uri ->
+                installApk(context, uri)
+            }
+        }
+        else {
+            val packageUri = Uri.fromParts("package", context.packageName, null)
+            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, packageUri).addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
         }
     }
+
+    fun parseArgs(ip: String, port: String, lines: List<String>): Array<String> {
+        val regex = Regex("""--?\S+(?:=(?:[^"'\s]+|"[^"]*"|'[^']*'))?|[^\s]+""")
+        val parsedArgs = lines
+            .flatMap { line -> regex.findAll(line).map { it.value } }
+        return arrayOf("ciadpi", "--ip", ip, "--port", port) + parsedArgs
+    }
+
 }

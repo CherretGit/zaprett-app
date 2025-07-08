@@ -1,4 +1,4 @@
-package com.cherret.zaprett
+package com.cherret.zaprett.utils
 
 import android.annotation.SuppressLint
 import android.app.DownloadManager
@@ -16,6 +16,7 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import com.cherret.zaprett.BuildConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.Call
@@ -90,7 +91,7 @@ fun download(context: Context, url: String): Long {
     }
     val request = DownloadManager.Request(url.toUri()).apply {
         setTitle(fileName)
-        setDescription("Загрузка $fileName")
+        setDescription(fileName)
         setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // Use MediaStore for Android 10+
@@ -126,11 +127,6 @@ fun installApk(context: Context, uri: Uri) {
             setDataAndType(apkUri, "application/vnd.android.package-archive")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
         }
-        context.startActivity(intent)
-    }
-    else {
-        val packageUri = Uri.fromParts("package", context.packageName, null)
-        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, packageUri)
         context.startActivity(intent)
     }
 }

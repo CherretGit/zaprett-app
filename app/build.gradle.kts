@@ -9,18 +9,26 @@ plugins {
 
 android {
     namespace = "com.cherret.zaprett"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.cherret.zaprett"
         minSdk = 29
-        targetSdk = 36
-        versionCode = 11
-        versionName = "1.10"
+        targetSdk = 35
+        versionCode = 14
+        versionName = "2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
     }
-
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -45,18 +53,42 @@ android {
     buildToolsVersion = "36.0.0"
 }
 
+tasks.register<Exec>("runNdkBuild") {
+    group = "build"
+
+    val ndkDir = android.ndkDirectory
+    executable = if (System.getProperty("os.name").startsWith("Windows", ignoreCase = true)) {
+        "$ndkDir\\ndk-build.cmd"
+    } else {
+        "$ndkDir/ndk-build"
+    }
+    setArgs(listOf(
+        "NDK_PROJECT_PATH=build/intermediates/ndkBuild",
+        "NDK_LIBS_OUT=src/main/jniLibs",
+        "APP_BUILD_SCRIPT=src/main/jni/Android.mk",
+        "NDK_APPLICATION_MK=src/main/jni/Application.mk"
+    ))
+
+    println("Command: $commandLine")
+}
+
+tasks.preBuild {
+    dependsOn("runNdkBuild")
+}
+
 dependencies {
-    implementation(libs.material3)
-    implementation(libs.androidx.material3.window.size.class1)
-    implementation(libs.androidx.material3.adaptive.navigation.suite)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.libsu.core)
-    implementation(libs.okhttp)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.crashlytics)
+    implementation("androidx.compose.material3:material3:1.3.1")
+    implementation("androidx.compose.material3:material3-window-size-class:1.3.1")
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.4.0-alpha10")
+    implementation("androidx.navigation:navigation-compose:2.8.9")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation ("com.github.topjohnwu.libsu:core:6.0.0")
+    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation("androidx.fragment:fragment-compose:1.8.8")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

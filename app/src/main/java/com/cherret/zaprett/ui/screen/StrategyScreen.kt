@@ -1,5 +1,6 @@
 package com.cherret.zaprett.ui.screen
 
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -62,6 +63,7 @@ import com.cherret.zaprett.ui.viewmodel.StrategyViewModel
 @Composable
 fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = viewModel()) {
     val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val allLists = viewModel.allItems
@@ -70,7 +72,11 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uri?.let { viewModel.copySelectedFile(context, "/strategies", it, snackbarHostState, scope) }
+        uri?.let { viewModel.copySelectedFile(
+            context,
+            if (sharedPreferences.getBoolean("use_module", false)) "/strategies/nfqws" else "/strategies/byedpi",
+            it
+        ) }
     }
 
     LaunchedEffect(Unit) {

@@ -14,8 +14,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
-import com.cherret.zaprett.getZaprettPath
-import com.cherret.zaprett.restartService
+import com.cherret.zaprett.utils.getZaprettPath
+import com.cherret.zaprett.utils.restartService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
@@ -69,9 +69,7 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
         } ?: "copied_file"
 
         try {
-            // Determine output file location based on Android version
             val outputFile = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // Android 11+ with MANAGE_EXTERNAL_STORAGE permission
                 if (Environment.isExternalStorageManager()) {
                     val outputDir = File(getZaprettPath() + path)
                     if (!outputDir.exists()) {
@@ -79,7 +77,6 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
                     }
                     File(outputDir, fileName)
                 } else {
-                    // Fallback to app-specific storage if permission is not granted
                     val outputDir = File(context.filesDir, path)
                     if (!outputDir.exists()) {
                         outputDir.mkdirs()
@@ -87,7 +84,6 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
                     File(outputDir, fileName)
                 }
             } else {
-                // Android 10: Use app-specific storage
                 val outputDir = File(context.filesDir, path)
                 if (!outputDir.exists()) {
                     outputDir.mkdirs()
@@ -101,7 +97,6 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
                 }
             }
             refresh()
-            showRestartSnackbar(context, snackbarHostState, scope)
         } catch (e: IOException) {
             e.printStackTrace()
             scope.launch {

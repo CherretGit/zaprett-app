@@ -2,6 +2,7 @@ package com.cherret.zaprett.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,11 +31,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -47,39 +44,24 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.cherret.zaprett.RepoItemInfo
 import com.cherret.zaprett.R
-import com.cherret.zaprett.download
-import com.cherret.zaprett.getFileSha256
-import com.cherret.zaprett.getZaprettPath
-import com.cherret.zaprett.registerDownloadListenerHost
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
+import com.cherret.zaprett.ui.viewmodel.BaseRepoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepoScreen(navController: NavController, getAllLists: () -> Array<String>, getHostList: ((List<RepoItemInfo>?) -> Unit) -> Unit, targetPath: String) {
+fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
     val context = LocalContext.current
-    val allLists by remember { mutableStateOf(getAllLists()) }
-    var hostLists by remember { mutableStateOf<List<RepoItemInfo>?>(null) }
-    val isUpdate = remember { mutableStateMapOf<String, Boolean>() }
+    val hostLists = viewModel.hostLists.value
+    val isUpdate = viewModel.isUpdate
+    val isInstalling = viewModel.isInstalling
+    val isUpdateInstalling = viewModel.isUpdateInstalling
+    val isRefreshing = viewModel.isRefreshing.value
     val snackbarHostState = remember { SnackbarHostState() }
-    var isRefreshing by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
-        getHostList {
-            hostLists = it
-        }
+        viewModel.refresh()
     }
-    LaunchedEffect(hostLists) {
-        if (hostLists != null) {
-            withContext(Dispatchers.IO) {
-                hostLists!!.forEach { item ->
-                    isUpdate[item.name] = !allLists.any { getFileSha256(File(it)) == item.hash }
-                }
-            }
-        }
-    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -101,66 +83,52 @@ fun RepoScreen(navController: NavController, getAllLists: () -> Array<String>, g
                 windowInsets = WindowInsets(0)
             )
         },
-        content = {  paddingValues ->
+        content = { paddingValues ->
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
-                onRefresh = {
-                    isRefreshing = true
-                    getHostList {
-                        hostLists = it
-                        isRefreshing = false
-                    }
-                },
+                onRefresh = { viewModel.refresh() },
                 modifier = Modifier.fillMaxSize()
             ) {
                 LazyColumn(
                     contentPadding = paddingValues,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    when {
-                        hostLists?.isEmpty() != false -> {
-                            item {
-                                Box(
-                                    modifier = Modifier.fillParentMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        stringResource(R.string.empty_list),
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
+                    if (hostLists.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier.fillParentMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    stringResource(R.string.empty_list),
+                                    textAlign = TextAlign.Center
+                                )
                             }
                         }
-                        else -> {
-                            items(hostLists.orEmpty()) { item ->
-                                var isButtonEnabled by remember { mutableStateOf(!allLists.any { File(it).name == item.name }) }
-                                var isInstalling by remember { mutableStateOf(false) }
-                                var isButtonUpdateEnabled by remember { mutableStateOf(true) }
-                                var isUpdateInstalling by remember { mutableStateOf(false) }
-                                ElevatedCard(
-                                    elevation = CardDefaults.cardElevation(
-                                        defaultElevation = 6.dp
-                                    ),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(start = 10.dp, top = 25.dp, end = 10.dp),
-                                ) {
+                    } else {
+                        items(hostLists) { item ->
+                            val isInstalled = viewModel.isItemInstalled(item)
+                            val installing = isInstalling[item.name] == true
+                            val updating = isUpdateInstalling[item.name] == true
+
+                            ElevatedCard(
+                                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 10.dp, top = 25.dp, end = 10.dp)
+                            ) {
+                                Column(Modifier.fillMaxWidth()) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(16.dp)
                                     ) {
-                                        Text(
-                                            text = item.name,
-                                            modifier = Modifier.weight(1f)
-                                        )
+                                        Text(text = item.name, modifier = Modifier.weight(1f))
                                     }
+
                                     Row(
-                                        verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(start = 16.dp)
@@ -170,8 +138,8 @@ fun RepoScreen(navController: NavController, getAllLists: () -> Array<String>, g
                                             modifier = Modifier.weight(1f)
                                         )
                                     }
+
                                     Row(
-                                        verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(start = 16.dp)
@@ -181,39 +149,18 @@ fun RepoScreen(navController: NavController, getAllLists: () -> Array<String>, g
                                             modifier = Modifier.weight(1f)
                                         )
                                     }
+
                                     HorizontalDivider(thickness = Dp.Hairline)
+
                                     Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
+                                        modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.End
                                     ) {
-                                        if (isUpdate[item.name] == true && allLists.any { File(it).name == item.name }) {
+                                        if (isUpdate[item.name] == true && isInstalled) {
                                             FilledTonalButton(
-                                                onClick = {
-                                                    isUpdateInstalling = true
-                                                    isButtonUpdateEnabled = false
-                                                    val downloadId = download(context, item.url)
-                                                    registerDownloadListenerHost(
-                                                        context,
-                                                        downloadId
-                                                    ) { uri ->
-                                                        val sourceFile = File(uri.path!!)
-                                                        val targetFile = File(
-                                                            getZaprettPath() + targetPath,
-                                                            uri.lastPathSegment!!
-                                                        )
-                                                        sourceFile.copyTo(targetFile, overwrite = true)
-                                                        sourceFile.delete()
-                                                        isUpdateInstalling = false
-                                                        getHostList {
-                                                            hostLists = it
-                                                        }
-                                                        isUpdate[item.name] = false
-                                                    }
-                                                },
-                                                enabled = isButtonUpdateEnabled,
-                                                modifier = Modifier
-                                                    .padding(start = 5.dp, end = 5.dp),
+                                                onClick = { viewModel.update(item) },
+                                                enabled = !updating,
+                                                modifier = Modifier.padding(horizontal = 5.dp)
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.Update,
@@ -221,37 +168,16 @@ fun RepoScreen(navController: NavController, getAllLists: () -> Array<String>, g
                                                     modifier = Modifier.size(20.dp)
                                                 )
                                                 Text(
-                                                    if (!isUpdateInstalling) stringResource(R.string.btn_update_host) else stringResource(
-                                                        R.string.btn_updating_host
-                                                    )
+                                                    if (updating) stringResource(R.string.btn_updating_host)
+                                                    else stringResource(R.string.btn_update_host)
                                                 )
                                             }
                                         }
+
                                         FilledTonalButton(
-                                            onClick = {
-                                                isInstalling = true
-                                                isButtonEnabled = false
-                                                val downloadId = download(context, item.url)
-                                                registerDownloadListenerHost(
-                                                    context,
-                                                    downloadId
-                                                ) { uri ->
-                                                    val sourceFile = File(uri.path!!)
-                                                    val targetFile = File(
-                                                        getZaprettPath() + targetPath,
-                                                        uri.lastPathSegment!!
-                                                    )
-                                                    sourceFile.copyTo(targetFile, overwrite = true)
-                                                    sourceFile.delete()
-                                                    isInstalling = false
-                                                    getHostList {
-                                                        hostLists = it
-                                                    }
-                                                }
-                                            },
-                                            enabled = isButtonEnabled,
-                                            modifier = Modifier
-                                                .padding(start = 5.dp, end = 5.dp),
+                                            onClick = { viewModel.install(item) },
+                                            enabled = !installing && !isInstalled,
+                                            modifier = Modifier.padding(horizontal = 5.dp)
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.InstallMobile,
@@ -259,9 +185,11 @@ fun RepoScreen(navController: NavController, getAllLists: () -> Array<String>, g
                                                 modifier = Modifier.size(20.dp)
                                             )
                                             Text(
-                                                if (isButtonEnabled) stringResource(R.string.btn_install_host) else if (isInstalling) stringResource(
-                                                    R.string.btn_installing_host
-                                                ) else stringResource(R.string.btn_installed_host)
+                                                when {
+                                                    installing -> stringResource(R.string.btn_installing_host)
+                                                    isInstalled -> stringResource(R.string.btn_installed_host)
+                                                    else -> stringResource(R.string.btn_install_host)
+                                                }
                                             )
                                         }
                                     }
@@ -272,6 +200,6 @@ fun RepoScreen(navController: NavController, getAllLists: () -> Array<String>, g
                 }
             }
         },
-        snackbarHost = {SnackbarHost(hostState = snackbarHostState)}
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     )
 }
