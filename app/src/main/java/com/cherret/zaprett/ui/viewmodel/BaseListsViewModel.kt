@@ -3,7 +3,6 @@ package com.cherret.zaprett.ui.viewmodel
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.provider.OpenableColumns
 import androidx.compose.material3.SnackbarHostState
@@ -47,7 +46,7 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
         }
         isRefreshing = false
     }
-
+    
     fun showRestartSnackbar(context: Context, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         scope.launch {
             val result = snackbarHostState.showSnackbar(
@@ -61,36 +60,21 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
         }
     }
 
-    fun copySelectedFile(context: Context, path: String, uri: Uri, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+    fun copySelectedFile(context: Context, path: String, uri: Uri) {
+        if (!Environment.isExternalStorageManager()) return
         val contentResolver = context.contentResolver
         val fileName = contentResolver.query(uri, null, null, null, null)?.use { cursor ->
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
             if (cursor.moveToFirst() && nameIndex != -1) cursor.getString(nameIndex) else "copied_file"
         } ?: "copied_file"
 
-        try {
-            val outputFile = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                if (Environment.isExternalStorageManager()) {
-                    val outputDir = File(getZaprettPath() + path)
-                    if (!outputDir.exists()) {
-                        outputDir.mkdirs()
-                    }
-                    File(outputDir, fileName)
-                } else {
-                    val outputDir = File(context.filesDir, path)
-                    if (!outputDir.exists()) {
-                        outputDir.mkdirs()
-                    }
-                    File(outputDir, fileName)
-                }
-            } else {
-                val outputDir = File(context.filesDir, path)
-                if (!outputDir.exists()) {
-                    outputDir.mkdirs()
-                }
-                File(outputDir, fileName)
-            }
+        val directory = File(getZaprettPath() + path)
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+        val outputFile = File(getZaprettPath() + path, fileName)
 
+        try {
             contentResolver.openInputStream(uri)?.use { inputStream ->
                 FileOutputStream(outputFile).use { outputStream ->
                     inputStream.copyTo(outputStream)
@@ -99,12 +83,6 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
             refresh()
         } catch (e: IOException) {
             e.printStackTrace()
-            scope.launch {
-                snackbarHostState.showSnackbar(
-                    context.getString(R.string.error_copying_file),
-                    duration = androidx.compose.material3.SnackbarDuration.Short
-                )
-            }
         }
     }
 }

@@ -99,22 +99,13 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                var showStoragePermissionDialog by remember {
+                var showStoragePermissionDialog by remember { mutableStateOf(!Environment.isExternalStorageManager()) }
+                var showNotificationPermissionDialog by remember {
                     mutableStateOf(
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            !Environment.isExternalStorageManager()
-                        } else {
-                            ContextCompat.checkSelfPermission(
-                                this,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                            ) != PackageManager.PERMISSION_GRANTED
-                        }
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
                     )
                 }
-                var showWelcomeDialog by remember {
-                    mutableStateOf(sharedPreferences.getBoolean("welcome_dialog", true))
-                }
-
                 var showWelcomeDialog by remember { mutableStateOf(sharedPreferences.getBoolean("welcome_dialog", true)) }
                 firebaseAnalytics.setAnalyticsCollectionEnabled(sharedPreferences.getBoolean("send_firebase_analytics", true))
                 BottomBar()
@@ -237,34 +228,11 @@ class MainActivity : ComponentActivity() {
             text = { Text(message) },
             onDismissRequest = onDismiss,
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            // Android 11+: Request MANAGE_EXTERNAL_STORAGE
-                            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                            val uri = Uri.fromParts("package", context.packageName, null)
-                            intent.data = uri
-                            context.startActivity(intent)
-                        } else {
-                            // Android 10: Request legacy storage permissions
-                            requestPermissions(
-                                arrayOf(
-                                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                ),
-                                STORAGE_PERMISSION_REQUEST_CODE
-                            )
-                        }
-                        onDismiss()
-                    }
-                ) {
+                TextButton(onClick = onConfirm) {
                     Text(stringResource(R.string.btn_continue))
                 }
             }
         )
     }
 
-    companion object {
-        private const val STORAGE_PERMISSION_REQUEST_CODE = 100
-    }
 }
