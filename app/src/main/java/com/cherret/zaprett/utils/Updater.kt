@@ -3,13 +3,16 @@ package com.cherret.zaprett.utils
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
@@ -72,16 +75,48 @@ fun getChangelog(changelogUrl: String, callback: (String?) -> Unit) {
 }
 
 fun download(context: Context, url: String): Long {
+    if (url.isEmpty()) {
+        Log.e("Updater", "Download URL is empty")
+        return -1L
+    }
+    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+    if (downloadManager == null) {
+        Log.e("Updater", "DownloadManager is unavailable")
+        return -1L
+    }
     val fileName = url.substringAfterLast("/")
-    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    if (fileName.isEmpty()) {
+        Log.e("Updater", "Invalid file name derived from URL: $url")
+        return -1L
+    }
     val request = DownloadManager.Request(url.toUri()).apply {
         setTitle(fileName)
         setDescription(fileName)
         setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Use MediaStore for Android 10+
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            }
+            val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            if (uri != null) {
+                setDestinationUri(uri)
+            } else {
+                Log.e("Updater", "Failed to create MediaStore URI")
+                return -1L
+            }
+        } else {
+            setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+        }
         setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
     }
-    return downloadManager.enqueue(request)
+    return try {
+        downloadManager.enqueue(request)
+    } catch (e: Exception) {
+        Log.e("Updater", "Failed to enqueue download: ${e.message}", e)
+        -1L
+    }
 }
 
 fun installApk(context: Context, uri: Uri) {

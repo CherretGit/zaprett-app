@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.cherret.zaprett"
-        minSdk = 30
+        minSdk = 29
         targetSdk = 35
         versionCode = 14
         versionName = "2.2"
@@ -50,6 +50,7 @@ android {
         compose = true
         buildConfig = true
     }
+    buildToolsVersion = "36.0.0"
 }
 
 tasks.register<Exec>("runNdkBuild") {
