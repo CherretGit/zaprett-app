@@ -91,22 +91,22 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (prefs.getBoolean("use_module", false) && prefs.getBoolean("update_on_boot", false)) {
             getStatus { isEnabled ->
                 if (isEnabled){
-                    cardText.value = R.string.status_enabled
+                    cardText.intValue = R.string.status_enabled
                     cardIcon.value = Icons.Filled.CheckCircle
                 }
                 else {
-                    cardText.value = R.string.status_disabled
+                    cardText.intValue = R.string.status_disabled
                     cardIcon.value = Icons.Filled.Cancel
                 }
             }
         }
         else {
             if (ByeDpiVpnService.status == ServiceStatus.Connected){
-                cardText.value = R.string.status_enabled
+                cardText.intValue = R.string.status_enabled
                 cardIcon.value = Icons.Filled.CheckCircle
             }
             else {
-                cardText.value = R.string.status_disabled
+                cardText.intValue = R.string.status_disabled
                 cardIcon.value = Icons.Filled.Cancel
             }
         }
@@ -116,7 +116,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (prefs.getBoolean("use_module", false)) {
             getStatus { isEnabled ->
                 if (isEnabled){
-                    cardText.value = R.string.status_enabled
+                    cardText.intValue = R.string.status_enabled
                     cardIcon.value = Icons.Filled.CheckCircle
                 }
                 else {

@@ -1,6 +1,5 @@
 package com.cherret.zaprett
 
-
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -99,7 +98,18 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                var showStoragePermissionDialog by remember { mutableStateOf(!Environment.isExternalStorageManager()) }
+                var showStoragePermissionDialog by remember {
+                    mutableStateOf(
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            !Environment.isExternalStorageManager()
+                        } else {
+                            ContextCompat.checkSelfPermission(
+                                this,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            ) != PackageManager.PERMISSION_GRANTED
+                        }
+                    )
+                }
                 var showNotificationPermissionDialog by remember {
                     mutableStateOf(
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -114,10 +124,20 @@ class MainActivity : ComponentActivity() {
                         title = stringResource(R.string.error_no_storage_title),
                         message = stringResource(R.string.error_no_storage_message),
                         onConfirm = {
-                            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                            val uri = Uri.fromParts("package", packageName, null)
-                            intent.data = uri
-                            startActivity(intent)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                                val uri = Uri.fromParts("package", applicationContext.packageName, null)
+                                intent.data = uri
+                                applicationContext.startActivity(intent)
+                            } else {
+                                requestPermissions(
+                                    arrayOf(
+                                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    ),
+                                    100
+                                )
+                            }
                             showStoragePermissionDialog = false
                         },
                         onDismiss = { showStoragePermissionDialog = false }

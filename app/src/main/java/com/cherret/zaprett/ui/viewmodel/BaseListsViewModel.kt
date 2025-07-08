@@ -2,7 +2,9 @@ package com.cherret.zaprett.ui.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.OpenableColumns
 import androidx.compose.material3.SnackbarHostState
@@ -11,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
 import com.cherret.zaprett.utils.getZaprettPath
@@ -20,6 +23,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.jar.Manifest
 
 abstract class BaseListsViewModel(application: Application) : AndroidViewModel(application) {
     val context = application
@@ -61,7 +65,11 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     }
 
     fun copySelectedFile(context: Context, path: String, uri: Uri) {
-        if (!Environment.isExternalStorageManager()) return
+        //if (!Environment.isExternalStorageManager()) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+            if (!Environment.isExternalStorageManager()) return
+        }
+        else if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED) return
         val contentResolver = context.contentResolver
         val fileName = contentResolver.query(uri, null, null, null, null)?.use { cursor ->
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -72,9 +80,29 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
         if (!directory.exists()) {
             directory.mkdirs()
         }
-        val outputFile = File(getZaprettPath() + path, fileName)
 
         try {
+            val outputFile = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (Environment.isExternalStorageManager()) {
+                    val outputDir = File(getZaprettPath() + path)
+                    if (!outputDir.exists()) {
+                        outputDir.mkdirs()
+                    }
+                    File(outputDir, fileName)
+                } else {
+                    val outputDir = File(context.filesDir, path)
+                    if (!outputDir.exists()) {
+                        outputDir.mkdirs()
+                    }
+                    File(outputDir, fileName)
+                }
+            } else {
+                val outputDir = File(context.filesDir, path)
+                if (!outputDir.exists()) {
+                    outputDir.mkdirs()
+                }
+                File(outputDir, fileName)
+            }
             contentResolver.openInputStream(uri)?.use { inputStream ->
                 FileOutputStream(outputFile).use { outputStream ->
                     inputStream.copyTo(outputStream)
