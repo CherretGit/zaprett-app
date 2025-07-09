@@ -31,8 +31,8 @@ private val client = OkHttpClient()
 private val json = Json { ignoreUnknownKeys = true }
 
 fun getUpdate(callback: (UpdateInfo?) -> Unit) {
-    //val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
-    val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/Test3/refs/heads/main/update.json").build() //test repo
+    val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
+    //val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/Test3/refs/heads/main/update.json").build() //test repo
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
