@@ -31,7 +31,8 @@ private val client = OkHttpClient()
 private val json = Json { ignoreUnknownKeys = true }
 
 fun getUpdate(callback: (UpdateInfo?) -> Unit) {
-    val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
+    //val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
+    val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/Test3/refs/heads/main/update.json").build() //test repo
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
@@ -81,22 +82,7 @@ fun download(context: Context, url: String): Long {
         setTitle(fileName)
         setDescription(fileName)
         setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Downloads.DISPLAY_NAME, fileName)
-                put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-            }
-            val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-            if (uri != null) {
-                setDestinationUri(uri)
-            } else {
-                Log.e("Updater", "Failed to create MediaStore URI")
-                return -1L
-            }
-        } else {
-            setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-        }
-
+        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
         setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
     }
     return downloadManager.enqueue(request)

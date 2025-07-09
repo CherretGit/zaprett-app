@@ -59,6 +59,7 @@ import com.cherret.zaprett.utils.checkModuleInstallation
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
+import androidx.core.net.toUri
 
 sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: ImageVector) {
     object home : Screen("home", R.string.title_home, Icons.Default.Home)
@@ -125,7 +126,7 @@ class MainActivity : ComponentActivity() {
                         message = stringResource(R.string.error_no_storage_message),
                         onConfirm = {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
                                 val uri = Uri.fromParts("package", packageName, null)
                                 intent.data = uri
                                 startActivity(intent)
