@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                         onConfirm = {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                                val uri = Uri.fromParts("package", applicationContext.packageName, null)
+                                val uri = Uri.fromParts("package", packageName, null)
                                 intent.data = uri
                                 startActivity(intent)
                             } else {
