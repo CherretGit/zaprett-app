@@ -67,7 +67,6 @@
     <string name="btn_show_full_path">Показывать полный путь к листу</string>
     <string name="pls_reboot_snack">Перезагрузите устройство для вступления изменений в силу</string>
     <string name="pls_restart_snack">Перезапустите zaprett для вступления изменений в силу</string>
-    <string name="qs_name">Zaprett</string>
     <string name="qs_starting">Запуск…</string>
     <string name="qs_stopping">Остановка…</string>
     <string name="module_version">Версия модуля</string>

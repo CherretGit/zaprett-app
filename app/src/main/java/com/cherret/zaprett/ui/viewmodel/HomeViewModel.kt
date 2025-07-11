@@ -21,6 +21,7 @@ import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ServiceStatus
+import com.cherret.zaprett.byedpi.TProxyService
 import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getBinVersion
@@ -120,17 +121,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     cardIcon.value = Icons.Filled.CheckCircle
                 }
                 else {
-                    cardText.value = R.string.status_disabled
+                    cardText.intValue = R.string.status_disabled
                     cardIcon.value = Icons.Filled.Cancel
                 }
             }
         } else {
             if (ByeDpiVpnService.status == ServiceStatus.Connected){
-                cardText.value = R.string.status_enabled
+                cardText.intValue = R.string.status_enabled
                 cardIcon.value = Icons.Filled.CheckCircle
             }
             else {
-                cardText.value = R.string.status_disabled
+                cardText.intValue = R.string.status_disabled
                 cardIcon.value = Icons.Filled.Cancel
             }
         }

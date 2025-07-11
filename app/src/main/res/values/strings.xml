@@ -68,7 +68,7 @@
     <string name="btn_show_full_path">Show full list\'s path</string>
     <string name="pls_reboot_snack">Reboot your device for the changes to take effect</string>
     <string name="pls_restart_snack">Restart zaprett service for the changes to take effects</string>
-    <string name="qs_name">Zaprett</string>
+    <string name="qs_name" translatable="false">zaprett</string>
     <string name="qs_starting">Starting…</string>
     <string name="qs_stopping">Stopping…</string>
     <string name="module_version">Module version</string>
