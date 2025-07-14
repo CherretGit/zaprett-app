@@ -88,13 +88,18 @@ class MainActivity : ComponentActivity() {
             ZaprettTheme {
                 val sharedPreferences = remember { getSharedPreferences("settings", MODE_PRIVATE) }
                 LaunchedEffect(Unit) {
-
-                    checkModuleInstallation { result ->
-                        if (getSharedPreferences("settings", Context.MODE_PRIVATE).getBoolean("use_module", false) && !result) sharedPreferences.edit {
-                            putBoolean(
-                                "use_module",
-                                false
-                            )
+                    if (sharedPreferences.getBoolean("use_module", false)) {
+                        checkModuleInstallation { result ->
+                            if (getSharedPreferences(
+                                    "settings",
+                                    Context.MODE_PRIVATE
+                                ).getBoolean("use_module", false) && !result
+                            ) sharedPreferences.edit {
+                                putBoolean(
+                                    "use_module",
+                                    false
+                                )
+                            }
                         }
                     }
                 }

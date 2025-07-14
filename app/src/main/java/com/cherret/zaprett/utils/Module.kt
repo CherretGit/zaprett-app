@@ -12,7 +12,7 @@ import java.util.Properties
 import androidx.core.content.edit
 
 fun checkRoot(callback: (Boolean) -> Unit) {
-    Shell.isAppGrantedRoot()?.let { callback(it) }
+    Shell.getShell().isRoot.let { callback(it) }
 }
 
 fun checkModuleInstallation(callback: (Boolean) -> Unit) {
