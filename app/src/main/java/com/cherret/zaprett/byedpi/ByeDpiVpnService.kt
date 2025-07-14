@@ -14,11 +14,15 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.cherret.zaprett.MainActivity
 import com.cherret.zaprett.R
+import com.cherret.zaprett.utils.getActiveLists
 import com.cherret.zaprett.utils.getActiveStrategy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.fileSize
 
 class ByeDpiVpnService : VpnService() {
     private var vpnInterface: ParcelFileDescriptor? = null
@@ -163,7 +167,7 @@ class ByeDpiVpnService : VpnService() {
         val socksPort = sharedPreferences.getString("port", "1080")?: "1080"
         val listSet = sharedPreferences.getStringSet("lists", emptySet())?: emptySet()
         CoroutineScope(Dispatchers.IO).launch {
-            val args = parseArgs(socksIp, socksPort, getActiveStrategy(sharedPreferences), listSet)
+            val args = parseArgs(socksIp, socksPort, getActiveStrategy(sharedPreferences), prepareList(listSet))
             val result = NativeBridge().startProxy(args)
             if (result < 0) {
                 println("Failed to start byedpi proxy")
@@ -172,16 +176,38 @@ class ByeDpiVpnService : VpnService() {
             }
         }
     }
+    suspend fun prepareList(actlists: Set<String>): String {
+        val lists: Array<File> = actlists.map { File(it) }.toTypedArray()
+        val hostlist = File.createTempFile("hostlist", "tmp", cacheDir).apply { deleteOnExit() }
+        withContext(Dispatchers.IO) {
+            hostlist.printWriter().use { out ->
+                lists.forEach {
+                    it.bufferedReader().useLines {
+                        it.forEach {
+                            out.println(it)
+                        }
+                    }
+                }
+            }
+        }
+        return hostlist.absolutePath
+    }
 
-    fun parseArgs(ip: String, port: String, rawArgs: List<String>, listSet: Set<String>): Array<String> {
+    fun parseArgs(ip: String, port: String, rawArgs: List<String>, list : String): Array<String> {
         val regex = Regex("""--?\S+(?:=(?:[^"'\s]+|"[^"]*"|'[^']*'))?|[^\s]+""")
         val parsedArgs = rawArgs
             .flatMap { args -> regex.findAll(args).map { it.value } }
             .toMutableList()
-        if (listSet.isNotEmpty()) {
-            for (path in listSet) {
+        sharedPreferences.getStringSet("lists", emptySet())?.let {
+            /*if (it.isNotEmpty() and File(list).exists()) {
                 parsedArgs.add("--hosts")
-                parsedArgs.add(path)
+                parsedArgs.add(list)
+            }*/
+            Log.d("hostlist", "Exists: "+File(list).exists().toString()+" Path: "+list)
+            File(list).bufferedReader().use {
+                it.forEachLine {
+                    Log.d("hostlist", it)
+                }
             }
         }
         return arrayOf("ciadpi", "--ip", ip, "--port", port) + parsedArgs
