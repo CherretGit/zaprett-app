@@ -20,7 +20,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 
-
 abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(application) {
     val context = application.applicationContext
     val sharedPreferences: SharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)

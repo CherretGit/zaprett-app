@@ -40,8 +40,8 @@
     <string name="btn_update_host">Обновить</string>
     <string name="btn_installing_host">Установка</string>
     <string name="btn_updating_host">Обновление</string>
-    <string name="btn_installed_host">Установленно</string>
-    <string name="btn_autorestart">Переодически перезапускать сервис</string>
+    <string name="btn_installed_host">Установлено</string>
+    <string name="btn_autorestart">Периодически перезапускать сервис</string>
     <string name="btn_autoupdate">Авто обновление</string>
     <string name="btn_send_firebase_analytics">Отправлять аналитику Firebase</string>
     <string name="btn_repository_url_lists">URL репозитория хостов</string>

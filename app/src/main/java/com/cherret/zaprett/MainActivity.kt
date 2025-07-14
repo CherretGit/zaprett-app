@@ -47,8 +47,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.cherret.zaprett.ui.screen.HomeScreen
-import com.cherret.zaprett.ui.screen.RepoScreen
 import com.cherret.zaprett.ui.screen.HostsScreen
+import com.cherret.zaprett.ui.screen.RepoScreen
 import com.cherret.zaprett.ui.screen.SettingsScreen
 import com.cherret.zaprett.ui.screen.StrategyScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
@@ -59,7 +59,6 @@ import com.cherret.zaprett.utils.checkModuleInstallation
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
-import androidx.core.net.toUri
 
 sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: ImageVector) {
     object home : Screen("home", R.string.title_home, Icons.Default.Home)

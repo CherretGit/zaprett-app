@@ -23,7 +23,6 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.util.jar.Manifest
 
 abstract class BaseListsViewModel(application: Application) : AndroidViewModel(application) {
     val context = application

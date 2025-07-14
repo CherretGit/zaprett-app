@@ -3,16 +3,12 @@ package com.cherret.zaprett.utils
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.provider.MediaStore
-import android.provider.Settings
-import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
@@ -32,7 +28,6 @@ private val json = Json { ignoreUnknownKeys = true }
 
 fun getUpdate(callback: (UpdateInfo?) -> Unit) {
     val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
-    //val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/Test3/refs/heads/main/update.json").build() //test repo
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
