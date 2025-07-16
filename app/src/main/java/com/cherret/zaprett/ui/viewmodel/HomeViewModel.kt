@@ -51,7 +51,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var nfqwsVer = mutableStateOf(context.getString(R.string.unknown_text))
         private set
 
-    var byedpiVer = mutableStateOf("0.17.1")
+    var byedpiVer = mutableStateOf("0.17.2")
         private set
 
     var serviceMode = mutableIntStateOf(R.string.service_mode_ciadpi)
