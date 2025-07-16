@@ -82,5 +82,13 @@
     <string name="qs_working">Working</string>
     <string name="qs_not_working">Not working</string>
     <string name="about_title">About app</string>
-    <string name="about_text">Zaprett App by Cherret, egor-white\nVersion: %1$s</string>
+    <string name="about_text">zaprett app by Cherret, egor-white\nVersion: %1$s</string>
+    <string name="btn_whitelist">App white list</string>
+    <string name="btn_blacklist">App black list</string>
+    <string name="shared_section">Shared settings</string>
+    <string name="zapret_section">zapret settings</string>
+    <string name="title_whitelist">White list</string>
+    <string name="title_blacklist">Black list</string>
+    <string name="btn_applist">Apps lists</string>
+    <string name="radio_disabed">Disabled</string>
 </resources>

@@ -42,7 +42,7 @@
     <string name="btn_updating_host">Обновление</string>
     <string name="btn_installed_host">Установлено</string>
     <string name="btn_autorestart">Периодически перезапускать сервис</string>
-    <string name="btn_autoupdate">Авто обновление</string>
+    <string name="btn_autoupdate">Автообновление</string>
     <string name="btn_send_firebase_analytics">Отправлять аналитику Firebase</string>
     <string name="btn_repository_url_lists">URL репозитория хостов</string>
     <string name="hint_enter_repository_url_lists">Введите URL репозитория хостов</string>
@@ -79,4 +79,12 @@
     <string name="qs_not_working">Не работает</string>
     <string name="about_title">О приложении</string>
     <string name="about_text">Zaprett app от Cherret, egor-white\nВерсия: %1$s</string>
+    <string name="btn_whitelist">Белый список приложений</string>
+    <string name="btn_blacklist">Чёрный список приложений</string>
+    <string name="shared_section">Общие настройки</string>
+    <string name="zapret_section">Настройки zapret</string>
+    <string name="title_whitelist">Белый список</string>
+    <string name="title_blacklist">Чёрный список</string>
+    <string name="btn_applist">Списки приложений</string>
+    <string name="radio_disabed">Выключено</string>
 </resources>

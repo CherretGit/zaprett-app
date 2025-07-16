@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import com.cherret.zaprett.MainActivity
 import com.cherret.zaprett.R
 import com.cherret.zaprett.utils.getActiveStrategy
+import com.cherret.zaprett.utils.getAppsListMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -122,11 +123,28 @@ class ByeDpiVpnService : VpnService() {
             .addDnsServer(dns)
             .addRoute("0.0.0.0", 0)
             .setMetered(false)
-            .addDisallowedApplication(applicationContext.packageName)
         if (ipv6) {
             builder.addAddress("fd00::1", 128)
                 .addRoute("::", 0)
         }
+        val applist = getAppsListMode(sharedPreferences)
+        if (applist.equals("none")) {
+            builder.addDisallowedApplication(applicationContext.packageName)
+        }
+        if (applist.equals("whitelist")) {
+            val whitelist = sharedPreferences.getStringSet("whitelist", emptySet())
+            whitelist!!.forEach {
+                builder.addAllowedApplication(it)
+            }
+        }
+        if (applist.equals("blacklist")) {
+            builder.addDisallowedApplication(applicationContext.packageName)
+            val blacklist = sharedPreferences.getStringSet("blacklist", emptySet())
+            blacklist!!.forEach {
+                builder.addDisallowedApplication(it)
+            }
+        }
+        Log.d("builder", builder.toString())
         vpnInterface = builder.establish()
         val tun2socksConfig = """
         | misc:

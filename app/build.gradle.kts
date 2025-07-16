@@ -15,8 +15,8 @@ android {
         applicationId = "com.cherret.zaprett"
         minSdk = 29
         targetSdk = 35
-        versionCode = 16
-        versionName = "2.4"
+        versionCode = 17
+        versionName = "2.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -88,6 +88,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("androidx.fragment:fragment-compose:1.8.8")
+    implementation("io.coil-kt.coil3:coil-compose:3.2.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

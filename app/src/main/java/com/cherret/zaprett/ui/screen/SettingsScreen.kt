@@ -2,10 +2,16 @@ package com.cherret.zaprett.ui.screen
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
@@ -13,31 +19,48 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ServiceStatus
+import com.cherret.zaprett.ui.viewmodel.AppListType
+import com.cherret.zaprett.ui.viewmodel.SettingsViewModel
 import com.cherret.zaprett.utils.checkModuleInstallation
 import com.cherret.zaprett.utils.checkRoot
+import com.cherret.zaprett.utils.getAppsListMode
 import com.cherret.zaprett.utils.getStartOnBoot
+import com.cherret.zaprett.utils.isInList
+import com.cherret.zaprett.utils.setAppsListMode
 import com.cherret.zaprett.utils.setStartOnBoot
 import com.cherret.zaprett.utils.stopService
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(viewModel : SettingsViewModel = viewModel()) {
     val context = LocalContext.current
     val sharedPreferences = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val editor = remember { sharedPreferences.edit() }
-
     val useModule = remember { mutableStateOf(sharedPreferences.getBoolean("use_module", false)) }
     val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", false)) }
     val autoRestart = remember { mutableStateOf(getStartOnBoot()) }
@@ -53,6 +76,9 @@ fun SettingsScreen() {
     val showPortDialog = remember { mutableStateOf(false) }
     val showDNSDialog = remember { mutableStateOf(false) }
     val textDialogValue = remember { mutableStateOf("") }
+    val showWhiteDialog = remember { mutableStateOf(false) }
+    val showBlackDialog = remember { mutableStateOf(false) }
+    val showAppsListsSheet = remember { mutableStateOf(false) }
 
     val settingsList = listOf(
         Setting.Section(stringResource(R.string.general_section)),
@@ -80,13 +106,6 @@ fun SettingsScreen() {
             onToggle = {
                 updateOnBoot.value = it
                 editor.putBoolean("update_on_boot", it).apply()
-            }
-        ),
-        Setting.Toggle(
-            title = stringResource(R.string.btn_autorestart),
-            checked = autoRestart.value,
-            onToggle = {
-                if (handleAutoRestart(context, it)) autoRestart.value = it
             }
         ),
         Setting.Toggle(
@@ -119,6 +138,27 @@ fun SettingsScreen() {
                 showStrategyRepoUrlDialog.value = true
             }
         ),
+        Setting.Section(
+            title = stringResource(R.string.shared_section)
+        ),
+        Setting.Action(
+            title = stringResource(R.string.btn_applist),
+            onClick = {
+                showAppsListsSheet.value = true
+            }
+        ),
+        Setting.Action(
+            title = stringResource(R.string.btn_whitelist),
+            onClick = {
+                showWhiteDialog.value = true
+            }
+        ),
+        Setting.Action(
+            title = stringResource(R.string.btn_blacklist),
+            onClick = {
+                showBlackDialog.value = true
+            }
+        ),
         Setting.Section(stringResource(R.string.byedpi_section)),
         Setting.Toggle(
             title = stringResource(R.string.btn_ipv6),
@@ -147,6 +187,16 @@ fun SettingsScreen() {
             onClick = {
                 textDialogValue.value = sharedPreferences.getString("dns", "8.8.8.8") ?: "8.8.8.8"
                 showDNSDialog.value = true
+            }
+        ),
+        Setting.Section(
+            title = stringResource(R.string.zapret_section)
+        ),
+        Setting.Toggle(
+            title = stringResource(R.string.btn_autorestart),
+            checked = autoRestart.value,
+            onToggle = {
+                if (handleAutoRestart(context, it)) autoRestart.value = it
             }
         )
     )
@@ -199,6 +249,38 @@ fun SettingsScreen() {
         TextDialog(stringResource(R.string.btn_dns), stringResource(R.string.hint_dns), textDialogValue.value, onConfirm = {
             editor.putString("dns", it).apply()
         }, onDismiss = { showDNSDialog.value = false })
+    }
+
+    if (showWhiteDialog.value) {
+        ChooseAppsDialog(
+            onDismissRequest = {
+                showWhiteDialog.value = false
+                viewModel.clearList()
+            },
+            viewModel = viewModel,
+            listType = AppListType.Whitelist
+        )
+    }
+
+    if (showBlackDialog.value) {
+        ChooseAppsDialog(
+            onDismissRequest = {
+                showBlackDialog.value = false
+                viewModel.clearList()
+            },
+            viewModel = viewModel,
+            listType = AppListType.Blacklist
+        )
+    }
+
+    if (showAppsListsSheet.value) {
+        ListBottomSheet(
+            onDismissRequest = {
+                showAppsListsSheet.value = false
+            },
+            prefs = sharedPreferences,
+            context
+        )
     }
 
     Scaffold(
@@ -314,7 +396,89 @@ private fun SettingsTextItem(title: String, onClick: () -> Unit) {
                 text = title,
                 modifier = Modifier.weight(1f)
             )
-            Icon(imageVector = Icons.AutoMirrored.Default.ArrowForward, contentDescription = "test")
+            Icon(imageVector = Icons.AutoMirrored.Default.ArrowForward, contentDescription = null)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ListBottomSheet(
+    onDismissRequest: () -> Unit,
+    prefs : SharedPreferences,
+    context: Context
+){
+    val selectedOption = remember { mutableStateOf(getAppsListMode(prefs)) }
+    ModalBottomSheet(
+        onDismissRequest = { onDismissRequest() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .selectable(
+                        selected = selectedOption.value=="none",
+                        onClick = {
+                            setAppsListMode(prefs, "none")
+                            selectedOption.value = "none"
+                        },
+                        role = Role.RadioButton
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = selectedOption.value.equals("none"),
+                    onClick = null
+                )
+                Text(stringResource(R.string.radio_disabed), modifier = Modifier.padding(start = 8.dp))
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .selectable(
+                        selected = selectedOption.value=="whitelist",
+                        onClick = {
+                            setAppsListMode(prefs, "whitelist")
+                            selectedOption.value = "whitelist"
+                        },
+                        role = Role.RadioButton
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = selectedOption.value.equals("whitelist"),
+                    onClick = null
+                )
+                Text(stringResource(R.string.title_whitelist), modifier = Modifier.padding(start = 8.dp))
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .selectable(
+                        selected = selectedOption.value=="blacklist",
+                        onClick = {
+                            setAppsListMode(prefs, "blacklist")
+                            selectedOption.value = "blacklist"
+                        },
+                        role = Role.RadioButton
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = selectedOption.value.equals("blacklist"),
+                    onClick = null
+                )
+                Text(stringResource(R.string.title_blacklist), modifier = Modifier.padding(start = 8.dp))
+            }
         }
     }
 }
@@ -438,6 +602,103 @@ private fun AboutDialog(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         confirmButton = { }
     )
+}
+
+@Composable
+private fun ChooseAppsDialog(
+    onDismissRequest: () -> Unit,
+    viewModel: SettingsViewModel,
+    listType: AppListType
+) {
+    val appsList by viewModel.appsList.collectAsState()
+    val title = if (listType == AppListType.Whitelist) stringResource(R.string.title_whitelist) else stringResource(R.string.title_blacklist)
+    LaunchedEffect(listType) {
+        viewModel.setListType(listType)
+    }
+
+
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(600.dp)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column (
+                modifier = Modifier.fillMaxSize()
+            ){
+                Text(
+                    text = title,
+                    modifier = Modifier.padding(16.dp),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp
+                )
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    items(appsList){
+                        AppItem(viewModel(), it, isInList(listType, it, LocalContext.current.getSharedPreferences("settings",
+                            Context.MODE_PRIVATE), LocalContext.current), { isChecked ->
+                            if (isChecked){ viewModel.addToList(listType, it) }
+                            else { viewModel.removeFromList(listType, it) }
+                            }
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        //.height(24.dp)
+                        .padding(bottom = 8.dp, end = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = { onDismissRequest() },
+                        modifier = Modifier.padding(8.dp, top = 4.dp),
+                    ) {
+                        Text(text = stringResource(R.string.btn_continue))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppItem(viewModel: SettingsViewModel, packageName : String, enabled : Boolean, onCheckedChange: (Boolean) -> Unit){
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current).data(viewModel.getAppIconBitmap(packageName)).build(),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(4.dp)
+        )
+        Text(
+            text = viewModel.getApplicationName(packageName) ?: "unknown",
+            modifier = Modifier
+                .weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontSize = 18.sp
+        )
+        Switch(
+                checked = enabled,
+                onCheckedChange = onCheckedChange
+        )
+
+    }
 }
 
 sealed class Setting {

@@ -1,5 +1,8 @@
 package com.cherret.zaprett.utils
 
+import android.app.Application
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import android.os.Environment
 import android.util.Log
@@ -10,6 +13,8 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Properties
 import androidx.core.content.edit
+import com.cherret.zaprett.ui.viewmodel.AppListType
+import com.cherret.zaprett.ui.viewmodel.SettingsViewModel
 
 fun checkRoot(callback: (Boolean) -> Unit) {
     Shell.getShell().isRoot.let { callback(it) }
@@ -141,7 +146,7 @@ fun getAllByeDPIStrategies(): Array<String> {
 
 fun getActiveLists(sharedPreferences: SharedPreferences): Array<String> {
     if (sharedPreferences.getBoolean("use_module", false)) {
-        val configFile = File("${getZaprettPath()}/config")
+        val configFile = getConfigFile()
         if (configFile.exists()) {
             val props = Properties()
             return try {
@@ -199,9 +204,9 @@ fun getActiveStrategy(sharedPreferences: SharedPreferences): List<String> {
 
 fun enableList(path: String, sharedPreferences: SharedPreferences) {
     if (sharedPreferences.getBoolean("use_module", false)) {
-        val props = Properties()
         val configFile = getConfigFile()
         try {
+            val props = Properties()
             if (configFile.exists()) {
                 FileInputStream(configFile).use { input ->
                     props.load(input)
@@ -326,4 +331,229 @@ fun disableStrategy(path: String, sharedPreferences: SharedPreferences) {
     else {
         sharedPreferences.edit { remove("active_strategy") }
     }
+}
+
+fun addPackageToList(listType: AppListType, packageName: String, prefs : SharedPreferences, context : Context) {
+    if (prefs.getBoolean("use_module", false)){
+        val configFile = getConfigFile()
+        try {
+            val props = Properties()
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+            }
+            if (listType == AppListType.Whitelist) {
+                val whitelist = props.getProperty("whitelist", "")
+                    .split(",")
+                    .filter { it.isNotBlank() }
+                    .toMutableList()
+                if (packageName !in whitelist) {
+                    whitelist.add(packageName)
+                }
+                props.setProperty("whitelist", whitelist.joinToString(","))
+            }
+            if (listType == AppListType.Blacklist) {
+                val blacklist = props.getProperty("blacklist", "")
+                    .split(",")
+                    .filter { it.isNotBlank() }
+                    .toMutableList()
+                if (packageName !in blacklist) {
+                    blacklist.add(packageName)
+                }
+                props.setProperty("blacklist", blacklist.joinToString(","))
+            }
+            FileOutputStream(configFile).use { output ->
+                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+    }
+    else {
+        val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
+        if (listType == AppListType.Whitelist){
+            val set = prefs.getStringSet("whitelist", emptySet())?.toMutableSet() ?: mutableSetOf()
+            set.add(packageName)
+            prefs.edit().putStringSet("whitelist", set).apply()
+        }
+        if (listType == AppListType.Blacklist){
+            val set = prefs.getStringSet("blacklist", emptySet())?.toMutableSet() ?: mutableSetOf()
+            set.add(packageName)
+            prefs.edit().putStringSet("blacklist", set).apply()
+        }
+
+    }
+}
+
+fun removePackageFromList(listType: AppListType, packageName: String, prefs: SharedPreferences, context: Context) {
+    if (prefs.getBoolean("use_module", false)){
+        val props = Properties()
+        val configFile = getConfigFile()
+        try {
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+            }
+            if (listType == AppListType.Whitelist){
+                val whitelist = props.getProperty("whitelist", "")
+                    .split(",")
+                    .filter { it.isNotBlank() }
+                    .toMutableList()
+                if (packageName in whitelist) {
+                    whitelist.remove(packageName)
+                }
+                props.setProperty("whitelist", whitelist.joinToString(","))
+            }
+            if (listType == AppListType.Blacklist) {
+                val blacklist = props.getProperty("blacklist", "")
+                    .split(",")
+                    .filter { it.isNotBlank() }
+                    .toMutableList()
+                if (packageName in blacklist) {
+                    blacklist.remove(packageName)
+                }
+                props.setProperty("blacklist", blacklist.joinToString(","))
+            }
+
+            FileOutputStream(configFile).use { output ->
+                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+    }
+    else {
+        val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
+        if (listType == AppListType.Whitelist) {
+            val set = prefs.getStringSet("whitelist", emptySet())?.toMutableSet() ?: mutableSetOf()
+            set.remove(packageName)
+            prefs.edit().putStringSet("whitelist", set).apply()
+        }
+        if (listType == AppListType.Blacklist) {
+            val set = prefs.getStringSet("blacklist", emptySet())?.toMutableSet() ?: mutableSetOf()
+            set.remove(packageName)
+            prefs.edit().putStringSet("blacklist", set).apply()
+        }
+    }
+}
+
+fun isInList(listType: AppListType, packageName: String, prefs: SharedPreferences, context: Context) : Boolean {
+    if (prefs.getBoolean("use_module", false)) {
+        val configFile = getConfigFile()
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                if (listType == AppListType.Whitelist) {
+                    val whitelist = props.getProperty("whitelist", "")
+                    return if (whitelist.isNotEmpty()) whitelist.split(",")
+                        .toTypedArray().contains(packageName) else false
+                }
+                if (listType == AppListType.Blacklist) {
+                    val blacklist = props.getProperty("blacklist", "")
+                    return if (blacklist.isNotEmpty()) blacklist.split(",")
+                        .toTypedArray().contains(packageName) else false
+                }
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+        }
+    }
+    else {
+        val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
+        if(listType == AppListType.Whitelist){
+            val whitelist = prefs.getStringSet("whitelist", emptySet()) ?: emptySet()
+            return packageName in whitelist
+        }
+        else {
+            val blacklist = prefs.getStringSet("blacklist", emptySet()) ?: emptySet()
+            return packageName in blacklist
+        }
+    }
+    return false
+}
+
+fun getAppList(listType: AppListType, sharedPreferences : SharedPreferences, context : Context) : Set<String> {
+    if (sharedPreferences.getBoolean("use_module", false)) {
+        val configFile = File("${getZaprettPath()}/config")
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                if (listType == AppListType.Whitelist) {
+                    val whitelist = props.getProperty("whitelist", "")
+                    return if (whitelist.isNotEmpty()) whitelist.split(",")
+                        .toSet() else emptySet()
+                }
+                if (listType == AppListType.Blacklist) {
+                    val blacklist = props.getProperty("blacklist", "")
+                    return if (blacklist.isNotEmpty()) blacklist.split(",")
+                        .toSet() else emptySet()
+                }
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+        }
+        return emptySet()
+    }
+    else {
+        return if (listType == AppListType.Whitelist) context.getSharedPreferences("settings", MODE_PRIVATE)
+            .getStringSet("whitelist", emptySet()) ?: emptySet()
+            else context.getSharedPreferences("settings", MODE_PRIVATE)
+            .getStringSet("blacklist", emptySet()) ?: emptySet()
+    }
+}
+
+fun getAppsListMode(prefs : SharedPreferences) : String {
+    if(prefs.getBoolean("use_module", false)) {
+        val configFile = getConfigFile()
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                val applist = props.getProperty("applist", "")!!
+                Log.d("App list", "Equals to ${applist}")
+                return if (applist.equals("whitelist") || applist.equals("blacklist") || applist.equals("none")) applist
+                    else "none"
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+        }
+    }
+    else {
+        return prefs.getString("applist", "")!!
+    }
+    return "none"
+}
+
+fun setAppsListMode(prefs: SharedPreferences, mode: String) {
+    if (prefs.getBoolean("use_module", false)) {
+        val configFile = getConfigFile()
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                props.setProperty("applist", mode)
+                FileOutputStream(configFile).use { output ->
+                    props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+                }
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+        }
+    }
+    else {
+        prefs.edit().putString("applist", mode).apply()
+    }
+    Log.d("App List", "Changed to ${mode}")
 }
