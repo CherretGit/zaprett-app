@@ -25,7 +25,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     val appsList: StateFlow<List<String>> = _appsList
     private val _selectedPackages = MutableStateFlow<Set<String>>(emptySet())
     val selectedPackages: StateFlow<Set<String>> = _selectedPackages.asStateFlow()
-
     private val _currentListType = MutableStateFlow(AppListType.Whitelist)
 
     init {
@@ -77,7 +76,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         _selectedPackages.value = emptySet()
     }
 
-    private fun refreshApplications() {
+    fun refreshApplications() {
         val context = getApplication<Application>()
         val packages = if (prefs.getBoolean("show_system_apps", false)){
             context.packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
