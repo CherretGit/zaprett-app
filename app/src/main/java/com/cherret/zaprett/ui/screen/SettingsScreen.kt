@@ -45,6 +45,7 @@ import com.cherret.zaprett.utils.getStartOnBoot
 import com.cherret.zaprett.utils.setAppsListMode
 import com.cherret.zaprett.utils.setStartOnBoot
 import com.cherret.zaprett.utils.stopService
+import androidx.core.content.edit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -614,62 +615,88 @@ private fun ChooseAppsDialog(
     val appsList by viewModel.appsList.collectAsState()
     val selectedPackages by viewModel.selectedPackages.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
+    val filteredList = remember(searchQuery, appsList) {
+        if (searchQuery.isBlank()) appsList
+        else appsList.filter { it.contains(searchQuery, ignoreCase = true) }
+    }
+    var expanded by remember { mutableStateOf(false) }
     val title = if (listType == AppListType.Whitelist) stringResource(R.string.title_whitelist) else stringResource(R.string.title_blacklist)
     LaunchedEffect(listType) {
         viewModel.setListType(listType)
     }
-
-
     Dialog(onDismissRequest = onDismissRequest) {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                //.height(600.dp)
                 .wrapContentHeight()
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
         ) {
-            Column (
-                modifier = Modifier.fillMaxSize()
-            ){
-                Row {
+            Column(
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth()) {
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = title,
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.weight(1f),
                         fontWeight = FontWeight.Bold,
                         fontSize = 24.sp
                     )
-                    Column (
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Checkbox(
-                            checked = showSystemApps.value,
-                            onCheckedChange = {
-                                prefs.edit().putBoolean("show_system_apps", it).apply()
-                                showSystemApps.value = it
-                                viewModel.refreshApplications()
-                            }
-                        )
-                        Text(
-                            text = "System apps",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(20.dp),
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center
-
-                        )
+                    Box {
+                        IconButton(onClick = { expanded = !expanded }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                        }
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.btn_show_system_apps),
+                                            fontSize = 12.sp,
+                                            textAlign = TextAlign.Center
+                                        )
+                                        Checkbox(
+                                            checked = showSystemApps.value,
+                                            onCheckedChange = null
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    prefs.edit { putBoolean("show_system_apps", !showSystemApps.value) }
+                                    showSystemApps.value = !showSystemApps.value
+                                    viewModel.refreshApplications()
+                                    expanded = false
+                                }
+                            )
+                        }
                     }
+                }
+                Row {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text(stringResource(R.string.search_field)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    )
                 }
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.SpaceBetween,
+                        .heightIn(max = 400.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    items(appsList, /*key = { it }*/){
+                    items(filteredList) {
                         AppItem(viewModel(), it, selectedPackages.contains(it), { isChecked ->
                             if (isChecked){ viewModel.addToList(listType, it) }
                             else { viewModel.removeFromList(listType, it) }
