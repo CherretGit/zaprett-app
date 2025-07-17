@@ -3,8 +3,6 @@ package com.cherret.zaprett.ui.screen
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -19,11 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -31,20 +25,17 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
-import com.cherret.zaprett.byedpi.ServiceStatus
-import com.cherret.zaprett.ui.viewmodel.AppListType
+import com.cherret.zaprett.data.ServiceStatus
+import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.ui.viewmodel.SettingsViewModel
 import com.cherret.zaprett.utils.checkModuleInstallation
 import com.cherret.zaprett.utils.checkRoot
@@ -511,6 +502,9 @@ private fun useModule(context: Context, checked: Boolean, updateOnBoot: MutableS
                         }
                         editor.remove("lists").apply()
                         editor.remove("active_strategy").apply()
+                        editor.remove("applist").apply()
+                        editor.remove("whitelist").apply()
+                        editor.remove("blacklist").apply()
                         updateOnBoot.value = true
                         callback(true)
                     } else {
@@ -653,7 +647,6 @@ private fun ChooseAppsDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        //.height(24.dp)
                         .padding(bottom = 8.dp, end = 8.dp),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
@@ -697,7 +690,6 @@ private fun AppItem(viewModel: SettingsViewModel, packageName : String, enabled 
                 checked = enabled,
                 onCheckedChange = onCheckedChange
         )
-
     }
 }
 

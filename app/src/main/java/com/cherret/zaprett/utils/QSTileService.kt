@@ -7,7 +7,7 @@ import android.service.quicksettings.TileService
 import androidx.core.content.ContextCompat
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
-import com.cherret.zaprett.byedpi.ServiceStatus
+import com.cherret.zaprett.data.ServiceStatus
 
 class QSTileService: TileService() {
     private lateinit var prefs: SharedPreferences

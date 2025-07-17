@@ -13,6 +13,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.cherret.zaprett.MainActivity
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getAppsListMode
 import kotlinx.coroutines.CoroutineScope
@@ -127,21 +128,23 @@ class ByeDpiVpnService : VpnService() {
             builder.addAddress("fd00::1", 128)
                 .addRoute("::", 0)
         }
-        val applist = getAppsListMode(sharedPreferences)
-        if (applist.equals("none")) {
-            builder.addDisallowedApplication(applicationContext.packageName)
-        }
-        if (applist.equals("whitelist")) {
-            val whitelist = sharedPreferences.getStringSet("whitelist", emptySet())
-            whitelist!!.forEach {
-                builder.addAllowedApplication(it)
+        val appList = getAppsListMode(sharedPreferences)
+        when (appList) {
+            "blacklist" -> {
+                builder.addDisallowedApplication(applicationContext.packageName)
+                val blacklist = sharedPreferences.getStringSet("blacklist", emptySet())?: emptySet()
+                blacklist.forEach {
+                    builder.addDisallowedApplication(it)
+                }
             }
-        }
-        if (applist.equals("blacklist")) {
-            builder.addDisallowedApplication(applicationContext.packageName)
-            val blacklist = sharedPreferences.getStringSet("blacklist", emptySet())
-            blacklist!!.forEach {
-                builder.addDisallowedApplication(it)
+            "whitelist" -> {
+                val whitelist = sharedPreferences.getStringSet("whitelist", emptySet())?: emptySet()
+                whitelist.forEach {
+                    builder.addAllowedApplication(it)
+                }
+            }
+            else -> {
+                builder.addDisallowedApplication(applicationContext.packageName)
             }
         }
         Log.d("builder", builder.toString())
@@ -190,7 +193,7 @@ class ByeDpiVpnService : VpnService() {
             }
         }
     }
-    suspend fun prepareList(actlists: Set<String>): String {
+    private suspend fun prepareList(actlists: Set<String>): String {
         if (actlists.isNotEmpty()) {
             val lists: Array<File> = actlists.map { File(it) }.toTypedArray()
             val hostlist = withContext(Dispatchers.IO) {
@@ -212,7 +215,7 @@ class ByeDpiVpnService : VpnService() {
         return ""
     }
 
-    fun parseArgs(ip: String, port: String, rawArgs: List<String>, list : String): Array<String> {
+    private fun parseArgs(ip: String, port: String, rawArgs: List<String>, list : String): Array<String> {
         val regex = Regex("""--?\S+(?:=(?:[^"'\s]+|"[^"]*"|'[^']*'))?|[^\s]+""")
         val parsedArgs = rawArgs
             .flatMap { args -> regex.findAll(args).map { it.value } }

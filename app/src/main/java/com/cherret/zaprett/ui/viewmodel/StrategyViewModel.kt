@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.material3.SnackbarHostState
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
-import com.cherret.zaprett.byedpi.ServiceStatus
+import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveByeDPIStrategies

@@ -1,6 +1,5 @@
 package com.cherret.zaprett.utils
 
-import android.app.Application
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
@@ -13,8 +12,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Properties
 import androidx.core.content.edit
-import com.cherret.zaprett.ui.viewmodel.AppListType
-import com.cherret.zaprett.ui.viewmodel.SettingsViewModel
+import com.cherret.zaprett.data.AppListType
 
 fun checkRoot(callback: (Boolean) -> Unit) {
     Shell.getShell().isRoot.let { callback(it) }
@@ -520,8 +518,8 @@ fun getAppsListMode(prefs : SharedPreferences) : String {
                     props.load(input)
                 }
                 val applist = props.getProperty("applist", "")!!
-                Log.d("App list", "Equals to ${applist}")
-                return if (applist.equals("whitelist") || applist.equals("blacklist") || applist.equals("none")) applist
+                Log.d("App list", "Equals to $applist")
+                return if (applist == "whitelist" || applist == "blacklist" || applist == "none") applist
                     else "none"
             } catch (e: IOException) {
                 throw RuntimeException(e)
@@ -553,7 +551,7 @@ fun setAppsListMode(prefs: SharedPreferences, mode: String) {
         }
     }
     else {
-        prefs.edit().putString("applist", mode).apply()
+        prefs.edit { putString("applist", mode) }
     }
-    Log.d("App List", "Changed to ${mode}")
+    Log.d("App List", "Changed to $mode")
 }
