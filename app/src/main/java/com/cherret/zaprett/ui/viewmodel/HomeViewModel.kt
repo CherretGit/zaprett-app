@@ -17,7 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
-import com.cherret.zaprett.byedpi.ServiceStatus
+import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getBinVersion

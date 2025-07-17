@@ -35,8 +35,8 @@ import coil3.request.ImageRequest
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
-import com.cherret.zaprett.byedpi.ServiceStatus
-import com.cherret.zaprett.ui.viewmodel.AppListType
+import com.cherret.zaprett.data.ServiceStatus
+import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.ui.viewmodel.SettingsViewModel
 import com.cherret.zaprett.utils.checkModuleInstallation
 import com.cherret.zaprett.utils.checkRoot
@@ -507,6 +507,9 @@ private fun useModule(context: Context, checked: Boolean, updateOnBoot: MutableS
                         }
                         editor.remove("lists").apply()
                         editor.remove("active_strategy").apply()
+                        editor.remove("applist").apply()
+                        editor.remove("whitelist").apply()
+                        editor.remove("blacklist").apply()
                         updateOnBoot.value = true
                         callback(true)
                     } else {
@@ -677,7 +680,6 @@ private fun ChooseAppsDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        //.height(24.dp)
                         .padding(bottom = 8.dp, end = 8.dp),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
@@ -721,7 +723,6 @@ private fun AppItem(viewModel: SettingsViewModel, packageName : String, enabled 
                 checked = enabled,
                 onCheckedChange = onCheckedChange
         )
-
     }
 }
 

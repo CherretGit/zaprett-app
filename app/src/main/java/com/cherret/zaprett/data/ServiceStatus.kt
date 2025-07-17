@@ -1,4 +1,4 @@
-package com.cherret.zaprett.byedpi
+package com.cherret.zaprett.data
 
 enum class ServiceStatus {
     Disconnected,

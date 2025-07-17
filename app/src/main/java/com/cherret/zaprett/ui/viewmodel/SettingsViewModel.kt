@@ -10,6 +10,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.lifecycle.AndroidViewModel
 import androidx.core.graphics.createBitmap
+import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.utils.addPackageToList
 import com.cherret.zaprett.utils.getAppList
 import com.cherret.zaprett.utils.removePackageFromList
@@ -76,7 +77,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         _selectedPackages.value = emptySet()
     }
 
-    fun refreshApplications() {
+    private fun refreshApplications() {
         val context = getApplication<Application>()
         val packages = if (prefs.getBoolean("show_system_apps", false)){
             context.packageManager.getInstalledPackages(PackageManager.GET_META_DATA)

@@ -340,5 +340,4 @@ fun UpdateDialog(viewModel: HomeViewModel, changeLog: String, newVersion: Mutabl
             }
         }
     )
-
 }
