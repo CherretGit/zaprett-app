@@ -3,8 +3,6 @@ package com.cherret.zaprett.ui.screen
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -19,24 +17,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -50,7 +42,6 @@ import com.cherret.zaprett.utils.checkModuleInstallation
 import com.cherret.zaprett.utils.checkRoot
 import com.cherret.zaprett.utils.getAppsListMode
 import com.cherret.zaprett.utils.getStartOnBoot
-import com.cherret.zaprett.utils.isInList
 import com.cherret.zaprett.utils.setAppsListMode
 import com.cherret.zaprett.utils.setStartOnBoot
 import com.cherret.zaprett.utils.stopService
@@ -79,6 +70,7 @@ fun SettingsScreen(viewModel : SettingsViewModel = viewModel()) {
     val showWhiteDialog = remember { mutableStateOf(false) }
     val showBlackDialog = remember { mutableStateOf(false) }
     val showAppsListsSheet = remember { mutableStateOf(false) }
+    val showSystemApps = remember { mutableStateOf(sharedPreferences.getBoolean("show_system_apps", false)) }
 
     val settingsList = listOf(
         Setting.Section(stringResource(R.string.general_section)),
@@ -258,7 +250,9 @@ fun SettingsScreen(viewModel : SettingsViewModel = viewModel()) {
                 viewModel.clearList()
             },
             viewModel = viewModel,
-            listType = AppListType.Whitelist
+            listType = AppListType.Whitelist,
+            sharedPreferences,
+            showSystemApps
         )
     }
 
@@ -269,7 +263,9 @@ fun SettingsScreen(viewModel : SettingsViewModel = viewModel()) {
                 viewModel.clearList()
             },
             viewModel = viewModel,
-            listType = AppListType.Blacklist
+            listType = AppListType.Blacklist,
+            sharedPreferences,
+            showSystemApps
         )
     }
 
@@ -608,9 +604,13 @@ private fun AboutDialog(onDismiss: () -> Unit) {
 private fun ChooseAppsDialog(
     onDismissRequest: () -> Unit,
     viewModel: SettingsViewModel,
-    listType: AppListType
+    listType: AppListType,
+    prefs: SharedPreferences,
+    showSystemApps : MutableState<Boolean>
 ) {
     val appsList by viewModel.appsList.collectAsState()
+    val selectedPackages by viewModel.selectedPackages.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
     val title = if (listType == AppListType.Whitelist) stringResource(R.string.title_whitelist) else stringResource(R.string.title_blacklist)
     LaunchedEffect(listType) {
         viewModel.setListType(listType)
@@ -621,19 +621,44 @@ private fun ChooseAppsDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(600.dp)
+                //.height(600.dp)
+                .wrapContentHeight()
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
         ) {
             Column (
                 modifier = Modifier.fillMaxSize()
             ){
-                Text(
-                    text = title,
-                    modifier = Modifier.padding(16.dp),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp
-                )
+                Row {
+                    Text(
+                        text = title,
+                        modifier = Modifier.padding(16.dp),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp
+                    )
+                    Column (
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Checkbox(
+                            checked = showSystemApps.value,
+                            onCheckedChange = {
+                                prefs.edit().putBoolean("show_system_apps", it).apply()
+                                showSystemApps.value = it
+                                viewModel.refreshApplications()
+                            }
+                        )
+                        Text(
+                            text = "System apps",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(20.dp),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+
+                        )
+                    }
+                }
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -641,9 +666,8 @@ private fun ChooseAppsDialog(
                     verticalArrangement = Arrangement.SpaceBetween,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    items(appsList){
-                        AppItem(viewModel(), it, isInList(listType, it, LocalContext.current.getSharedPreferences("settings",
-                            Context.MODE_PRIVATE), LocalContext.current), { isChecked ->
+                    items(appsList, /*key = { it }*/){
+                        AppItem(viewModel(), it, selectedPackages.contains(it), { isChecked ->
                             if (isChecked){ viewModel.addToList(listType, it) }
                             else { viewModel.removeFromList(listType, it) }
                             }
