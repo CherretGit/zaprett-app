@@ -3,6 +3,7 @@ package com.cherret.zaprett.ui.screen
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -46,6 +48,7 @@ import com.cherret.zaprett.utils.setAppsListMode
 import com.cherret.zaprett.utils.setStartOnBoot
 import com.cherret.zaprett.utils.stopService
 import androidx.core.content.edit
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -594,11 +597,52 @@ private fun TextDialog(title: String, message: String, initialText: String, onCo
 
 @Composable
 private fun AboutDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
     AlertDialog(
         title = { Text(text = stringResource(R.string.about_title)) },
         icon = {Icon(painterResource(R.drawable.ic_launcher_monochrome), contentDescription = stringResource(R.string.app_name), modifier = Modifier
             .size(64.dp))},
-        text = { Text(text = stringResource(R.string.about_text, BuildConfig.VERSION_NAME)) },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = stringResource(R.string.about_text, BuildConfig.VERSION_NAME))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IconButton(onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW,
+                            "https://github.com/CherretGit/zaprett-app".toUri())
+                        context.startActivity(intent)
+                    }) {
+                        Icon(painterResource(R.drawable.github), "GitHub")
+                    }
+                    IconButton(onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW,
+                            "https://t.me/zaprett_module".toUri())
+                        context.startActivity(intent)
+                    }) {
+                        Icon(painterResource(R.drawable.telegram), "Telegram")
+                    }
+                    IconButton(onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW,
+                            "https://matrix.to/#/#zaprett-group:matrix.cherret.ru".toUri())
+                        context.startActivity(intent)
+                    }) {
+                        Icon(painterResource(R.drawable.matrix), "Matrix")
+                    }
+                    IconButton(onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW,
+                            "https://pay.cloudtips.ru/p/672192fd".toUri())
+                        context.startActivity(intent)
+                    }) {
+                        Icon(Icons.Default.AttachMoney, "Donate")
+                    }
+                }
+            }
+        },
         onDismissRequest = onDismiss,
         confirmButton = { }
     )

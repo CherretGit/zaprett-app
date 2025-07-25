@@ -78,7 +78,7 @@
     <string name="qs_working">Работает</string>
     <string name="qs_not_working">Не работает</string>
     <string name="about_title">О приложении</string>
-    <string name="about_text">Zaprett app от Cherret, egor-white\nВерсия: %1$s</string>
+    <string name="about_text">zaprett app от Cherret, egor-white\nВерсия: %1$s</string>
     <string name="btn_whitelist">Белый список приложений</string>
     <string name="btn_blacklist">Чёрный список приложений</string>
     <string name="shared_section">Общие настройки</string>
