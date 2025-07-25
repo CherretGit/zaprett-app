@@ -3,6 +3,7 @@ package com.cherret.zaprett.ui.screen
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -768,7 +769,11 @@ private fun ChooseAppsDialog(
 }
 
 @Composable
-private fun AppItem(viewModel: SettingsViewModel, packageName : String, enabled : Boolean, onCheckedChange: (Boolean) -> Unit){
+private fun AppItem(viewModel: SettingsViewModel, packageName : String, enabled : Boolean, onCheckedChange: (Boolean) -> Unit) {
+    var bitmap by remember { mutableStateOf<Drawable?>(null) }
+    LaunchedEffect(packageName) {
+        bitmap = viewModel.getAppIconBitmap(packageName)
+    }
     Row (
         modifier = Modifier
             .fillMaxWidth()
@@ -777,7 +782,7 @@ private fun AppItem(viewModel: SettingsViewModel, packageName : String, enabled 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current).data(viewModel.getAppIconBitmap(packageName)).build(),
+            model = bitmap,
             contentDescription = null,
             modifier = Modifier
                 .padding(4.dp)
