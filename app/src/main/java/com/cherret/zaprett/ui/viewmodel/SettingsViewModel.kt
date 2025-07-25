@@ -4,19 +4,17 @@ import android.app.Application
 import android.content.Context.MODE_PRIVATE
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.lifecycle.AndroidViewModel
-import androidx.core.graphics.createBitmap
 import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.utils.addPackageToList
 import com.cherret.zaprett.utils.getAppList
 import com.cherret.zaprett.utils.removePackageFromList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application
@@ -31,29 +29,14 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         refreshApplications()
     }
 
-    fun getAppIconBitmap(packageName: String): Bitmap? {
-        val pm: PackageManager = getApplication<Application>().packageManager
+    suspend fun getAppIconBitmap(packageName: String): Drawable? = withContext(Dispatchers.IO) {
+        val pm: PackageManager = context.packageManager
         val drawable: Drawable = try {
             pm.getApplicationIcon(packageName)
-
         } catch (e: PackageManager.NameNotFoundException) {
-            return null
+            return@withContext null
         }
-        return drawableToBitmap(drawable)
-    }
-
-    private fun drawableToBitmap(drawable: Drawable): Bitmap {
-        if (drawable is BitmapDrawable) {
-            return drawable.bitmap
-        }
-        val bitmap = createBitmap(
-            drawable.intrinsicWidth.coerceAtLeast(1),
-            drawable.intrinsicHeight.coerceAtLeast(1)
-        )
-        val canvas = Canvas(bitmap)
-        drawable.setBounds(0, 0, canvas.width, canvas.height)
-        drawable.draw(canvas)
-        return bitmap
+        return@withContext drawable
     }
 
     fun getApplicationName(packageName: String) : String? {
@@ -77,7 +60,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun refreshApplications() {
-        val context = getApplication<Application>()
         val packages = if (prefs.getBoolean("show_system_apps", false)){
             context.packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
         }
