@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.cherret.zaprett"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.cherret.zaprett"
@@ -76,19 +76,19 @@ tasks.preBuild {
 }
 
 dependencies {
-    implementation("androidx.compose.material3:material3:1.3.1")
-    implementation("androidx.compose.material3:material3-window-size-class:1.3.1")
-    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.4.0-alpha10")
-    implementation("androidx.navigation:navigation-compose:2.8.9")
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
-    implementation ("com.github.topjohnwu.libsu:core:6.0.0")
-    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
-    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-crashlytics")
-    implementation("androidx.fragment:fragment-compose:1.8.8")
-    implementation("io.coil-kt.coil3:coil-compose:3.2.0")
+    implementation(libs.compose.material3)
+    implementation(libs.compose.material3.window.size)
+    implementation(libs.compose.material3.adaptive.nav)
+    implementation(libs.navigation.compose)
+    implementation(libs.compose.icons)
+    implementation(libs.libsu.core)
+    implementation(libs.okhttp)
+    implementation(libs.serialization.json)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.fragment.compose)
+    implementation(libs.coil.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
