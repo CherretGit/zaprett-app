@@ -261,10 +261,14 @@ fun enableList(path: String, sharedPreferences: SharedPreferences) {
         }
     }
     else {
-        val currentSet = sharedPreferences.getStringSet("lists", emptySet())?.toMutableSet() ?: mutableSetOf()
+        val currentSet = sharedPreferences.getStringSet(
+            if (getHostListMode(sharedPreferences) == "whitelist") "lists"
+            else "exclude_lists", emptySet())?.toMutableSet() ?: mutableSetOf()
         if (path !in currentSet) {
             currentSet.add(path)
-            sharedPreferences.edit { putStringSet("lists", currentSet) }
+            sharedPreferences.edit { putStringSet(
+                if (getHostListMode(sharedPreferences) == "whitelist") "lists"
+                else "exclude_lists", currentSet) }
         }
     }
 }
@@ -332,13 +336,20 @@ fun disableList(path: String, sharedPreferences: SharedPreferences) {
         }
     }
     else {
-        val currentSet = sharedPreferences.getStringSet("lists", emptySet())?.toMutableSet() ?: mutableSetOf()
+        val currentSet = sharedPreferences.getStringSet(
+            if (getHostListMode(sharedPreferences) == "whitelist") "lists"
+            else "exclude_lists", emptySet())?.toMutableSet() ?: mutableSetOf()
         if (path in currentSet) {
             currentSet.remove(path)
-            sharedPreferences.edit { putStringSet("lists", currentSet) }
+            sharedPreferences.edit { putStringSet(
+                if (getHostListMode(sharedPreferences) == "whitelist") "lists"
+                else "exclude_lists", currentSet) }
         }
         if (currentSet.isEmpty()) {
-            sharedPreferences.edit { remove("lists") }
+            sharedPreferences.edit { remove(
+                if (getHostListMode(sharedPreferences) == "whitelist") "lists"
+                else "exclude_lists"
+            ) }
         }
     }
 }
