@@ -3,7 +3,6 @@ package com.cherret.zaprett.ui.viewmodel
 import android.app.Application
 import android.content.Context
 import androidx.compose.material3.SnackbarHostState
-import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.utils.disableList
 import com.cherret.zaprett.utils.enableList
 import com.cherret.zaprett.utils.getActiveExcludeLists

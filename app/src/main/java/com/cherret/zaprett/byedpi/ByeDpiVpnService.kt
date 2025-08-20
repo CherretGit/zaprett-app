@@ -14,8 +14,11 @@ import androidx.core.app.NotificationCompat
 import com.cherret.zaprett.MainActivity
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ServiceStatus
+import com.cherret.zaprett.utils.getActiveExcludeLists
+import com.cherret.zaprett.utils.getActiveLists
 import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getAppsListMode
+import com.cherret.zaprett.utils.getHostListMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -182,9 +185,9 @@ class ByeDpiVpnService : VpnService() {
     private fun startByeDpi() {
         val socksIp = sharedPreferences.getString("ip", "127.0.0.1")?: "127.0.0.1"
         val socksPort = sharedPreferences.getString("port", "1080")?: "1080"
-        val listSet = sharedPreferences.getStringSet("lists", emptySet())?: emptySet()
+        val listSet = if (getHostListMode(sharedPreferences) == "whitelist") getActiveLists(sharedPreferences) else getActiveExcludeLists(sharedPreferences)
         CoroutineScope(Dispatchers.IO).launch {
-            val args = parseArgs(socksIp, socksPort, getActiveStrategy(sharedPreferences), prepareList(listSet))
+            val args = parseArgs(socksIp, socksPort, getActiveStrategy(sharedPreferences), prepareList(listSet), sharedPreferences)
             val result = NativeBridge().startProxy(args)
             if (result < 0) {
                 Log.d("proxy","Failed to start byedpi proxy")
@@ -193,7 +196,7 @@ class ByeDpiVpnService : VpnService() {
             }
         }
     }
-    private suspend fun prepareList(actlists: Set<String>): String {
+    private suspend fun prepareList(actlists: Array<String>): String {
         if (actlists.isNotEmpty()) {
             val lists: Array<File> = actlists.map { File(it) }.toTypedArray()
             val hostlist = withContext(Dispatchers.IO) {
@@ -215,15 +218,20 @@ class ByeDpiVpnService : VpnService() {
         return ""
     }
 
-    private fun parseArgs(ip: String, port: String, rawArgs: List<String>, list : String): Array<String> {
+    private fun parseArgs(ip: String, port: String, rawArgs: List<String>, list : String, sharedPreferences: SharedPreferences): Array<String> {
         val regex = Regex("""--?\S+(?:=(?:[^"'\s]+|"[^"]*"|'[^']*'))?|[^\s]+""")
         val parsedArgs = rawArgs
             .flatMap { args -> regex.findAll(args).map { it.value } }
             .flatMap { arg ->
-                when {
-                    arg == "\$hostlist" && list.isNotEmpty() -> listOf("-H", list)
-                    arg == "\$hostlist" && list.isEmpty() -> emptyList()
-                    else -> listOf(arg)
+                if (getHostListMode(sharedPreferences) == "whitelist") {
+                    when {
+                        arg == "\$hostlist" && list.isNotEmpty() -> listOf("-H", list)
+                        arg == "\$hostlist" && list.isEmpty() -> emptyList()
+                        else -> listOf(arg)
+                    }
+                }
+                else {
+                    listOf("-H", list, "-An", arg)
                 }
             }
             .toMutableList()

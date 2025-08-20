@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import com.cherret.zaprett.data.ItemType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.Call
@@ -113,7 +114,7 @@ data class RepoItemInfo(
     val name: String,
     val author: String,
     val description: String,
-    val type: String? = null,
+    val type: ItemType,
     val hash: String,
     val url: String
 )

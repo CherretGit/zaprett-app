@@ -116,40 +116,37 @@ fun getZaprettPath(): String {
 }
 
 fun getAllLists(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/lists/")
-    if (listsDir.exists() && listsDir.isDirectory) {
-        val onlyNames = listsDir.list() ?: return emptyArray()
-        return onlyNames.map { "$listsDir/$it" }.toTypedArray()
-    }
-    return emptyArray()
+    val listsDir = File("${getZaprettPath()}/lists/include")
+    return listsDir.listFiles { file -> file.isFile }
+        ?.map { it.absolutePath }
+        ?.toTypedArray()
+        ?: emptyArray()
 }
 
 fun getAllExcludeLists(): Array<String> {
     val listsDir = File("${getZaprettPath()}/lists/exclude/")
-    if (listsDir.exists() && listsDir.isDirectory) {
-        val onlyNames = listsDir.list() ?: return emptyArray()
-        return onlyNames.map { "$listsDir/$it" }.toTypedArray()
-    }
-    return emptyArray()
+    return listsDir.listFiles { file -> file.isFile }
+        ?.map { it.absolutePath }
+        ?.toTypedArray()
+        ?: emptyArray()
 }
 
 fun getAllNfqwsStrategies(): Array<String> {
     val listsDir = File("${getZaprettPath()}/strategies/nfqws")
-    if (listsDir.exists() && listsDir.isDirectory) {
-        val onlyNames = listsDir.list() ?: return emptyArray()
-        return onlyNames.map { "$listsDir/$it" }.toTypedArray()
-    }
-    return emptyArray()
+    return listsDir.listFiles { file -> file.isFile }
+        ?.map { it.absolutePath }
+        ?.toTypedArray()
+        ?: emptyArray()
 }
 
 fun getAllByeDPIStrategies(): Array<String> {
     val listsDir = File("${getZaprettPath()}/strategies/byedpi")
-    if (listsDir.exists() && listsDir.isDirectory) {
-        val onlyNames = listsDir.list() ?: return emptyArray()
-        return onlyNames.map { "$listsDir/$it" }.toTypedArray()
-    }
-    return emptyArray()
+    return listsDir.listFiles { file -> file.isFile }
+        ?.map { it.absolutePath }
+        ?.toTypedArray()
+        ?: emptyArray()
 }
+
 
 fun getActiveLists(sharedPreferences: SharedPreferences): Array<String> {
     if (sharedPreferences.getBoolean("use_module", false)) {

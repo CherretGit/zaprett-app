@@ -81,7 +81,7 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let {
-            if (getHostListMode(prefs) == "whitelist") viewModel.copySelectedFile(context, "/lists", it)
+            if (getHostListMode(prefs) == "whitelist") viewModel.copySelectedFile(context, "/lists/include", it)
             else viewModel.copySelectedFile(context, "/lists/exclude", it) }
     }
 
