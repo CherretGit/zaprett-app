@@ -1,5 +1,7 @@
 package com.cherret.zaprett.ui.screen
 
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,9 +44,11 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,11 +65,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
 import com.cherret.zaprett.ui.viewmodel.HostsViewModel
+import com.cherret.zaprett.utils.getHostListMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewModel()) {
     val context = LocalContext.current
+    val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val allLists = viewModel.allItems
@@ -74,7 +80,9 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uri?.let { viewModel.copySelectedFile(context, "/lists", it) }
+        uri?.let {
+            if (getHostListMode(prefs) == "whitelist") viewModel.copySelectedFile(context, "/lists", it)
+            else viewModel.copySelectedFile(context, "/lists/exclude", it) }
     }
 
     LaunchedEffect(Unit) {
@@ -102,13 +110,12 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
                 },
                 modifier = Modifier.fillMaxSize()
             ) {
-                //ListTypeChoose()
                 LazyColumn(
                     contentPadding = paddingValues,
                     modifier = Modifier.fillMaxSize()
                 ) {
                     item {
-                        ListTypeChoose()
+                        ListTypeChoose(viewModel, prefs)
                     }
                     when {
                         allLists.isEmpty() -> {
@@ -225,9 +232,10 @@ private fun FloatingMenu(navController: NavController, launcher: ActivityResultL
 
 
 @Composable
-fun ListTypeChoose(modifier: Modifier = Modifier) {
-    var selectedIndex = 0/*by remember { mutableIntStateOf(0) }*/
+fun ListTypeChoose(viewModel: HostsViewModel, prefs : SharedPreferences) {
+    val listType = remember { mutableStateOf(prefs.getString("listtype", "whitelist")!!)}
     val options = listOf(stringResource(R.string.title_whitelist), stringResource(R.string.title_blacklist))
+    val selectedIndex = if (listType.value == "whitelist") 0 else 1
 
     SingleChoiceSegmentedButtonRow (
         modifier = Modifier
@@ -240,7 +248,10 @@ fun ListTypeChoose(modifier: Modifier = Modifier) {
                     index = index,
                     count = options.size
                 ),
-                onClick = { selectedIndex = index },
+                onClick = {
+                    listType.value = if (index == 0) "whitelist" else "blacklist"
+                    viewModel.setListType(listType.value)
+                          },
                 selected = index == selectedIndex,
                 label = {
                     Text(

@@ -3,18 +3,27 @@ package com.cherret.zaprett.ui.viewmodel
 import android.app.Application
 import android.content.Context
 import androidx.compose.material3.SnackbarHostState
+import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.utils.disableList
 import com.cherret.zaprett.utils.enableList
+import com.cherret.zaprett.utils.getActiveExcludeLists
 import com.cherret.zaprett.utils.getActiveLists
+import com.cherret.zaprett.utils.getAllExcludeLists
 import com.cherret.zaprett.utils.getAllLists
+import com.cherret.zaprett.utils.getHostListMode
 import com.cherret.zaprett.utils.getStatus
+import com.cherret.zaprett.utils.setHostListMode
 import kotlinx.coroutines.CoroutineScope
 import java.io.File
 
 class HostsViewModel(application: Application): BaseListsViewModel(application) {
     private val sharedPreferences = application.getSharedPreferences("settings", Context.MODE_PRIVATE)
-    override fun loadAllItems(): Array<String> = getAllLists()
-    override fun loadActiveItems(): Array<String> = getActiveLists(sharedPreferences)
+    override fun loadAllItems(): Array<String> =
+        if (getHostListMode(sharedPreferences) == "whitelist") getAllLists()
+        else getAllExcludeLists()
+    override fun loadActiveItems(): Array<String> =
+        if (getHostListMode(sharedPreferences) == "whitelist") getActiveLists(sharedPreferences)
+        else getActiveExcludeLists(sharedPreferences)
 
     override fun deleteItem(item: String, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         val wasChecked = checked[item] == true
@@ -45,4 +54,9 @@ class HostsViewModel(application: Application): BaseListsViewModel(application) 
             }
         }
     }
+    fun setListType(type : String) {
+        setHostListMode(sharedPreferences, type)
+        refresh()
+    }
+
 }

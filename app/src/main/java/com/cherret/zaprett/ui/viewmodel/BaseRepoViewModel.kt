@@ -13,6 +13,7 @@ import com.cherret.zaprett.utils.RepoItemInfo
 import com.cherret.zaprett.R
 import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getFileSha256
+import com.cherret.zaprett.utils.getHostListMode
 import com.cherret.zaprett.utils.getZaprettPath
 import com.cherret.zaprett.utils.registerDownloadListenerHost
 import com.cherret.zaprett.utils.restartService
@@ -43,9 +44,11 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
             viewModelScope.launch(Dispatchers.IO) {
                 val safeList = list ?: emptyList()
                 val useModule = sharedPreferences.getBoolean("use_module", false)
+                val listType = getHostListMode(sharedPreferences)
                 val filteredList = safeList.filter { item ->
                     when (item.type) {
-                        "list" -> true
+                        "list" -> listType == "whitelist"
+                        "exclude-list" -> listType == "blacklist"
                         "nfqws" -> useModule
                         "byedpi" -> !useModule
                         else -> false
