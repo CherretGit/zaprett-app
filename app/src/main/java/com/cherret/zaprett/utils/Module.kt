@@ -642,7 +642,7 @@ fun getHostListMode(prefs : SharedPreferences) : String {
                 FileInputStream(configFile).use { input ->
                     props.load(input)
                 }
-                val hostlist = props.getProperty("list_type", "whitelist")!!
+                val hostlist = props.getProperty("list-type", "whitelist")!!
                 return if (hostlist == "whitelist" || hostlist == "blacklist") hostlist
                 else "whitelist"
             } catch (e: IOException) {
