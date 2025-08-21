@@ -66,29 +66,34 @@ fun getConfigFile(): File {
 
 fun setStartOnBoot(startOnBoot: Boolean) {
     val configFile = getConfigFile()
-    val props = Properties()
-    try {
-        FileInputStream(configFile).use { input ->
-            props.load(input)
+    if (configFile.exists()) {
+        val props = Properties()
+        try {
+            FileInputStream(configFile).use { input ->
+                props.load(input)
+            }
+            props.setProperty("start-on-boot", startOnBoot.toString())
+            FileOutputStream(configFile).use { output ->
+                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
         }
-        props.setProperty("start_on_boot", startOnBoot.toString())
-        FileOutputStream(configFile).use { output ->
-            props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
-        }
-    } catch (e: IOException) {
-        throw RuntimeException(e)
     }
-
 }
 
 fun getStartOnBoot(): Boolean {
     val configFile = getConfigFile()
     val props = Properties()
     return try {
-        FileInputStream(configFile).use { input ->
-            props.load(input)
+        if (configFile.exists()) {
+            FileInputStream(configFile).use { input ->
+                props.load(input)
+            }
+            props.getProperty("start-on-boot", "false").toBoolean()
+        } else {
+            false
         }
-        props.getProperty("start_on_boot", "false").toBoolean()
     } catch (_: IOException) {
         false
     }
@@ -97,18 +102,17 @@ fun getStartOnBoot(): Boolean {
 fun getZaprettPath(): String {
     val props = Properties()
     val configFile = getConfigFile()
-
-    return try {
-        FileInputStream(configFile).use { input ->
-            props.load(input)
+    if (configFile.exists()) {
+        return try {
+            FileInputStream(configFile).use { input ->
+                props.load(input)
+            }
+            props.getProperty("zaprettdir", Environment.getExternalStorageDirectory().path + "/zaprett")
+        } catch (e: IOException) {
+            throw RuntimeException(e)
         }
-        props.getProperty(
-            "zaprettdir",
-            Environment.getExternalStorageDirectory().path + "/zaprett"
-        )
-    } catch (e: IOException) {
-        throw RuntimeException(e)
     }
+    return Environment.getExternalStorageDirectory().path + "/zaprett"
 }
 
 fun getAllLists(): Array<String> {
@@ -147,59 +151,65 @@ fun getAllByeDPIStrategies(): Array<String> {
 fun getActiveLists(sharedPreferences: SharedPreferences): Array<String> {
     if (sharedPreferences.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
-        val props = Properties()
-        return try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+        if (configFile.exists()) {
+            val props = Properties()
+            return try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                val activeLists = props.getProperty("active-lists", "")
+                Log.d("Active lists", activeLists)
+                if (activeLists.isNotEmpty()) activeLists.split(",")
+                    .toTypedArray() else emptyArray()
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
-            val activeLists = props.getProperty("active_lists", "")
-            Log.d("Active lists", activeLists)
-            if (activeLists.isNotEmpty()) activeLists.split(",")
-                .toTypedArray() else emptyArray()
-        } catch (e: IOException) {
-            throw RuntimeException(e)
         }
-    } else {
+        return emptyArray()
+    }
+    else {
         return sharedPreferences.getStringSet("lists", emptySet())?.toTypedArray() ?: emptyArray()
     }
 }
-
 fun getActiveExcludeLists(sharedPreferences: SharedPreferences): Array<String> {
     if (sharedPreferences.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
-        val props = Properties()
-        return try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+        if (configFile.exists()) {
+            val props = Properties()
+            return try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                val activeLists = props.getProperty("active-exclude-lists", "")
+                if (activeLists.isNotEmpty()) activeLists.split(",")
+                    .toTypedArray() else emptyArray()
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
-            val activeLists = props.getProperty("active_exclude_lists", "")
-            if (activeLists.isNotEmpty()) activeLists.split(",")
-                .toTypedArray() else emptyArray()
-        } catch (e: IOException) {
-            throw RuntimeException(e)
         }
-
-    } else {
-        return sharedPreferences.getStringSet("exclude_lists", emptySet())?.toTypedArray()
-            ?: emptyArray()
+        return emptyArray()
+    }
+    else {
+        return sharedPreferences.getStringSet("exclude_lists", emptySet())?.toTypedArray() ?: emptyArray()
     }
 }
 
 fun getActiveNfqwsStrategies(): Array<String> {
     val configFile = File("${getZaprettPath()}/config")
-    val props = Properties()
-    return try {
-        FileInputStream(configFile).use { input ->
-            props.load(input)
+    if (configFile.exists()) {
+        val props = Properties()
+        return try {
+            FileInputStream(configFile).use { input ->
+                props.load(input)
+            }
+            val activeStrategies = props.getProperty("strategy", "")
+            Log.d("Active strategies", activeStrategies)
+            if (activeStrategies.isNotEmpty()) activeStrategies.split(",").toTypedArray() else emptyArray()
+        } catch (e: IOException) {
+            throw RuntimeException(e)
         }
-        val activeStrategies = props.getProperty("strategy", "")
-        Log.d("Active strategies", activeStrategies)
-        if (activeStrategies.isNotEmpty()) activeStrategies.split(",")
-            .toTypedArray() else emptyArray()
-    } catch (e: IOException) {
-        throw RuntimeException(e)
     }
-
+    return emptyArray()
 }
 
 fun getActiveByeDPIStrategies(sharedPreferences: SharedPreferences): Array<String> {
@@ -223,24 +233,24 @@ fun enableList(path: String, sharedPreferences: SharedPreferences) {
         val configFile = getConfigFile()
         try {
             val props = Properties()
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
             }
-
             val activeLists = props.getProperty(
-                if (getHostListMode(sharedPreferences) == "whitelist") "active_lists"
-                else "active_exclude_lists",
-                ""
-            )
-                .split(",")
-                .filter { it.isNotBlank() }
-                .toMutableList()
+                    if (getHostListMode(sharedPreferences) == "whitelist") "active-lists"
+                    else "active-exclude-lists",
+                "")
+                    .split(",")
+                    .filter { it.isNotBlank() }
+                    .toMutableList()
             if (path !in activeLists) {
                 activeLists.add(path)
             }
             props.setProperty(
-                if (getHostListMode(sharedPreferences) == "whitelist") "active_lists"
-                else "active_exclude_lists",
+                if (getHostListMode(sharedPreferences) == "whitelist") "active-lists"
+                else "active-exclude-lists",
                 activeLists.joinToString(",")
             )
             FileOutputStream(configFile).use { output ->
@@ -249,19 +259,16 @@ fun enableList(path: String, sharedPreferences: SharedPreferences) {
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-    } else {
+    }
+    else {
         val currentSet = sharedPreferences.getStringSet(
             if (getHostListMode(sharedPreferences) == "whitelist") "lists"
-            else "exclude_lists", emptySet()
-        )?.toMutableSet() ?: mutableSetOf()
+            else "exclude_lists", emptySet())?.toMutableSet() ?: mutableSetOf()
         if (path !in currentSet) {
             currentSet.add(path)
-            sharedPreferences.edit {
-                putStringSet(
-                    if (getHostListMode(sharedPreferences) == "whitelist") "lists"
-                    else "exclude_lists", currentSet
-                )
-            }
+            sharedPreferences.edit { putStringSet(
+                if (getHostListMode(sharedPreferences) == "whitelist") "lists"
+                else "exclude_lists", currentSet) }
         }
     }
 }
@@ -271,8 +278,10 @@ fun enableStrategy(path: String, sharedPreferences: SharedPreferences) {
         val props = Properties()
         val configFile = getConfigFile()
         try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
             }
             val activeStrategies = props.getProperty("strategy", "")
                 .split(",")
@@ -288,7 +297,8 @@ fun enableStrategy(path: String, sharedPreferences: SharedPreferences) {
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-    } else {
+    }
+    else {
         sharedPreferences.edit { putString("active_strategy", path) }
     }
 }
@@ -298,25 +308,24 @@ fun disableList(path: String, sharedPreferences: SharedPreferences) {
         val props = Properties()
         val configFile = getConfigFile()
         try {
-
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
             }
-
             val activeLists = props.getProperty(
-                if (getHostListMode(sharedPreferences) == "whitelist") "active_lists"
-                else "active_exclude_lists",
-                ""
-            )
-                .split(",")
-                .filter { it.isNotBlank() }
-                .toMutableList()
+                if (getHostListMode(sharedPreferences) == "whitelist") "active-lists"
+                    else "active-exclude-lists",
+                "")
+                    .split(",")
+                    .filter { it.isNotBlank() }
+                    .toMutableList()
             if (path in activeLists) {
                 activeLists.remove(path)
             }
             props.setProperty(
-                if (getHostListMode(sharedPreferences) == "whitelist") "active_lists"
-                else "active_exclude_lists",
+                if (getHostListMode(sharedPreferences) == "whitelist") "active-lists"
+                    else "active-exclude-lists",
                 activeLists.joinToString(",")
             )
             FileOutputStream(configFile).use { output ->
@@ -325,27 +334,22 @@ fun disableList(path: String, sharedPreferences: SharedPreferences) {
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-    } else {
+    }
+    else {
         val currentSet = sharedPreferences.getStringSet(
             if (getHostListMode(sharedPreferences) == "whitelist") "lists"
-            else "exclude_lists", emptySet()
-        )?.toMutableSet() ?: mutableSetOf()
+            else "exclude_lists", emptySet())?.toMutableSet() ?: mutableSetOf()
         if (path in currentSet) {
             currentSet.remove(path)
-            sharedPreferences.edit {
-                putStringSet(
-                    if (getHostListMode(sharedPreferences) == "whitelist") "lists"
-                    else "exclude_lists", currentSet
-                )
-            }
+            sharedPreferences.edit { putStringSet(
+                if (getHostListMode(sharedPreferences) == "whitelist") "lists"
+                else "exclude_lists", currentSet) }
         }
         if (currentSet.isEmpty()) {
-            sharedPreferences.edit {
-                remove(
-                    if (getHostListMode(sharedPreferences) == "whitelist") "lists"
-                    else "exclude_lists"
-                )
-            }
+            sharedPreferences.edit { remove(
+                if (getHostListMode(sharedPreferences) == "whitelist") "lists"
+                else "exclude_lists"
+            ) }
         }
     }
 }
@@ -355,10 +359,11 @@ fun disableStrategy(path: String, sharedPreferences: SharedPreferences) {
         val props = Properties()
         val configFile = getConfigFile()
         try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
             }
-
             val activeStrategies = props.getProperty("strategy", "")
                 .split(",")
                 .filter { it.isNotBlank() }
@@ -373,25 +378,22 @@ fun disableStrategy(path: String, sharedPreferences: SharedPreferences) {
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-    } else {
+    }
+    else {
         sharedPreferences.edit { remove("active_strategy") }
     }
 }
 
-fun addPackageToList(
-    listType: AppListType,
-    packageName: String,
-    prefs: SharedPreferences,
-    context: Context
-) {
-    if (prefs.getBoolean("use_module", false)) {
+fun addPackageToList(listType: AppListType, packageName: String, prefs : SharedPreferences, context : Context) {
+    if (prefs.getBoolean("use_module", false)){
         val configFile = getConfigFile()
         try {
             val props = Properties()
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
             }
-
             if (listType == AppListType.Whitelist) {
                 val whitelist = props.getProperty("whitelist", "")
                     .split(",")
@@ -418,36 +420,34 @@ fun addPackageToList(
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-    } else {
+    }
+    else {
         val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
-        if (listType == AppListType.Whitelist) {
+        if (listType == AppListType.Whitelist){
             val set = prefs.getStringSet("whitelist", emptySet())?.toMutableSet() ?: mutableSetOf()
             set.add(packageName)
-            prefs.edit { putStringSet("whitelist", set) }
+            prefs.edit().putStringSet("whitelist", set).apply()
         }
-        if (listType == AppListType.Blacklist) {
+        if (listType == AppListType.Blacklist){
             val set = prefs.getStringSet("blacklist", emptySet())?.toMutableSet() ?: mutableSetOf()
             set.add(packageName)
-            prefs.edit { putStringSet("blacklist", set) }
+            prefs.edit().putStringSet("blacklist", set).apply()
         }
 
     }
 }
 
-fun removePackageFromList(
-    listType: AppListType,
-    packageName: String,
-    prefs: SharedPreferences,
-    context: Context
-) {
-    if (prefs.getBoolean("use_module", false)) {
+fun removePackageFromList(listType: AppListType, packageName: String, prefs: SharedPreferences, context: Context) {
+    if (prefs.getBoolean("use_module", false)){
         val props = Properties()
         val configFile = getConfigFile()
         try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
             }
-            if (listType == AppListType.Whitelist) {
+            if (listType == AppListType.Whitelist){
                 val whitelist = props.getProperty("whitelist", "")
                     .split(",")
                     .filter { it.isNotBlank() }
@@ -474,55 +474,53 @@ fun removePackageFromList(
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-    } else {
+    }
+    else {
         val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
         if (listType == AppListType.Whitelist) {
             val set = prefs.getStringSet("whitelist", emptySet())?.toMutableSet() ?: mutableSetOf()
             set.remove(packageName)
-            prefs.edit { putStringSet("whitelist", set) }
+            prefs.edit().putStringSet("whitelist", set).apply()
         }
         if (listType == AppListType.Blacklist) {
             val set = prefs.getStringSet("blacklist", emptySet())?.toMutableSet() ?: mutableSetOf()
             set.remove(packageName)
-            prefs.edit { putStringSet("blacklist", set) }
+            prefs.edit().putStringSet("blacklist", set).apply()
         }
     }
 }
 
-// Never used?
-fun isInList(
-    listType: AppListType,
-    packageName: String,
-    prefs: SharedPreferences,
-    context: Context
-): Boolean {
+fun isInList(listType: AppListType, packageName: String, prefs: SharedPreferences, context: Context) : Boolean {
     if (prefs.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
-
-        val props = Properties()
-        try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                if (listType == AppListType.Whitelist) {
+                    val whitelist = props.getProperty("whitelist", "")
+                    return if (whitelist.isNotEmpty()) whitelist.split(",")
+                        .toTypedArray().contains(packageName) else false
+                }
+                if (listType == AppListType.Blacklist) {
+                    val blacklist = props.getProperty("blacklist", "")
+                    return if (blacklist.isNotEmpty()) blacklist.split(",")
+                        .toTypedArray().contains(packageName) else false
+                }
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
-            if (listType == AppListType.Whitelist) {
-                val whitelist = props.getProperty("whitelist", "")
-                return if (whitelist.isNotEmpty()) whitelist.split(",")
-                    .toTypedArray().contains(packageName) else false
-            }
-            if (listType == AppListType.Blacklist) {
-                val blacklist = props.getProperty("blacklist", "")
-                return if (blacklist.isNotEmpty()) blacklist.split(",")
-                    .toTypedArray().contains(packageName) else false
-            }
-        } catch (e: IOException) {
-            throw RuntimeException(e)
         }
-    } else {
+    }
+    else {
         val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
-        if (listType == AppListType.Whitelist) {
+        if(listType == AppListType.Whitelist){
             val whitelist = prefs.getStringSet("whitelist", emptySet()) ?: emptySet()
             return packageName in whitelist
-        } else {
+        }
+        else {
             val blacklist = prefs.getStringSet("blacklist", emptySet()) ?: emptySet()
             return packageName in blacklist
         }
@@ -530,121 +528,130 @@ fun isInList(
     return false
 }
 
-fun getAppList(
-    listType: AppListType,
-    sharedPreferences: SharedPreferences,
-    context: Context
-): Set<String> {
+fun getAppList(listType: AppListType, sharedPreferences : SharedPreferences, context : Context) : Set<String> {
     if (sharedPreferences.getBoolean("use_module", false)) {
         val configFile = File("${getZaprettPath()}/config")
-        val props = Properties()
-        try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                if (listType == AppListType.Whitelist) {
+                    val whitelist = props.getProperty("whitelist", "")
+                    return if (whitelist.isNotEmpty()) whitelist.split(",")
+                        .toSet() else emptySet()
+                }
+                if (listType == AppListType.Blacklist) {
+                    val blacklist = props.getProperty("blacklist", "")
+                    return if (blacklist.isNotEmpty()) blacklist.split(",")
+                        .toSet() else emptySet()
+                }
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
-            if (listType == AppListType.Whitelist) {
-                val whitelist = props.getProperty("whitelist", "")
-                return if (whitelist.isNotEmpty()) whitelist.split(",")
-                    .toSet() else emptySet()
-            }
-            if (listType == AppListType.Blacklist) {
-                val blacklist = props.getProperty("blacklist", "")
-                return if (blacklist.isNotEmpty()) blacklist.split(",")
-                    .toSet() else emptySet()
-            }
-        } catch (e: IOException) {
-            throw RuntimeException(e)
         }
-    } else {
-        return if (listType == AppListType.Whitelist) context.getSharedPreferences(
-            "settings",
-            MODE_PRIVATE
-        )
+        return emptySet()
+    }
+    else {
+        return if (listType == AppListType.Whitelist) context.getSharedPreferences("settings", MODE_PRIVATE)
             .getStringSet("whitelist", emptySet()) ?: emptySet()
-        else context.getSharedPreferences("settings", MODE_PRIVATE)
+            else context.getSharedPreferences("settings", MODE_PRIVATE)
             .getStringSet("blacklist", emptySet()) ?: emptySet()
     }
-    return emptySet()
 }
 
-fun getAppsListMode(prefs: SharedPreferences): String {
-    if (prefs.getBoolean("use_module", false)) {
+fun getAppsListMode(prefs : SharedPreferences) : String {
+    if(prefs.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
-        val props = Properties()
-        try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                val applist = props.getProperty("applist", "")!!
+                Log.d("App list", "Equals to $applist")
+                return if (applist == "whitelist" || applist == "blacklist" || applist == "none") applist
+                    else "none"
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
-            val applist = props.getProperty("applist", "")!!
-            Log.d("App list", "Equals to $applist")
-            return if (applist == "whitelist" || applist == "blacklist" || applist == "none") applist
-            else "none"
-        } catch (e: IOException) {
-            throw RuntimeException(e)
         }
-    } else {
+    }
+    else {
         return prefs.getString("applist", "")!!
     }
+    return "none"
 }
 
 fun setAppsListMode(prefs: SharedPreferences, mode: String) {
     if (prefs.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
-        val props = Properties()
-        try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                props.setProperty("app-list", mode)
+                FileOutputStream(configFile).use { output ->
+                    props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+                }
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
-            props.setProperty("app_list", mode)
-            FileOutputStream(configFile).use { output ->
-                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
-            }
-        } catch (e: IOException) {
-            throw RuntimeException(e)
         }
-
-    } else {
+    }
+    else {
         prefs.edit { putString("app-list", mode) }
     }
+    Log.d("App List", "Changed to $mode")
 }
 
 fun setHostListMode(prefs: SharedPreferences, mode: String) {
     if (prefs.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
-        val props = Properties()
-        try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                props.setProperty("list-type", mode)
+                FileOutputStream(configFile).use { output ->
+                    props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+                }
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
-            props.setProperty("list_type", mode)
-            FileOutputStream(configFile).use { output ->
-                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
-            }
-        } catch (e: IOException) {
-            throw RuntimeException(e)
         }
-
-    } else {
+    }
+    else {
         prefs.edit { putString("list_type", mode) }
     }
+    Log.d("App List", "Changed to $mode")
 }
 
-fun getHostListMode(prefs: SharedPreferences): String {
-    if (prefs.getBoolean("use_module", false)) {
+fun getHostListMode(prefs : SharedPreferences) : String {
+    if(prefs.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
-        val props = Properties()
-        try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+        if (configFile.exists()) {
+            val props = Properties()
+            try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                val hostlist = props.getProperty("list-type", "whitelist")!!
+                return if (hostlist == "whitelist" || hostlist == "blacklist") hostlist
+                else "whitelist"
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
-            val hostlist = props.getProperty("list_type", "whitelist")!!
-            return if (hostlist == "whitelist" || hostlist == "blacklist") hostlist
-            else "whitelist"
-        } catch (e: IOException) {
-            throw RuntimeException(e)
         }
-
-    } else {
+    }
+    else {
         return prefs.getString("list_type", "whitelist")!!
     }
+    return "none"
 }
