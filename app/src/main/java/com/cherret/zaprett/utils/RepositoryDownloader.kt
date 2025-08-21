@@ -27,7 +27,7 @@ private val client = OkHttpClient()
 private val json = Json { ignoreUnknownKeys = true }
 
 fun getHostList(sharedPreferences: SharedPreferences, callback: (List<RepoItemInfo>?) -> Unit) {
-    val request = Request.Builder().url(sharedPreferences.getString("hosts_repo_url","https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/hosts.json")?: "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/hosts.json").build()
+    val request = Request.Builder().url(sharedPreferences.getString("hosts_repo_url","https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json")?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json").build()
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
@@ -47,7 +47,7 @@ fun getHostList(sharedPreferences: SharedPreferences, callback: (List<RepoItemIn
 }
 
 fun getStrategiesList(sharedPreferences: SharedPreferences, callback: (List<RepoItemInfo>?) -> Unit) {
-    val request = Request.Builder().url(sharedPreferences.getString("strategies_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/strategies.json")?: "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/strategies.json").build()
+    val request = Request.Builder().url(sharedPreferences.getString("strategies_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json")?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json").build()
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()

@@ -124,14 +124,14 @@ fun SettingsScreen(viewModel : SettingsViewModel = viewModel()) {
         Setting.Action(
             title = stringResource(R.string.btn_repository_url_lists),
             onClick = {
-                textDialogValue.value = sharedPreferences.getString("hosts_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/hosts.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/hosts.json"
+                textDialogValue.value = sharedPreferences.getString("hosts_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
                 showHostsRepoUrlDialog.value = true
             }
         ),
         Setting.Action(
             title = stringResource(R.string.btn_repository_url_strategies),
             onClick = {
-                textDialogValue.value = sharedPreferences.getString("strategy_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/strategies.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/strategies.json"
+                textDialogValue.value = sharedPreferences.getString("strategy_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json"
                 showStrategyRepoUrlDialog.value = true
             }
         ),
