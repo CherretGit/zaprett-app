@@ -49,7 +49,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 val filteredList = safeList.filter { item ->
                     when (item.type) {
                         ItemType.list -> listType == "whitelist"
-                        ItemType.lists_exclude -> listType == "blacklist"
+                        ItemType.list_exclude -> listType == "blacklist"
                         ItemType.nfqws -> useModule
                         ItemType.byedpi -> !useModule
                     }
@@ -79,7 +79,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
                     ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
                     ItemType.list -> File(getZaprettPath(), "lists/include")
-                    ItemType.lists_exclude -> File(getZaprettPath(), "lists/exclude")
+                    ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
                 }
                 val targetFile = File(targetDir, uri.lastPathSegment!!)
                 sourceFile.copyTo(targetFile, overwrite = true)
@@ -100,7 +100,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
                     ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
                     ItemType.list -> File(getZaprettPath(), "lists/include")
-                    ItemType.lists_exclude -> File(getZaprettPath(), "lists/exclude")
+                    ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
                 }
                 val targetFile = File(targetDir, uri.lastPathSegment!!)
                 sourceFile.copyTo(targetFile, overwrite = true)
