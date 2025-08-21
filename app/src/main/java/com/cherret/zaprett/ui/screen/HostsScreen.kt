@@ -233,7 +233,7 @@ private fun FloatingMenu(navController: NavController, launcher: ActivityResultL
 
 @Composable
 fun ListTypeChoose(viewModel: HostsViewModel, prefs : SharedPreferences) {
-    val listType = remember { mutableStateOf(prefs.getString("listtype", "whitelist")!!)}
+    val listType = remember { mutableStateOf(getHostListMode(prefs))}
     val options = listOf(stringResource(R.string.title_whitelist), stringResource(R.string.title_blacklist))
     val selectedIndex = if (listType.value == "whitelist") 0 else 1
 
