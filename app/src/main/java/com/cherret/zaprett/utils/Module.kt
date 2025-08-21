@@ -72,7 +72,7 @@ fun setStartOnBoot(startOnBoot: Boolean) {
             FileInputStream(configFile).use { input ->
                 props.load(input)
             }
-            props.setProperty("start-on-boot", startOnBoot.toString())
+            props.setProperty("start_on_boot", startOnBoot.toString())
             FileOutputStream(configFile).use { output ->
                 props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
             }
@@ -90,7 +90,7 @@ fun getStartOnBoot(): Boolean {
             FileInputStream(configFile).use { input ->
                 props.load(input)
             }
-            props.getProperty("start-on-boot", "false").toBoolean()
+            props.getProperty("start_on_boot", "false").toBoolean()
         } else {
             false
         }
@@ -157,7 +157,7 @@ fun getActiveLists(sharedPreferences: SharedPreferences): Array<String> {
                 FileInputStream(configFile).use { input ->
                     props.load(input)
                 }
-                val activeLists = props.getProperty("active-lists", "")
+                val activeLists = props.getProperty("active_lists", "")
                 Log.d("Active lists", activeLists)
                 if (activeLists.isNotEmpty()) activeLists.split(",")
                     .toTypedArray() else emptyArray()
@@ -180,7 +180,7 @@ fun getActiveExcludeLists(sharedPreferences: SharedPreferences): Array<String> {
                 FileInputStream(configFile).use { input ->
                     props.load(input)
                 }
-                val activeLists = props.getProperty("active-exclude-lists", "")
+                val activeLists = props.getProperty("active_exclude_lists", "")
                 if (activeLists.isNotEmpty()) activeLists.split(",")
                     .toTypedArray() else emptyArray()
             } catch (e: IOException) {
@@ -239,8 +239,8 @@ fun enableList(path: String, sharedPreferences: SharedPreferences) {
                 }
             }
             val activeLists = props.getProperty(
-                    if (getHostListMode(sharedPreferences) == "whitelist") "active-lists"
-                    else "active-exclude-lists",
+                    if (getHostListMode(sharedPreferences) == "whitelist") "active_lists"
+                    else "active_exclude_lists",
                 "")
                     .split(",")
                     .filter { it.isNotBlank() }
@@ -249,8 +249,8 @@ fun enableList(path: String, sharedPreferences: SharedPreferences) {
                 activeLists.add(path)
             }
             props.setProperty(
-                if (getHostListMode(sharedPreferences) == "whitelist") "active-lists"
-                else "active-exclude-lists",
+                if (getHostListMode(sharedPreferences) == "whitelist") "active_lists"
+                else "active_exclude_lists",
                 activeLists.joinToString(",")
             )
             FileOutputStream(configFile).use { output ->
@@ -314,8 +314,8 @@ fun disableList(path: String, sharedPreferences: SharedPreferences) {
                 }
             }
             val activeLists = props.getProperty(
-                if (getHostListMode(sharedPreferences) == "whitelist") "active-lists"
-                    else "active-exclude-lists",
+                if (getHostListMode(sharedPreferences) == "whitelist") "active_lists"
+                    else "active_exclude_lists",
                 "")
                     .split(",")
                     .filter { it.isNotBlank() }
@@ -324,8 +324,8 @@ fun disableList(path: String, sharedPreferences: SharedPreferences) {
                 activeLists.remove(path)
             }
             props.setProperty(
-                if (getHostListMode(sharedPreferences) == "whitelist") "active-lists"
-                    else "active-exclude-lists",
+                if (getHostListMode(sharedPreferences) == "whitelist") "active_lists"
+                    else "active_exclude_lists",
                 activeLists.joinToString(",")
             )
             FileOutputStream(configFile).use { output ->
@@ -570,7 +570,7 @@ fun getAppsListMode(prefs : SharedPreferences) : String {
                 FileInputStream(configFile).use { input ->
                     props.load(input)
                 }
-                val applist = props.getProperty("applist", "")!!
+                val applist = props.getProperty("app_list", "")!!
                 Log.d("App list", "Equals to $applist")
                 return if (applist == "whitelist" || applist == "blacklist" || applist == "none") applist
                     else "none"
@@ -588,19 +588,23 @@ fun getAppsListMode(prefs : SharedPreferences) : String {
 fun setAppsListMode(prefs: SharedPreferences, mode: String) {
     if (prefs.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
+        val props = Properties()
         if (configFile.exists()) {
-            val props = Properties()
             try {
                 FileInputStream(configFile).use { input ->
                     props.load(input)
                 }
-                props.setProperty("app-list", mode)
-                FileOutputStream(configFile).use { output ->
-                    props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
-                }
             } catch (e: IOException) {
                 throw RuntimeException(e)
             }
+        }
+        props.setProperty("app_list", mode)
+        try {
+            FileOutputStream(configFile).use { output ->
+                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
         }
     }
     else {
@@ -608,23 +612,26 @@ fun setAppsListMode(prefs: SharedPreferences, mode: String) {
     }
     Log.d("App List", "Changed to $mode")
 }
-
 fun setHostListMode(prefs: SharedPreferences, mode: String) {
     if (prefs.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
+        val props = Properties()
         if (configFile.exists()) {
-            val props = Properties()
             try {
                 FileInputStream(configFile).use { input ->
                     props.load(input)
                 }
-                props.setProperty("list-type", mode)
-                FileOutputStream(configFile).use { output ->
-                    props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
-                }
             } catch (e: IOException) {
                 throw RuntimeException(e)
             }
+        }
+        props.setProperty("list_type", mode)
+        try {
+            FileOutputStream(configFile).use { output ->
+                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
         }
     }
     else {
@@ -642,7 +649,7 @@ fun getHostListMode(prefs : SharedPreferences) : String {
                 FileInputStream(configFile).use { input ->
                     props.load(input)
                 }
-                val hostlist = props.getProperty("list-type", "whitelist")!!
+                val hostlist = props.getProperty("list_type", "whitelist")!!
                 return if (hostlist == "whitelist" || hostlist == "blacklist") hostlist
                 else "whitelist"
             } catch (e: IOException) {
@@ -653,5 +660,5 @@ fun getHostListMode(prefs : SharedPreferences) : String {
     else {
         return prefs.getString("list_type", "whitelist")!!
     }
-    return "none"
+    return "whitelist"
 }
