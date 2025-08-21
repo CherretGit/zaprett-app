@@ -1,5 +1,5 @@
 package com.cherret.zaprett.data
 
 enum class ItemType {
-    Byedpi, Nfqws, Lists, ListsExclude
+    byedpi, nfqws, list, lists_exclude
 }

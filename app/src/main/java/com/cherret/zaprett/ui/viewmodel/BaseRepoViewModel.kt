@@ -48,10 +48,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 val listType = getHostListMode(sharedPreferences)
                 val filteredList = safeList.filter { item ->
                     when (item.type) {
-                        ItemType.Lists -> listType == "whitelist"
-                        ItemType.ListsExclude -> listType == "blacklist"
-                        ItemType.Nfqws -> useModule
-                        ItemType.Byedpi -> !useModule
+                        ItemType.list -> listType == "whitelist"
+                        ItemType.lists_exclude -> listType == "blacklist"
+                        ItemType.nfqws -> useModule
+                        ItemType.byedpi -> !useModule
                     }
                 }
                 hostLists.value = filteredList
@@ -76,10 +76,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
             viewModelScope.launch(Dispatchers.IO) {
                 val sourceFile = File(uri.path!!)
                 val targetDir = when (item.type) {
-                    ItemType.Byedpi -> File(getZaprettPath(), "strategies/byedpi")
-                    ItemType.Nfqws -> File(getZaprettPath(), "strategies/nfqws")
-                    ItemType.Lists -> File(getZaprettPath(), "lists/include")
-                    ItemType.ListsExclude -> File(getZaprettPath(), "lists/exclude")
+                    ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
+                    ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
+                    ItemType.list -> File(getZaprettPath(), "lists/include")
+                    ItemType.lists_exclude -> File(getZaprettPath(), "lists/exclude")
                 }
                 val targetFile = File(targetDir, uri.lastPathSegment!!)
                 sourceFile.copyTo(targetFile, overwrite = true)
@@ -97,10 +97,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
             viewModelScope.launch(Dispatchers.IO) {
                 val sourceFile = File(uri.path!!)
                 val targetDir = when (item.type) {
-                    ItemType.Byedpi -> File(getZaprettPath(), "strategies/byedpi")
-                    ItemType.Nfqws -> File(getZaprettPath(), "strategies/nfqws")
-                    ItemType.Lists -> File(getZaprettPath(), "lists/include")
-                    ItemType.ListsExclude -> File(getZaprettPath(), "lists/exclude")
+                    ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
+                    ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
+                    ItemType.list -> File(getZaprettPath(), "lists/include")
+                    ItemType.lists_exclude -> File(getZaprettPath(), "lists/exclude")
                 }
                 val targetFile = File(targetDir, uri.lastPathSegment!!)
                 sourceFile.copyTo(targetFile, overwrite = true)
