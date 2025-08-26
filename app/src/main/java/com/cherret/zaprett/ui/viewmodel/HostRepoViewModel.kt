@@ -7,5 +7,5 @@ import com.cherret.zaprett.utils.getHostList
 
 class HostRepoViewModel(application: Application): BaseRepoViewModel(application) {
     override fun getInstalledLists(): Array<String> = getAllLists()
-    override fun getRepoList(callback: (List<RepoItemInfo>?) -> Unit) = getHostList(sharedPreferences, callback)
+    override fun getRepoList(callback: (Result<List<RepoItemInfo>>) -> Unit) = getHostList(sharedPreferences, callback)
 }

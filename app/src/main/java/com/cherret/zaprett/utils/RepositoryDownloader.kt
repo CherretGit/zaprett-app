@@ -26,41 +26,44 @@ import java.security.MessageDigest
 private val client = OkHttpClient()
 private val json = Json { ignoreUnknownKeys = true }
 
-fun getHostList(sharedPreferences: SharedPreferences, callback: (List<RepoItemInfo>?) -> Unit) {
-    val request = Request.Builder().url(sharedPreferences.getString("hosts_repo_url","https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json")?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json").build()
-    client.newCall(request).enqueue(object : Callback {
-        override fun onFailure(call: Call, e: IOException) {
-            e.printStackTrace()
-            callback(null)
-        }
-        override fun onResponse(call: Call, response: Response) {
-            response.use {
-                if (!response.isSuccessful) {
-                    callback(null)
-                }
-                val jsonString = response.body.string()
-                val hostsInfo = json.decodeFromString<List<RepoItemInfo>>(jsonString)
-                callback(hostsInfo)
-            }
-        }
-    })
+fun getHostList(sharedPreferences: SharedPreferences, callback: (Result<List<RepoItemInfo>>) -> Unit) {
+    getRepo(
+        sharedPreferences.getString(
+            "hosts_repo_url",
+            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
+        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json",
+        callback
+    )
 }
 
-fun getStrategiesList(sharedPreferences: SharedPreferences, callback: (List<RepoItemInfo>?) -> Unit) {
-    val request = Request.Builder().url(sharedPreferences.getString("strategies_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json")?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json").build()
+fun getStrategiesList(sharedPreferences: SharedPreferences, callback: (Result<List<RepoItemInfo>>) -> Unit) {
+    getRepo(
+        sharedPreferences.getString(
+            "strategies_repo_url",
+            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json"
+        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json",
+        callback
+    )
+}
+
+fun getRepo(url: String, callback: (Result<List<RepoItemInfo>>) -> Unit) {
+    val request = Request.Builder().url(url).build()
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
-            callback(null)
+            callback(Result.failure(e))
         }
         override fun onResponse(call: Call, response: Response) {
             response.use {
                 if (!response.isSuccessful) {
-                    callback(null)
+                    callback(Result.failure(IOException("Unexpected HTTP code ${response.code}")))
+                    return
                 }
                 val jsonString = response.body.string()
-                val strategiesInfo = json.decodeFromString<List<RepoItemInfo>>(jsonString)
-                callback(strategiesInfo)
+                val result = runCatching {
+                    json.decodeFromString<List<RepoItemInfo>>(jsonString)
+                }
+                callback(result)
             }
         }
     })

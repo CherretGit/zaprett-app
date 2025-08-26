@@ -93,4 +93,10 @@
     <string name="radio_disabed">Disabled</string>
     <string name="btn_show_system_apps">Show system apps</string>
     <string name="search_field">Search…</string>
+    <string name="error_text">Error</string>
+    <string name="error_server_data">Error retrieving data from the server, please check your internet connection</string>
+    <string name="error_processing_data">Error processing data</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="btn_copy_log">Copy log</string>
+    <string name="log_copied">Log copied</string>
 </resources>

@@ -89,4 +89,10 @@
     <string name="radio_disabed">Выключено</string>
     <string name="btn_show_system_apps">Показывать системные приложения</string>
     <string name="search_field">Поиск…</string>
+    <string name="error_text">Ошибка</string>
+    <string name="error_server_data">Ошибка получения данных с сервера, пожалуйста проверьте интернет соединение</string>
+    <string name="error_processing_data">Ошибка при обработке данных</string>
+    <string name="error_unknown">Неизвестная ошибка</string>
+    <string name="btn_copy_log">Скопировать лог</string>
+    <string name="log_copied">Лог скопирован</string>
 </resources>

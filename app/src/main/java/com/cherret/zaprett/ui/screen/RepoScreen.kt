@@ -1,12 +1,19 @@
 package com.cherret.zaprett.ui.screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,10 +35,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +57,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
 import com.cherret.zaprett.ui.viewmodel.BaseRepoViewModel
+import kotlinx.serialization.SerializationException
+import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,10 +70,50 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
     val isUpdateInstalling = viewModel.isUpdateInstalling
     val isRefreshing = viewModel.isRefreshing.value
     val snackbarHostState = remember { SnackbarHostState() }
-
+    val error by viewModel.errorFlow.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.refresh()
     }
+
+    if (error != null) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.clearError()
+                navController.popBackStack()
+            },
+            title = { Text(stringResource(R.string.error_text)) },
+            text = {
+                Text(
+                    when (error) {
+                        is IOException -> stringResource(R.string.error_server_data)
+                        is SerializationException -> stringResource(R.string.error_processing_data)
+                        else -> stringResource(R.string.error_unknown)
+                    }
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip: ClipData = ClipData.newPlainText("Error log", error?.message)
+                    clipboard.setPrimaryClip(clip)
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
+                        Toast.makeText(context, context.getString(R.string.log_copied), Toast.LENGTH_SHORT).show()
+                    }
+                }) {
+                    Text(stringResource(R.string.btn_copy_log))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearError()
+                    navController.popBackStack()
+                }) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
+    }
+
 
     Scaffold(
         topBar = {
@@ -198,6 +251,7 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }

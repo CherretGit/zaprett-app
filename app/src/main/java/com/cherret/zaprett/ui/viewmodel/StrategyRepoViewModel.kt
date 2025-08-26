@@ -13,5 +13,5 @@ class StrategyRepoViewModel(application: Application): BaseRepoViewModel(applica
         } else {
             getAllByeDPIStrategies()
         }
-    override fun getRepoList(callback: (List<RepoItemInfo>?) -> Unit) = getStrategiesList(sharedPreferences, callback)
+    override fun getRepoList(callback: (Result<List<RepoItemInfo>>) -> Unit) = getStrategiesList(sharedPreferences, callback)
 }

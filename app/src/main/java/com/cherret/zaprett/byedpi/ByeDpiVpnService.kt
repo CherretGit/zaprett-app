@@ -231,7 +231,7 @@ class ByeDpiVpnService : VpnService() {
                     }
                 }
                 else {
-                    listOf("-H", list, "-An", arg)
+                    listOf("-H", list, "-An", arg).filter { it != "\$hostlist" }
                 }
             }
             .toMutableList()

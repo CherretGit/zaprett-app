@@ -189,7 +189,7 @@ class MainActivity : ComponentActivity() {
                                         contentDescription = stringResource(id = topLevelRoute.nameResId)
                                     )
                                 },
-                                label = { Text(text = stringResource(id = topLevelRoute.nameResId)) },
+                                label = { Text(text = stringResource(id = topLevelRoute.nameResId)) }, alwaysShowLabel = false,
                                 selected = currentDestination?.route == topLevelRoute.route,
                                 onClick = {
                                     navController.navigate(topLevelRoute.route) {

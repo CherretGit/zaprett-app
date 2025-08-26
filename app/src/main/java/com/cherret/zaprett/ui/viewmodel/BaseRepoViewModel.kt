@@ -19,12 +19,16 @@ import com.cherret.zaprett.utils.getZaprettPath
 import com.cherret.zaprett.utils.registerDownloadListenerHost
 import com.cherret.zaprett.utils.restartService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 
 abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(application) {
     val context = application.applicationContext
     val sharedPreferences: SharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    private val _errorFlow = MutableStateFlow<Throwable?>(null)
+    val errorFlow: StateFlow<Throwable?> = _errorFlow
 
     var hostLists = mutableStateOf<List<RepoItemInfo>>(emptyList())
         protected set
@@ -37,32 +41,41 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     val isUpdateInstalling = mutableStateMapOf<String, Boolean>()
 
     abstract fun getInstalledLists(): Array<String>
-    abstract fun getRepoList(callback: (List<RepoItemInfo>?) -> Unit)
+    abstract fun getRepoList(callback: (Result<List<RepoItemInfo>>) -> Unit)
 
     fun refresh() {
         isRefreshing.value = true
-        getRepoList { list ->
+        getRepoList { result ->
             viewModelScope.launch(Dispatchers.IO) {
-                val safeList = list ?: emptyList()
-                val useModule = sharedPreferences.getBoolean("use_module", false)
-                val listType = getHostListMode(sharedPreferences)
-                val filteredList = safeList.filter { item ->
-                    when (item.type) {
-                        ItemType.list -> listType == "whitelist"
-                        ItemType.list_exclude -> listType == "blacklist"
-                        ItemType.nfqws -> useModule
-                        ItemType.byedpi -> !useModule
+                result
+                    .onSuccess { safeList ->
+                        val useModule = sharedPreferences.getBoolean("use_module", false)
+                        val listType = getHostListMode(sharedPreferences)
+                        val filteredList = safeList.filter { item ->
+                            when (item.type) {
+                                ItemType.list -> listType == "whitelist"
+                                ItemType.list_exclude -> listType == "blacklist"
+                                ItemType.nfqws -> useModule
+                                ItemType.byedpi -> !useModule
+                            }
+                        }
+                        hostLists.value = filteredList
+                        isUpdate.clear()
+                        val existingHashes = getInstalledLists().map { getFileSha256(File(it)) }
+                        for (item in filteredList) {
+                            isUpdate[item.name] = item.hash !in existingHashes
+                        }
                     }
-                }
-                hostLists.value = filteredList
-                isUpdate.clear()
-                val existingHashes = getInstalledLists().map { getFileSha256(File(it)) }
-                for (item in filteredList) {
-                    isUpdate[item.name] = item.hash !in existingHashes
-                }
-                isRefreshing.value = false
+                    .onFailure { e ->
+                        _errorFlow.value = e
+                    }
             }
+            isRefreshing.value = false
         }
+    }
+
+    fun clearError() {
+        _errorFlow.value = null
     }
 
     fun isItemInstalled(item: RepoItemInfo): Boolean {
