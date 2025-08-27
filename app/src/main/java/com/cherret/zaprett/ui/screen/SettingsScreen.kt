@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.R
@@ -58,7 +56,7 @@ fun SettingsScreen(viewModel : SettingsViewModel = viewModel()) {
     val sharedPreferences = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val editor = remember { sharedPreferences.edit() }
     val useModule = remember { mutableStateOf(sharedPreferences.getBoolean("use_module", false)) }
-    val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", false)) }
+    val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", true)) }
     val autoRestart = remember { mutableStateOf(getStartOnBoot()) }
     val autoUpdate = remember { mutableStateOf(sharedPreferences.getBoolean("auto_update", true)) }
     val sendFirebaseAnalytics = remember { mutableStateOf(sharedPreferences.getBoolean("send_firebase_analytics", true)) }
@@ -86,7 +84,6 @@ fun SettingsScreen(viewModel : SettingsViewModel = viewModel()) {
                 useModule(
                     context = context,
                     checked = isChecked,
-                    updateOnBoot = updateOnBoot,
                     openNoRootDialog = openNoRootDialog,
                     openNoModuleDialog = openNoModuleDialog
                 ) { success ->
@@ -494,7 +491,7 @@ private fun SettingsSection(title: String) {
     )
 }
 
-private fun useModule(context: Context, checked: Boolean, updateOnBoot: MutableState<Boolean>, openNoRootDialog: MutableState<Boolean>, openNoModuleDialog: MutableState<Boolean>, callback: (Boolean) -> Unit) {
+private fun useModule(context: Context, checked: Boolean, openNoRootDialog: MutableState<Boolean>, openNoModuleDialog: MutableState<Boolean>, callback: (Boolean) -> Unit) {
     val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val editor = sharedPreferences.edit()
     if (checked) {
@@ -515,7 +512,6 @@ private fun useModule(context: Context, checked: Boolean, updateOnBoot: MutableS
                         editor.remove("applist").apply()
                         editor.remove("whitelist").apply()
                         editor.remove("blacklist").apply()
-                        updateOnBoot.value = true
                         callback(true)
                     } else {
                         openNoModuleDialog.value = true
@@ -529,7 +525,6 @@ private fun useModule(context: Context, checked: Boolean, updateOnBoot: MutableS
         editor.putBoolean("use_module", false)
             .putBoolean("update_on_boot", false)
             .apply()
-        updateOnBoot.value = false
         callback(true)
     }
 }
