@@ -226,7 +226,7 @@ fun SettingsScreen(viewModel : SettingsViewModel = viewModel()) {
 
     if (showStrategyRepoUrlDialog.value) {
         TextDialog(stringResource(R.string.btn_repository_url_strategies), stringResource(R.string.hint_enter_repository_url_strategies), textDialogValue.value, onConfirm = {
-            editor.putString("strategy_repo_url", it).apply()
+            editor.putString("strategies_repo_url", it).apply()
         }, onDismiss = { showStrategyRepoUrlDialog.value = false })
     }
 
