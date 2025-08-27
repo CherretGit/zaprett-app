@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.ServiceStatusUI
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 
@@ -78,8 +79,7 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResu
     val requestVpnPermission by viewModel.requestVpnPermission.collectAsState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val cardText = viewModel.cardText
-    val cardIcon = viewModel.cardIcon;
+    val status by viewModel.serviceStatus.collectAsState()
     val changeLog = viewModel.changeLog
     val newVersion = viewModel.newVersion
     val updateAvailable = viewModel.updateAvailable
@@ -124,7 +124,7 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResu
             Column(modifier = Modifier
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())) {
-                ServiceStatusCard(viewModel, cardText, cardIcon, snackbarHostState, scope)
+                ServiceStatusCard(viewModel, status, snackbarHostState, scope)
                 UpdateCard(updateAvailable) { viewModel.showUpdateDialog() }
                 if (showUpdateDialog) {
                     UpdateDialog(viewModel, changeLog.value.orEmpty(), newVersion) { viewModel.dismissUpdateDialog() }
@@ -142,7 +142,7 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResu
 }
 
 @Composable
-private fun ServiceStatusCard(viewModel: HomeViewModel, cardText: MutableState<Int>, cardIcon : MutableState<ImageVector>, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+private fun ServiceStatusCard(viewModel: HomeViewModel, status: ServiceStatusUI, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -162,14 +162,14 @@ private fun ServiceStatusCard(viewModel: HomeViewModel, cardText: MutableState<I
         )
         {
             Icon(
-                painter = rememberVectorPainter(cardIcon.value),
+                painter = rememberVectorPainter(status.icon),
                 modifier = Modifier
                     .width(60.dp)
                     .height(60.dp),
                 contentDescription = "icon"
             )
             Text(
-                text = stringResource(cardText.value),
+                text = stringResource(status.textRes),
                 fontFamily = FontFamily(Font(R.font.unbounded, FontWeight.Normal)),
                 fontSize = 16.sp,
                 //maxLines = 3,
