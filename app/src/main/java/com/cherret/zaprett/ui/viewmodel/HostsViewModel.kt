@@ -32,6 +32,7 @@ class HostsViewModel(application: Application): BaseListsViewModel(application) 
         if (sharedPreferences.getBoolean("use_module", false)) {
             getStatus { isEnabled ->
                 if (isEnabled && wasChecked) {
+                    snackbarHostState.currentSnackbarData?.dismiss()
                     showRestartSnackbar(context, snackbarHostState, scope)
                 }
             }
@@ -44,6 +45,7 @@ class HostsViewModel(application: Application): BaseListsViewModel(application) 
         if (sharedPreferences.getBoolean("use_module", false)) {
             getStatus { isEnabled ->
                 if (isEnabled) {
+                    snackbarHostState.currentSnackbarData?.dismiss()
                     showRestartSnackbar(
                         context,
                         snackbarHostState,
