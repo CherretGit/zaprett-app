@@ -251,7 +251,6 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
