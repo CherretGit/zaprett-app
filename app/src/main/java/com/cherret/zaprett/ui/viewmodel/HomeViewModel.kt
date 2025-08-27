@@ -7,7 +7,6 @@ import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.SnackbarHostState
@@ -18,6 +17,7 @@ import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
+import com.cherret.zaprett.data.ServiceStatusUI
 import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getBinVersion
@@ -32,6 +32,7 @@ import com.cherret.zaprett.utils.startService
 import com.cherret.zaprett.utils.stopService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -40,10 +41,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     private val _requestVpnPermission = MutableStateFlow(false)
     val requestVpnPermission = _requestVpnPermission.asStateFlow()
-    var cardText = mutableIntStateOf(R.string.status_not_availible) // MVP temporarily(maybe)
-        private set
-    var cardIcon = mutableStateOf(Icons.AutoMirrored.Filled.Help)
-        private set
+    private val _serviceStatus = MutableStateFlow(ServiceStatusUI())
+    val serviceStatus: StateFlow<ServiceStatusUI> = _serviceStatus.asStateFlow()
 
     var moduleVer = mutableStateOf(context.getString(R.string.unknown_text))
         private set
@@ -84,53 +83,35 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun checkServiceStatus() {
-        if (prefs.getBoolean("use_module", false) && prefs.getBoolean("update_on_boot", false)) {
+    private fun updateServiceStatus(useModule: Boolean) {
+        if (useModule) {
             getStatus { isEnabled ->
-                if (isEnabled){
-                    cardText.intValue = R.string.status_enabled
-                    cardIcon.value = Icons.Filled.CheckCircle
-                }
-                else {
-                    cardText.intValue = R.string.status_disabled
-                    cardIcon.value = Icons.Filled.Cancel
+                _serviceStatus.value = if (isEnabled) {
+                    ServiceStatusUI(R.string.status_enabled, Icons.Filled.CheckCircle)
+                } else {
+                    ServiceStatusUI(R.string.status_disabled, Icons.Filled.Cancel)
                 }
             }
-        }
-        else {
-            if (ByeDpiVpnService.status == ServiceStatus.Connected){
-                cardText.intValue = R.string.status_enabled
-                cardIcon.value = Icons.Filled.CheckCircle
-            }
-            else {
-                cardText.intValue = R.string.status_disabled
-                cardIcon.value = Icons.Filled.Cancel
+        } else {
+            _serviceStatus.value = if (ByeDpiVpnService.status == ServiceStatus.Connected) {
+                ServiceStatusUI(R.string.status_enabled, Icons.Filled.CheckCircle)
+            } else {
+                ServiceStatusUI(R.string.status_disabled, Icons.Filled.Cancel)
             }
         }
     }
 
-    fun onCardClick() {
-        if (prefs.getBoolean("use_module", false)) {
-            getStatus { isEnabled ->
-                if (isEnabled){
-                    cardText.intValue = R.string.status_enabled
-                    cardIcon.value = Icons.Filled.CheckCircle
-                }
-                else {
-                    cardText.intValue = R.string.status_disabled
-                    cardIcon.value = Icons.Filled.Cancel
-                }
-            }
-        } else {
-            if (ByeDpiVpnService.status == ServiceStatus.Connected){
-                cardText.intValue = R.string.status_enabled
-                cardIcon.value = Icons.Filled.CheckCircle
-            }
-            else {
-                cardText.intValue = R.string.status_disabled
-                cardIcon.value = Icons.Filled.Cancel
-            }
+    fun checkServiceStatus() {
+        val updateOnBoot = prefs.getBoolean("update_on_boot", false)
+        if (updateOnBoot) {
+            val useModule = prefs.getBoolean("use_module", false)
+            updateServiceStatus(useModule)
         }
+    }
+
+    fun onCardClick() {
+        val useModule = prefs.getBoolean("use_module", false)
+        updateServiceStatus(useModule)
     }
 
     fun startVpn() {
