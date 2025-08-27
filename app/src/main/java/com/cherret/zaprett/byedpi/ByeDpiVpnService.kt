@@ -229,9 +229,12 @@ class ByeDpiVpnService : VpnService() {
                         arg == "\$hostlist" && list.isEmpty() -> emptyList()
                         else -> listOf(arg)
                     }
-                }
-                else {
-                    listOf("-H", list, "-An", arg).filter { it != "\$hostlist" }
+                } else {
+                    if (list.isNotEmpty()) {
+                        listOf("-H", list, "-An", arg).filter { it != "\$hostlist" }
+                    } else {
+                        listOf("-An", arg).filter { it != "\$hostlist" }
+                    }
                 }
             }
             .toMutableList()
