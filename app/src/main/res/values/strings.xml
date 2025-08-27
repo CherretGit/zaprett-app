@@ -99,4 +99,5 @@
     <string name="error_unknown">Unknown error</string>
     <string name="btn_copy_log">Copy log</string>
     <string name="log_copied">Log copied</string>
+    <string name="download_error">Occurred a file download error, please report to developers</string>
 </resources>

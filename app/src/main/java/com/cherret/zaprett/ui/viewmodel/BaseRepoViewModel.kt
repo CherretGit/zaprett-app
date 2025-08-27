@@ -30,6 +30,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     private val _errorFlow = MutableStateFlow<Throwable?>(null)
     val errorFlow: StateFlow<Throwable?> = _errorFlow
 
+    private val _downloadErrorFlow = MutableStateFlow<String?>(null)
+
+    val downloadErrorFlow: StateFlow<String?> = _downloadErrorFlow
+
     var hostLists = mutableStateOf<List<RepoItemInfo>>(emptyList())
         protected set
 
@@ -78,6 +82,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
         _errorFlow.value = null
     }
 
+    fun clearDownloadError() {
+        _downloadErrorFlow.value = null
+    }
+
     fun isItemInstalled(item: RepoItemInfo): Boolean {
         return getInstalledLists().any { File(it).name == item.name }
     }
@@ -85,7 +93,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     fun install(item: RepoItemInfo) {
         isInstalling[item.name] = true
         val downloadId = download(context, item.url)
-        registerDownloadListenerHost(context, downloadId) { uri ->
+        registerDownloadListenerHost(context, downloadId, { uri ->
             viewModelScope.launch(Dispatchers.IO) {
                 val sourceFile = File(uri.path!!)
                 val targetDir = when (item.type) {
@@ -101,29 +109,46 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 isUpdate[item.name] = false
                 refresh()
             }
-        }
+        }, onError = {
+            isInstalling[item.name] = false
+            isUpdate[item.name] = false
+            refresh()
+            _downloadErrorFlow.value = it
+        })
     }
+
     fun update(item: RepoItemInfo) {
         isUpdateInstalling[item.name] = true
         val downloadId = download(context, item.url)
-        registerDownloadListenerHost(context, downloadId) { uri ->
-            viewModelScope.launch(Dispatchers.IO) {
-                val sourceFile = File(uri.path!!)
-                val targetDir = when (item.type) {
-                    ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
-                    ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
-                    ItemType.list -> File(getZaprettPath(), "lists/include")
-                    ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
+        registerDownloadListenerHost(
+            context,
+            downloadId,
+            onDownloaded = { uri ->
+                viewModelScope.launch(Dispatchers.IO) {
+                    val sourceFile = File(uri.path!!)
+                    val targetDir = when (item.type) {
+                        ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
+                        ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
+                        ItemType.list -> File(getZaprettPath(), "lists/include")
+                        ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
+                    }
+                    val targetFile = File(targetDir, uri.lastPathSegment!!)
+                    sourceFile.copyTo(targetFile, overwrite = true)
+                    sourceFile.delete()
+                    isUpdateInstalling[item.name] = false
+                    isUpdate[item.name] = false
+                    refresh()
                 }
-                val targetFile = File(targetDir, uri.lastPathSegment!!)
-                sourceFile.copyTo(targetFile, overwrite = true)
-                sourceFile.delete()
+            },
+            onError = { error ->
                 isUpdateInstalling[item.name] = false
                 isUpdate[item.name] = false
                 refresh()
+                _downloadErrorFlow.value = error
             }
-        }
+        )
     }
+
 
     fun showRestartSnackbar(snackbarHostState: SnackbarHostState) {
         viewModelScope.launch {

@@ -71,6 +71,7 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
     val isRefreshing = viewModel.isRefreshing.value
     val snackbarHostState = remember { SnackbarHostState() }
     val error by viewModel.errorFlow.collectAsState()
+    val downloadError by viewModel.downloadErrorFlow.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.refresh()
     }
@@ -107,6 +108,37 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
                 TextButton(onClick = {
                     viewModel.clearError()
                     navController.popBackStack()
+                }) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
+    }
+
+    if (downloadError != null) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.clearDownloadError()
+            },
+            title = { Text(stringResource(R.string.error_text)) },
+            text = {
+                Text(stringResource(R.string.download_error))
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip: ClipData = ClipData.newPlainText("Error log", downloadError)
+                    clipboard.setPrimaryClip(clip)
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
+                        Toast.makeText(context, context.getString(R.string.log_copied), Toast.LENGTH_SHORT).show()
+                    }
+                }) {
+                    Text(stringResource(R.string.btn_copy_log))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearDownloadError()
                 }) {
                     Text(stringResource(R.string.btn_continue))
                 }

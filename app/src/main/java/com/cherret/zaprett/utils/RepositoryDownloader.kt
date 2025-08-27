@@ -69,7 +69,7 @@ fun getRepo(url: String, callback: (Result<List<RepoItemInfo>>) -> Unit) {
     })
 }
 
-fun registerDownloadListenerHost(context: Context, downloadId: Long, onDownloaded: (Uri) -> Unit) {// AI Generated
+fun registerDownloadListenerHost(context: Context, downloadId: Long, onDownloaded: (Uri) -> Unit, onError: (String) -> Unit) {// AI Generated
     val receiver = object : BroadcastReceiver() {
         @SuppressLint("Range")
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -80,12 +80,32 @@ fun registerDownloadListenerHost(context: Context, downloadId: Long, onDownloade
             dm.query(query)?.use { cursor ->
                 if (cursor.moveToFirst()) {
                     val status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
-                    if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                        val uriString = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI))
-                        if (uriString != null) {
-                            val uri = uriString.toUri()
+                    val reason = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_REASON))
+                    when (status) {
+                        DownloadManager.STATUS_SUCCESSFUL -> {
+                            val uriString = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI))
+                            if (uriString != null) {
+                                val uri = uriString.toUri()
+                                context.unregisterReceiver(this)
+                                onDownloaded(uri)
+                            }
+                        }
+
+                        DownloadManager.STATUS_FAILED -> {
                             context.unregisterReceiver(this)
-                            onDownloaded(uri)
+                            val errorMessage = when (reason) {
+                                DownloadManager.ERROR_CANNOT_RESUME -> "Cannot resume download"
+                                DownloadManager.ERROR_DEVICE_NOT_FOUND -> "Device not found"
+                                DownloadManager.ERROR_FILE_ALREADY_EXISTS -> "File already exists"
+                                DownloadManager.ERROR_FILE_ERROR -> "File error"
+                                DownloadManager.ERROR_HTTP_DATA_ERROR -> "HTTP data error"
+                                DownloadManager.ERROR_INSUFFICIENT_SPACE -> "Insufficient space"
+                                DownloadManager.ERROR_TOO_MANY_REDIRECTS -> "Too many redirects"
+                                DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> "Unhandled HTTP code"
+                                DownloadManager.ERROR_UNKNOWN -> "Unknown error"
+                                else -> "Download failed: reason=$reason"
+                            }
+                            onError(errorMessage)
                         }
                     }
                 }
