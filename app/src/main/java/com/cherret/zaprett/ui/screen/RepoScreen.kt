@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
+import com.cherret.zaprett.component.RepoItem
 import com.cherret.zaprett.ui.viewmodel.BaseRepoViewModel
 import kotlinx.serialization.SerializationException
 import java.io.IOException
@@ -193,94 +194,13 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
                         }
                     } else {
                         items(hostLists) { item ->
-                            val isInstalled = viewModel.isItemInstalled(item)
-                            val installing = isInstalling[item.name] == true
-                            val updating = isUpdateInstalling[item.name] == true
-
-                            ElevatedCard(
-                                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 10.dp, top = 25.dp, end = 10.dp)
-                            ) {
-                                Column(Modifier.fillMaxWidth()) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
-                                    ) {
-                                        Text(text = item.name, modifier = Modifier.weight(1f))
-                                    }
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp)
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.title_author, item.author),
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                    }
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp)
-                                    ) {
-                                        Text(
-                                            text = item.description,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                    }
-
-                                    HorizontalDivider(thickness = Dp.Hairline)
-
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.End
-                                    ) {
-                                        if (isUpdate[item.name] == true && isInstalled) {
-                                            FilledTonalButton(
-                                                onClick = { viewModel.update(item) },
-                                                enabled = !updating,
-                                                modifier = Modifier.padding(horizontal = 5.dp)
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Update,
-                                                    contentDescription = stringResource(R.string.btn_remove_host),
-                                                    modifier = Modifier.size(20.dp)
-                                                )
-                                                Text(
-                                                    if (updating) stringResource(R.string.btn_updating_host)
-                                                    else stringResource(R.string.btn_update_host)
-                                                )
-                                            }
-                                        }
-
-                                        FilledTonalButton(
-                                            onClick = { viewModel.install(item) },
-                                            enabled = !installing && !isInstalled,
-                                            modifier = Modifier.padding(horizontal = 5.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.InstallMobile,
-                                                contentDescription = stringResource(R.string.btn_remove_host),
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Text(
-                                                when {
-                                                    installing -> stringResource(R.string.btn_installing_host)
-                                                    isInstalled -> stringResource(R.string.btn_installed_host)
-                                                    else -> stringResource(R.string.btn_install_host)
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
+                            RepoItem(
+                                item = item,
+                                viewModel = viewModel,
+                                isInstalling = isInstalling,
+                                isUpdateInstalling = isUpdateInstalling,
+                                isUpdate = isUpdate
+                            )
                         }
                     }
                 }
