@@ -5,6 +5,7 @@
     <string name="title_strategies">Стратегии</string>
     <string name="title_repo">Репозиторий</string>
     <string name="title_settings">Настройки</string>
+    <string name="title_debug">Отладка</string>
     <string name="general_section">Основные настройки</string>
     <string name="byedpi_section">Настройки ByeDPI</string>
     <string name="btn_continue">Продолжить</string>
@@ -48,6 +49,8 @@
     <string name="hint_enter_repository_url_lists">Введите URL репозитория хостов</string>
     <string name="btn_repository_url_strategies">URL репозитория стратегий</string>
     <string name="hint_enter_repository_url_strategies">Введите URL репозитория стратегий</string>
+    <string name="btn_update_repository_url">URL репозитория обновлений</string>
+    <string name="hint_enter_update_repository_url">Введите URL репозитория обновлений</string>
     <string name="btn_ipv6">IPv6</string>
     <string name="btn_ip">IP-адрес</string>
     <string name="hint_ip">Введите IP-адрес</string>

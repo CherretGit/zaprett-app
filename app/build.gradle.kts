@@ -89,6 +89,7 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.fragment.compose)
     implementation(libs.coil.compose)
+    implementation(libs.compose.markdown)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

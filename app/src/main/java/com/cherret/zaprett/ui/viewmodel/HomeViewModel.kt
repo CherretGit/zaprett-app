@@ -72,7 +72,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun checkForUpdate() {
         if (prefs.getBoolean("auto_update", true)) {
-            getUpdate {
+            getUpdate(prefs) {
                 if (it != null) {
                     downloadUrl.value = it.downloadUrl.toString()
                     getChangelog(it.changelogUrl.toString()) { log -> changeLog.value = log }

@@ -46,6 +46,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.cherret.zaprett.ui.screen.DebugScreen
 import com.cherret.zaprett.ui.screen.HomeScreen
 import com.cherret.zaprett.ui.screen.HostsScreen
 import com.cherret.zaprett.ui.screen.RepoScreen
@@ -67,7 +68,7 @@ sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: 
     object settings : Screen("settings", R.string.title_settings, Icons.Default.Settings)
 }
 val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.strategies, Screen.settings)
-val hideNavBar = listOf("repo?source={source}")
+val hideNavBar = listOf("repo?source={source}", "debugScreen")
 class MainActivity : ComponentActivity() {
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
@@ -214,7 +215,7 @@ class MainActivity : ComponentActivity() {
                 composable(Screen.home.route) { HomeScreen(viewModel = viewModel, vpnPermissionLauncher) }
                 composable(Screen.hosts.route) { HostsScreen(navController) }
                 composable(Screen.strategies.route) { StrategyScreen(navController) }
-                composable(Screen.settings.route) { SettingsScreen() }
+                composable(Screen.settings.route) { SettingsScreen(navController) }
                 composable(route = "repo?source={source}",arguments = listOf(navArgument("source") {})) { backStackEntry ->
                     val source = backStackEntry.arguments?.getString("source")
                     when (source) {
@@ -228,6 +229,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+                composable("debugScreen") { DebugScreen(navController) }
             }
         }
     }

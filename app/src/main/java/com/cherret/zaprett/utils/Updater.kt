@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -25,9 +26,9 @@ import java.io.File
 
 private val client = OkHttpClient()
 private val json = Json { ignoreUnknownKeys = true }
-
-fun getUpdate(callback: (UpdateInfo?) -> Unit) {
-    val request = Request.Builder().url("https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
+// PLS EGOR-WHITE REFACTOR THIS
+fun getUpdate(sharedPreferences: SharedPreferences, callback: (UpdateInfo?) -> Unit) {
+    val request = Request.Builder().url(sharedPreferences.getString("update_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json")?: "https://raw.githubusercontent.com/CherretGit/zaprett-app/refs/heads/main/update.json").build()
     client.newCall(request).enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()

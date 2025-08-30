@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
-import com.cherret.zaprett.component.ListSwitchItem
+import com.cherret.zaprett.ui.component.ListSwitchItem
 import com.cherret.zaprett.ui.viewmodel.StrategyViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

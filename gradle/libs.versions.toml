@@ -1,5 +1,5 @@
 [versions]
-agp = "8.12.1"
+agp = "8.12.2"
 kotlin = "2.2.10"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -18,6 +18,7 @@ serialization = "1.9.0"
 firebase-bom = "34.1.0"
 fragment-compose = "1.8.9"
 coil3 = "3.3.0"
+compose-markdown = "0.5.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,6 +48,7 @@ firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 fragment-compose = { group = "androidx.fragment", name = "fragment-compose", version.ref = "fragment-compose" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil3" }
+compose-markdown = { module = "com.github.jeziellago:compose-markdown", version.ref = "compose-markdown" }
 
 
 [plugins]

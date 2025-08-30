@@ -1,4 +1,4 @@
-package com.cherret.zaprett.component
+package com.cherret.zaprett.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

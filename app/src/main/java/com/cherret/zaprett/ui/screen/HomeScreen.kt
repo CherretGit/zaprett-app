@@ -69,6 +69,7 @@ import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ServiceStatusUI
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -321,8 +322,8 @@ fun UpdateDialog(viewModel: HomeViewModel, changeLog: String, newVersion: Mutabl
     AlertDialog(
         title = { Text(text = stringResource(R.string.update_available)) },
         text = {
-            Text(
-                text = stringResource(R.string.alert_version, BuildConfig.VERSION_NAME, newVersion.value.toString(), changeLog)
+            MarkdownText(
+                markdown = stringResource(R.string.alert_version, BuildConfig.VERSION_NAME, newVersion.value.toString(), changeLog)
             )
         },
         onDismissRequest = onDismiss,
