@@ -69,7 +69,7 @@ fun getRepo(url: String, callback: (Result<List<RepoItemInfo>>) -> Unit) {
     })
 }
 
-fun registerDownloadListenerHost(context: Context, downloadId: Long, onDownloaded: (Uri) -> Unit, onError: (String) -> Unit) {// AI Generated
+fun registerDownloadListener(context: Context, downloadId: Long, onDownloaded: (Uri) -> Unit, onError: (String) -> Unit) {// AI Generated
     val receiver = object : BroadcastReceiver() {
         @SuppressLint("Range")
         override fun onReceive(context: Context?, intent: Intent?) {

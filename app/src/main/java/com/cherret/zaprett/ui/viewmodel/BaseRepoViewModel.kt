@@ -16,7 +16,7 @@ import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getFileSha256
 import com.cherret.zaprett.utils.getHostListMode
 import com.cherret.zaprett.utils.getZaprettPath
-import com.cherret.zaprett.utils.registerDownloadListenerHost
+import com.cherret.zaprett.utils.registerDownloadListener
 import com.cherret.zaprett.utils.restartService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,7 +93,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     fun install(item: RepoItemInfo) {
         isInstalling[item.name] = true
         val downloadId = download(context, item.url)
-        registerDownloadListenerHost(context, downloadId, { uri ->
+        registerDownloadListener(context, downloadId, { uri ->
             viewModelScope.launch(Dispatchers.IO) {
                 val sourceFile = File(uri.path!!)
                 val targetDir = when (item.type) {
@@ -120,7 +120,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     fun update(item: RepoItemInfo) {
         isUpdateInstalling[item.name] = true
         val downloadId = download(context, item.url)
-        registerDownloadListenerHost(
+        registerDownloadListener(
             context,
             downloadId,
             onDownloaded = { uri ->

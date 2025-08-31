@@ -226,9 +226,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         showUpdateDialog.value = false
         if (context.packageManager.canRequestPackageInstalls()){
             val id = download(context, downloadUrl.value.orEmpty())
-            registerDownloadListener(context, id) { uri ->
+            registerDownloadListener(context, id, { uri ->
                 installApk(context, uri)
-            }
+                },
+                onError = {
+
+                })
         }
         else {
             val packageUri = Uri.fromParts("package", context.packageName, null)

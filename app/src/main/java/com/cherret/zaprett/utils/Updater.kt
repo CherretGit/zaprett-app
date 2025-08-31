@@ -95,30 +95,6 @@ fun installApk(context: Context, uri: Uri) {
         context.startActivity(intent)
     }
 }
-
-fun registerDownloadListener(context: Context, downloadId: Long, onDownloaded: (Uri) -> Unit) {// AI Generated
-    val receiver = object : BroadcastReceiver() {
-        @SuppressLint("Range")
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action != DownloadManager.ACTION_DOWNLOAD_COMPLETE) return
-            if (intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) != downloadId) return
-            val downloadManager = context?.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager ?: return
-            downloadManager.query(DownloadManager.Query().setFilterById(downloadId)).use { cursor ->
-                if (cursor.moveToFirst() && cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
-                    context.unregisterReceiver(this)
-                    onDownloaded(cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)).toUri())
-                }
-            }
-        }
-    }
-    val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        context.registerReceiver(receiver, intentFilter, Context.RECEIVER_EXPORTED)
-    } else {
-        ContextCompat.registerReceiver(context, receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), ContextCompat.RECEIVER_EXPORTED)
-    }
-}
-
 @Serializable
 data class UpdateInfo(
     val version: String?,
