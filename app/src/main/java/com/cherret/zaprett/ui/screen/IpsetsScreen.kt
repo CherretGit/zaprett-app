@@ -169,7 +169,7 @@ private fun FloatingMenu(navController: NavController, launcher: ActivityResultL
             text = { Text(stringResource(R.string.btn_download_host)) },
             onClick = {
                 expanded = false
-                navController.navigate("repo?source=hosts") { launchSingleTop = true }
+                navController.navigate("repo?source=ipsets") { launchSingleTop = true }
             },
             leadingIcon = {
                 Icon(Icons.Default.Download, contentDescription = stringResource(R.string.btn_download_host))

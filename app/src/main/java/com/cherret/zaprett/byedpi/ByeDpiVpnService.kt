@@ -15,7 +15,9 @@ import com.cherret.zaprett.MainActivity
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.utils.disableList
+import com.cherret.zaprett.utils.getActiveExcludeIpsets
 import com.cherret.zaprett.utils.getActiveExcludeLists
+import com.cherret.zaprett.utils.getActiveIpsets
 import com.cherret.zaprett.utils.getActiveLists
 import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getAppsListMode
@@ -187,8 +189,9 @@ class ByeDpiVpnService : VpnService() {
         val socksIp = sharedPreferences.getString("ip", "127.0.0.1")?: "127.0.0.1"
         val socksPort = sharedPreferences.getString("port", "1080")?: "1080"
         val listSet = if (getHostListMode(sharedPreferences) == "whitelist") getActiveLists(sharedPreferences) else getActiveExcludeLists(sharedPreferences)
+        val ipsetSet = if (getHostListMode(sharedPreferences) == "whitelist") getActiveIpsets(sharedPreferences) else getActiveExcludeIpsets(sharedPreferences)
         CoroutineScope(Dispatchers.IO).launch {
-            val args = parseArgs(socksIp, socksPort, getActiveStrategy(sharedPreferences), prepareList(listSet), sharedPreferences)
+            val args = parseArgs(socksIp, socksPort, getActiveStrategy(sharedPreferences), prepareList(listSet), prepareIpset(ipsetSet), sharedPreferences)
             val result = NativeBridge().startProxy(args)
             if (result < 0) {
                 Log.d("proxy","Failed to start byedpi proxy")
@@ -223,7 +226,33 @@ class ByeDpiVpnService : VpnService() {
         return ""
     }
 
-    private fun parseArgs(ip: String, port: String, rawArgs: List<String>, list : String, sharedPreferences: SharedPreferences): Array<String> {
+    private suspend fun prepareIpset(actsets: Array<String>): String {
+        if (actsets.isNotEmpty()) {
+            val lists: Array<File> = actsets.map { File(it) }.toTypedArray()
+            val hostlist = withContext(Dispatchers.IO) {
+                File.createTempFile("ipset", ".txt", cacheDir)
+            }.apply { deleteOnExit() }
+            withContext(Dispatchers.IO) {
+                hostlist.printWriter().use { out ->
+                    lists.forEach {
+                        if (it.exists()) {
+                            it.bufferedReader().useLines {
+                                it.forEach {
+                                    out.println(it)
+                                }
+                            }
+                        } else {
+                            disableList(it.name, sharedPreferences)
+                        }
+                    }
+                }
+            }
+            return hostlist.absolutePath
+        }
+        return ""
+    }
+
+    private fun parseArgs(ip: String, port: String, rawArgs: List<String>, list : String, ipset : String, sharedPreferences: SharedPreferences): Array<String> {
         val regex = Regex("""--?\S+(?:=(?:[^"'\s]+|"[^"]*"|'[^']*'))?|[^\s]+""")
         val parsedArgs = rawArgs
             .flatMap { args -> regex.findAll(args).map { it.value } }
@@ -232,6 +261,8 @@ class ByeDpiVpnService : VpnService() {
                     when {
                         arg == "\$hostlist" && list.isNotEmpty() -> listOf("-H", list)
                         arg == "\$hostlist" && list.isEmpty() -> emptyList()
+                        arg == "\$ipset" && list.isNotEmpty() -> listOf("-H", list)
+                        arg == "\$ipset" && list.isEmpty() -> emptyList()
                         else -> listOf(arg)
                     }
                 } else {
@@ -239,6 +270,13 @@ class ByeDpiVpnService : VpnService() {
                         listOf("-H", list, "-An", arg).filter { it != "\$hostlist" }
                     } else {
                         listOf("-An", arg).filter { it != "\$hostlist" }
+                    }
+                    if (ipset.isEmpty()) {
+                        listOf("-H", list, "-An", arg).filter { it != "\$ipset" }
+
+                    }
+                    else {
+                        listOf("-An", arg).filter { it != "\$ipset" }
                     }
                 }
             }
