@@ -64,42 +64,16 @@ fun getConfigFile(): File {
     return File(Environment.getExternalStorageDirectory(), "zaprett/config")
 }
 
-fun setStartOnBoot(startOnBoot: Boolean) {
-    val configFile = getConfigFile()
-    if (configFile.exists()) {
-        val props = Properties()
-        try {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
-            }
-            props.setProperty("start_on_boot", startOnBoot.toString())
-            FileOutputStream(configFile).use { output ->
-                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
-            }
-        } catch (e: IOException) {
-            throw RuntimeException(e)
-        }
+fun setStartOnBoot(callback: (Boolean) -> Unit) {
+    Shell.cmd("zaprett autostart").submit { result ->
+        if (result.out.isNotEmpty() && result.out.toString().contains("true")) callback(true) else callback(false)
     }
 }
 
-fun getStartOnBoot(): Boolean {
-    val configFile = getConfigFile()
-    if (configFile.exists()) {
-        val props = Properties()
-        return try {
-            if (configFile.exists()) {
-                FileInputStream(configFile).use { input ->
-                    props.load(input)
-                }
-                props.getProperty("start_on_boot", "false").toBoolean()
-            } else {
-                false
-            }
-        } catch (_: IOException) {
-            false
-        }
+fun getStartOnBoot(callback: (Boolean) -> Unit) {
+    Shell.cmd("zaprett get-autostart").submit { result ->
+        if (result.out.isNotEmpty() && result.out.toString().contains("true")) callback(true) else callback(false)
     }
-    return false
 }
 
 fun getZaprettPath(): String {
@@ -126,8 +100,24 @@ fun getAllLists(): Array<String> {
         ?: emptyArray()
 }
 
+fun getAllIpsets(): Array<String> {
+    val listsDir = File("${getZaprettPath()}/ipset/include")
+    return listsDir.listFiles { file -> file.isFile }
+        ?.map { it.absolutePath }
+        ?.toTypedArray()
+        ?: emptyArray()
+}
+
 fun getAllExcludeLists(): Array<String> {
     val listsDir = File("${getZaprettPath()}/lists/exclude/")
+    return listsDir.listFiles { file -> file.isFile }
+        ?.map { it.absolutePath }
+        ?.toTypedArray()
+        ?: emptyArray()
+}
+
+fun getAllExcludeIpsets(): Array<String> {
+    val listsDir = File("${getZaprettPath()}/ipset/exclude/")
     return listsDir.listFiles { file -> file.isFile }
         ?.map { it.absolutePath }
         ?.toTypedArray()

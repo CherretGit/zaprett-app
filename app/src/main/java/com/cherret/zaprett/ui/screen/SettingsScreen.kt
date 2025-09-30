@@ -99,7 +99,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     val editor = remember { sharedPreferences.edit() }
     val useModule = remember { mutableStateOf(sharedPreferences.getBoolean("use_module", false)) }
     val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", true)) }
-    val autoRestart = remember { mutableStateOf(getStartOnBoot()) }
+    val autoRestart = viewModel.autoRestart.collectAsState()
     val autoUpdate = remember { mutableStateOf(sharedPreferences.getBoolean("auto_update", true)) }
     val sendFirebaseAnalytics = remember { mutableStateOf(sharedPreferences.getBoolean("send_firebase_analytics", true)) }
     val ipv6 = remember { mutableStateOf(sharedPreferences.getBoolean("ipv6",false)) }
@@ -232,7 +232,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
             title = stringResource(R.string.btn_autorestart),
             checked = autoRestart.value,
             onToggle = {
-                if (handleAutoRestart(context, it)) autoRestart.value = it
+                viewModel.handleAutoRestart(context)
             }
         )
     )
@@ -508,15 +508,7 @@ private fun useModule(context: Context, checked: Boolean, openNoRootDialog: Muta
     }
 }
 
-private fun handleAutoRestart(context: Context, checked: Boolean): Boolean {
-    val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-    return if (sharedPreferences.getBoolean("use_module", false)) {
-        setStartOnBoot(checked)
-        true
-    } else {
-        false
-    }
-}
+
 
 
 

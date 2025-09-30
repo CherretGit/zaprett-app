@@ -55,6 +55,7 @@ import com.cherret.zaprett.ui.screen.StrategyScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
 import com.cherret.zaprett.ui.viewmodel.HostRepoViewModel
+import com.cherret.zaprett.ui.viewmodel.IpsetRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.StrategyRepoViewModel
 import com.cherret.zaprett.utils.checkModuleInstallation
 import com.google.firebase.Firebase
@@ -221,6 +222,10 @@ class MainActivity : ComponentActivity() {
                     when (source) {
                         "hosts" -> {
                             val viewModel: HostRepoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                            RepoScreen(navController, viewModel)
+                        }
+                        "ipsets" -> {
+                            val viewModel: IpsetRepoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
                             RepoScreen(navController, viewModel)
                         }
                         "strategies" -> {

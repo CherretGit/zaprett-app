@@ -1,6 +1,7 @@
 package com.cherret.zaprett.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -9,7 +10,9 @@ import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.utils.addPackageToList
 import com.cherret.zaprett.utils.getAppList
+import com.cherret.zaprett.utils.getStartOnBoot
 import com.cherret.zaprett.utils.removePackageFromList
+import com.cherret.zaprett.utils.setStartOnBoot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,8 +28,14 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     val selectedPackages: StateFlow<Set<String>> = _selectedPackages.asStateFlow()
     private val _currentListType = MutableStateFlow(AppListType.Whitelist)
 
+    private val _autoRestart = MutableStateFlow(false)
+    val autoRestart: StateFlow<Boolean> = _autoRestart
+
     init {
         refreshApplications()
+        getStartOnBoot { value ->
+            _autoRestart.value = value
+        }
     }
 
     suspend fun getAppIconBitmap(packageName: String): Drawable? = withContext(Dispatchers.IO) {
@@ -100,4 +109,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         refreshApplications()
     }
 
+    fun handleAutoRestart(context: Context) {
+        val sharedPreferences = context.getSharedPreferences("settings", MODE_PRIVATE)
+        if (sharedPreferences.getBoolean("use_module", false)) {
+            setStartOnBoot{ value ->
+                _autoRestart.value = value
+            }
+        }
+    }
 }
