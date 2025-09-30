@@ -84,19 +84,22 @@ fun setStartOnBoot(startOnBoot: Boolean) {
 
 fun getStartOnBoot(): Boolean {
     val configFile = getConfigFile()
-    val props = Properties()
-    return try {
-        if (configFile.exists()) {
-            FileInputStream(configFile).use { input ->
-                props.load(input)
+    if (configFile.exists()) {
+        val props = Properties()
+        return try {
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                props.getProperty("start_on_boot", "false").toBoolean()
+            } else {
+                false
             }
-            props.getProperty("start_on_boot", "false").toBoolean()
-        } else {
+        } catch (_: IOException) {
             false
         }
-    } catch (_: IOException) {
-        false
     }
+    return false
 }
 
 fun getZaprettPath(): String {

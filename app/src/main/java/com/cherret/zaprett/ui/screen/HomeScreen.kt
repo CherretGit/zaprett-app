@@ -196,9 +196,7 @@ private fun UpdateCard(updateAvailable: MutableState<Boolean>, onClick: () -> Un
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 10.dp, top = 10.dp, end = 10.dp)
-                .width(140.dp)
-                .height(70.dp),
+                .padding(start = 10.dp, top = 10.dp, end = 10.dp),
             onClick = onClick
         ) {
             Text(

@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import com.cherret.zaprett.MainActivity
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ServiceStatus
+import com.cherret.zaprett.utils.disableList
 import com.cherret.zaprett.utils.getActiveExcludeLists
 import com.cherret.zaprett.utils.getActiveLists
 import com.cherret.zaprett.utils.getActiveStrategy
@@ -205,10 +206,14 @@ class ByeDpiVpnService : VpnService() {
             withContext(Dispatchers.IO) {
                 hostlist.printWriter().use { out ->
                     lists.forEach {
-                        it.bufferedReader().useLines {
-                            it.forEach {
-                                out.println(it)
+                        if (it.exists()) {
+                            it.bufferedReader().useLines {
+                                it.forEach {
+                                    out.println(it)
+                                }
                             }
+                        } else {
+                            disableList(it.name, sharedPreferences)
                         }
                     }
                 }
