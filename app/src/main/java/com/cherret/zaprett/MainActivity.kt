@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lan
 import androidx.compose.material.icons.filled.MultipleStop
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SettingsInputComposite
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -49,6 +50,7 @@ import androidx.navigation.navArgument
 import com.cherret.zaprett.ui.screen.DebugScreen
 import com.cherret.zaprett.ui.screen.HomeScreen
 import com.cherret.zaprett.ui.screen.HostsScreen
+import com.cherret.zaprett.ui.screen.IpsetsScreen
 import com.cherret.zaprett.ui.screen.RepoScreen
 import com.cherret.zaprett.ui.screen.SettingsScreen
 import com.cherret.zaprett.ui.screen.StrategyScreen
@@ -66,9 +68,10 @@ sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: 
     object home : Screen("home", R.string.title_home, Icons.Default.Home)
     object hosts : Screen("hosts", R.string.title_hosts, Icons.Default.Lan)
     object strategies : Screen("strategies", R.string.title_strategies, Icons.Default.MultipleStop)
+    object ipsets : Screen("ipsets", R.string.title_ipset, Icons.Default.SettingsInputComposite)
     object settings : Screen("settings", R.string.title_settings, Icons.Default.Settings)
 }
-val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.strategies, Screen.settings)
+val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.strategies, Screen.ipsets, Screen.settings)
 val hideNavBar = listOf("repo?source={source}", "debugScreen")
 class MainActivity : ComponentActivity() {
     private val viewModel: HomeViewModel by viewModels()
@@ -216,6 +219,7 @@ class MainActivity : ComponentActivity() {
                 composable(Screen.home.route) { HomeScreen(viewModel = viewModel, vpnPermissionLauncher) }
                 composable(Screen.hosts.route) { HostsScreen(navController) }
                 composable(Screen.strategies.route) { StrategyScreen(navController) }
+                composable(Screen.ipsets.route) { IpsetsScreen(navController) }
                 composable(Screen.settings.route) { SettingsScreen(navController) }
                 composable(route = "repo?source={source}",arguments = listOf(navArgument("source") {})) { backStackEntry ->
                     val source = backStackEntry.arguments?.getString("source")

@@ -107,6 +107,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     val openNoModuleDialog = remember { mutableStateOf(false) }
     val showAboutDialog = remember { mutableStateOf(false) }
     val showHostsRepoUrlDialog = remember { mutableStateOf(false) }
+    val showIpsetRepoUrlDialog = remember { mutableStateOf(false) }
     val showStrategyRepoUrlDialog = remember { mutableStateOf(false) }
     val showIPDialog = remember { mutableStateOf(false) }
     val showPortDialog = remember { mutableStateOf(false) }
@@ -160,11 +161,25 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
                 editor.putBoolean("send_firebase_analytics", it).apply()
             }
         ),
+        Setting.Toggle(
+            title = "",
+            checked = false,
+            onToggle = {
+
+            }
+        ),
         Setting.Action(
             title = stringResource(R.string.btn_repository_url_lists),
             onClick = {
                 textDialogValue.value = sharedPreferences.getString("hosts_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
                 showHostsRepoUrlDialog.value = true
+            }
+        ),
+        Setting.Action(
+            title = stringResource(R.string.ipset_repo_url),
+            onClick = {
+                textDialogValue.value = sharedPreferences.getString("ipset_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json"
+                showIpsetRepoUrlDialog.value = true
             }
         ),
         Setting.Action(

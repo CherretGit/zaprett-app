@@ -1,5 +1,6 @@
 package com.cherret.zaprett.ui.viewmodel
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
@@ -25,7 +26,8 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(application) {
-    val context = application.applicationContext
+    @SuppressLint("StaticFieldLeak")
+    val context: Context = application.applicationContext
     val sharedPreferences: SharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     private val _errorFlow = MutableStateFlow<Throwable?>(null)
     val errorFlow: StateFlow<Throwable?> = _errorFlow

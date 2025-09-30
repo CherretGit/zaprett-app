@@ -164,6 +164,27 @@ fun getActiveLists(sharedPreferences: SharedPreferences): Array<String> {
         return sharedPreferences.getStringSet("lists", emptySet())?.toTypedArray() ?: emptyArray()
     }
 }
+fun getActiveIpsets(sharedPreferences: SharedPreferences): Array<String> {
+    if (sharedPreferences.getBoolean("use_module", false)) {
+        val configFile = getConfigFile()
+        if (configFile.exists()) {
+            val props = Properties()
+            return try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                val activeLists = props.getProperty("active_ipsets", "")
+                Log.d("Active ipsets", activeLists)
+                if (activeLists.isNotEmpty()) activeLists.split(",")
+                    .toTypedArray() else emptyArray()
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+        }
+        return emptyArray()
+    }
+    else return emptyArray()
+}
 fun getActiveExcludeLists(sharedPreferences: SharedPreferences): Array<String> {
     if (sharedPreferences.getBoolean("use_module", false)) {
         val configFile = getConfigFile()
@@ -185,6 +206,28 @@ fun getActiveExcludeLists(sharedPreferences: SharedPreferences): Array<String> {
     else {
         return sharedPreferences.getStringSet("exclude_lists", emptySet())?.toTypedArray() ?: emptyArray()
     }
+}
+
+fun getActiveExcludeIpsets(sharedPreferences: SharedPreferences): Array<String> {
+    if (sharedPreferences.getBoolean("use_module", false)) {
+        val configFile = getConfigFile()
+        if (configFile.exists()) {
+            val props = Properties()
+            return try {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+                val activeLists = props.getProperty("active_exclude_ipsets", "")
+                Log.d("Active ipsets", activeLists)
+                if (activeLists.isNotEmpty()) activeLists.split(",")
+                    .toTypedArray() else emptyArray()
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+        }
+        return emptyArray()
+    }
+    else return emptyArray()
 }
 
 fun getActiveNfqwsStrategies(): Array<String> {
@@ -265,7 +308,50 @@ fun enableList(path: String, sharedPreferences: SharedPreferences) {
         }
     }
 }
-
+fun enableIpset(path: String, sharedPreferences: SharedPreferences) {
+    if (sharedPreferences.getBoolean("use_module", false)) {
+        val configFile = getConfigFile()
+        try {
+            val props = Properties()
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+            }
+            val activeLists = props.getProperty(
+                if (getHostListMode(sharedPreferences) == "whitelist") "active_ipsets"
+                else "active_exclude_ipsets",
+                "")
+                .split(",")
+                .filter { it.isNotBlank() }
+                .toMutableList()
+            if (path !in activeLists) {
+                activeLists.add(path)
+            }
+            props.setProperty(
+                if (getHostListMode(sharedPreferences) == "whitelist") "active_ipsets"
+                else "active_exclude_ipsets",
+                activeLists.joinToString(",")
+            )
+            FileOutputStream(configFile).use { output ->
+                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+    }
+    else {
+        val currentSet = sharedPreferences.getStringSet(
+            if (getHostListMode(sharedPreferences) == "whitelist") "ipsets"
+            else "exclude_ipsets", emptySet())?.toMutableSet() ?: mutableSetOf()
+        if (path !in currentSet) {
+            currentSet.add(path)
+            sharedPreferences.edit { putStringSet(
+                if (getHostListMode(sharedPreferences) == "whitelist") "ipsets"
+                else "exclude_ipsetss", currentSet) }
+        }
+    }
+}
 fun enableStrategy(path: String, sharedPreferences: SharedPreferences) {
     if (sharedPreferences.getBoolean("use_module", false)) {
         val props = Properties()
@@ -342,6 +428,57 @@ fun disableList(path: String, sharedPreferences: SharedPreferences) {
             sharedPreferences.edit { remove(
                 if (getHostListMode(sharedPreferences) == "whitelist") "lists"
                 else "exclude_lists"
+            ) }
+        }
+    }
+}
+
+fun disableIpset(path: String, sharedPreferences: SharedPreferences) {
+    if (sharedPreferences.getBoolean("use_module", false)) {
+        val props = Properties()
+        val configFile = getConfigFile()
+        try {
+            if (configFile.exists()) {
+                FileInputStream(configFile).use { input ->
+                    props.load(input)
+                }
+            }
+            val activeLists = props.getProperty(
+                if (getHostListMode(sharedPreferences) == "whitelist") "active_ipsets"
+                else "active_exclude_ipsets",
+                "")
+                .split(",")
+                .filter { it.isNotBlank() }
+                .toMutableList()
+            if (path in activeLists) {
+                activeLists.remove(path)
+            }
+            props.setProperty(
+                if (getHostListMode(sharedPreferences) == "whitelist") "active_ipsets"
+                else "active_exclude_ipsets",
+                activeLists.joinToString(",")
+            )
+            FileOutputStream(configFile).use { output ->
+                props.store(output, "Don't place '/' in end of directory! Example: /sdcard")
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+    }
+    else {
+        val currentSet = sharedPreferences.getStringSet(
+            if (getHostListMode(sharedPreferences) == "whitelist") "ipsets"
+            else "exclude_ipsets", emptySet())?.toMutableSet() ?: mutableSetOf()
+        if (path in currentSet) {
+            currentSet.remove(path)
+            sharedPreferences.edit { putStringSet(
+                if (getHostListMode(sharedPreferences) == "whitelist") "ipsets"
+                else "exclude_ipsets", currentSet) }
+        }
+        if (currentSet.isEmpty()) {
+            sharedPreferences.edit { remove(
+                if (getHostListMode(sharedPreferences) == "whitelist") "ipsets"
+                else "exclude_ipsets"
             ) }
         }
     }

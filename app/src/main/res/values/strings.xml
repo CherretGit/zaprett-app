@@ -103,4 +103,6 @@
     <string name="btn_copy_log">Copy log</string>
     <string name="log_copied">Log copied</string>
     <string name="download_error">Occurred a file download error, please report to developers</string>
+    <string name="ipset_repo_url">Ipset repository URL</string>
+    <string name="title_ipset" translatable="false">Ipset</string>
 </resources>

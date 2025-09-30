@@ -39,7 +39,7 @@ fun getHostList(sharedPreferences: SharedPreferences, callback: (Result<List<Rep
 fun getIpsetList(sharedPreferences: SharedPreferences, callback: (Result<List<RepoItemInfo>>) -> Unit) {
     getRepo(
         sharedPreferences.getString(
-            "hosts_repo_url",
+            "ipset_repo_url",
             "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json"
         ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json",
         callback

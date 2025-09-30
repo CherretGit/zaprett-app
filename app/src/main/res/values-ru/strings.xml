@@ -99,4 +99,5 @@
     <string name="btn_copy_log">Скопировать лог</string>
     <string name="log_copied">Лог скопирован</string>
     <string name="download_error">Произошла ошибка скачивания, пожалуйста, сообщите о ней разработчикам</string>
+    <string name="ipset_repo_url">URL репозитория ipset</string>
 </resources>
