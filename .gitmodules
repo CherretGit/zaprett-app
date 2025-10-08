@@ -1,5 +1,5 @@
-[submodule "app/src/main/cpp/byedpi"]
-	path = app/src/main/rust/byedpi
+[submodule "rust/byedpi"]
+	path = rust/byedpi
 	url = https://github.com/hufrea/byedpi
 [submodule "app/src/main/jni/hev-socks5-tunnel"]
 	path = app/src/main/jni/hev-socks5-tunnel
