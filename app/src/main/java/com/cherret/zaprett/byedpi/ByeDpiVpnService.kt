@@ -177,7 +177,7 @@ class ByeDpiVpnService : VpnService() {
         try {
             vpnInterface?.close()
             vpnInterface = null
-            NativeBridge().stopProxy()
+            NativeBridge().jniStopProxy()
             TProxyService.TProxyStopService()
             status = ServiceStatus.Disconnected
         } catch (e: Exception) {
@@ -192,7 +192,7 @@ class ByeDpiVpnService : VpnService() {
         val ipsetSet = if (getHostListMode(sharedPreferences) == "whitelist") getActiveIpsets(sharedPreferences) else getActiveExcludeIpsets(sharedPreferences)
         CoroutineScope(Dispatchers.IO).launch {
             val args = parseArgs(socksIp, socksPort, getActiveStrategy(sharedPreferences), prepareList(listSet), prepareIpset(ipsetSet), sharedPreferences)
-            val result = NativeBridge().startProxy(args)
+            val result = NativeBridge().jniStartProxy(args)
             if (result < 0) {
                 Log.d("proxy","Failed to start byedpi proxy")
             } else {

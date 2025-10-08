@@ -5,6 +5,7 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     kotlin("plugin.serialization") version "2.1.20"
+    id("org.mozilla.rust-android-gradle.rust-android") version "0.9.6"
 }
 
 android {
@@ -19,15 +20,6 @@ android {
         versionName = "2.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-        }
-    }
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
     }
     buildTypes {
         release {
@@ -73,6 +65,26 @@ tasks.register<Exec>("runNdkBuild") {
 
 tasks.preBuild {
     dependsOn("runNdkBuild")
+}
+
+cargo {
+    module  = "../rust"
+    libname = "byedpi"
+    targets = listOf("arm", "arm64", "x86", "x86_64")
+}
+
+tasks.preBuild {
+    dependsOn("cargoBuild")
+}
+
+tasks.register<Exec>("cargoClean") {
+    workingDir = file("../rust")
+    commandLine("cargo", "clean")
+    group = "build"
+}
+
+tasks.named("clean") {
+    dependsOn("cargoClean")
 }
 
 dependencies {

@@ -1,0 +1,17 @@
+[package]
+name = "byedpi"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+jni = "0.21.1"
+libc = "0.2.0"
+android_logger = "0.15.1"
+log = "0.4"
+once_cell = "1.21.3"
+
+[lib]
+crate-type = ["cdylib"]
+
+[build-dependencies]
+cmake = "0.1.49"
