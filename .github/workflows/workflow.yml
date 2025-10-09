@@ -40,7 +40,9 @@ jobs:
     - name: Setup NDK
       uses: nttld/setup-ndk@v1
       with:
-          ndk-version: "r27d"
+          ndk-version: r27d
+          link-to-sdk: true
+          local-cache: true
         
     - name: Install toolchain
       run: |
