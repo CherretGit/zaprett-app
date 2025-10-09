@@ -38,7 +38,7 @@ jobs:
       uses: android-actions/setup-android@v2
 
     - name: Setup NDK
-      uses: nttld/setup-ndk@v1
+      uses: nttld/setup-ndk@v1.5.0
       with:
           ndk-version: r27d
           link-to-sdk: true
