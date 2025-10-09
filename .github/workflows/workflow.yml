@@ -37,6 +37,11 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v2
 
+    - name: Setup NDK
+      uses: nttld/setup-ndk@v1
+      with:
+          ndk-version: "r27d"
+        
     - name: Install toolchain
       run: |
         rustup default stable
