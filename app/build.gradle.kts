@@ -71,6 +71,7 @@ cargo {
     module  = "../rust"
     libname = "byedpi"
     targets = listOf("arm", "arm64", "x86", "x86_64")
+    profile = "release"
 }
 
 tasks.preBuild {

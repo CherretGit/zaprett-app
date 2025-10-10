@@ -97,7 +97,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     val context = LocalContext.current
     val sharedPreferences = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val editor = remember { sharedPreferences.edit() }
-    val useModule = remember { mutableStateOf(sharedPreferences.getBoolean("use_module", false)) }
+    val useModule = viewModel.useModule.collectAsState()
     val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", true)) }
     val autoRestart = viewModel.autoRestart.collectAsState()
     val autoUpdate = remember { mutableStateOf(sharedPreferences.getBoolean("auto_update", true)) }
@@ -124,17 +124,11 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
             title = stringResource(R.string.btn_use_root),
             checked = useModule.value,
             onToggle = { isChecked ->
-                useModule(
+                viewModel.useModule(
                     context = context,
                     checked = isChecked,
                     openNoRootDialog = openNoRootDialog,
-                    openNoModuleDialog = openNoModuleDialog
-                ) { success ->
-                    if (success) {
-                        useModule.value = isChecked
-                        if (!isChecked) stopService {  }
-                    }
-                }
+                    openNoModuleDialog = openNoModuleDialog)
             }
         ),
         Setting.Toggle(
@@ -484,46 +478,6 @@ private fun ListBottomSheet(
         }
     }
 }
-
-private fun useModule(context: Context, checked: Boolean, openNoRootDialog: MutableState<Boolean>, openNoModuleDialog: MutableState<Boolean>, callback: (Boolean) -> Unit) {
-    val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-    val editor = sharedPreferences.edit()
-    if (checked) {
-        checkRoot { hasRoot ->
-            if (hasRoot) {
-                checkModuleInstallation { hasModule ->
-                    if (hasModule) {
-                        editor.putBoolean("use_module", true)
-                            .putBoolean("update_on_boot", true)
-                            .apply()
-                        if (ByeDpiVpnService.status == ServiceStatus.Connected) {
-                            context.startService(Intent(context, ByeDpiVpnService::class.java).apply {
-                                action = "STOP_VPN"
-                            })
-                        }
-                        editor.remove("lists").apply()
-                        editor.remove("active_strategy").apply()
-                        editor.remove("applist").apply()
-                        editor.remove("whitelist").apply()
-                        editor.remove("blacklist").apply()
-                        callback(true)
-                    } else {
-                        openNoModuleDialog.value = true
-                    }
-                }
-            } else {
-                openNoRootDialog.value = true
-            }
-        }
-    } else {
-        editor.putBoolean("use_module", false)
-            .putBoolean("update_on_boot", false)
-            .apply()
-        callback(true)
-    }
-}
-
-
 
 
 

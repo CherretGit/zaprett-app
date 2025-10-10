@@ -3,12 +3,18 @@ package com.cherret.zaprett.ui.viewmodel
 import android.app.Application
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.AndroidViewModel
+import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.AppListType
+import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.utils.addPackageToList
+import com.cherret.zaprett.utils.checkModuleInstallation
+import com.cherret.zaprett.utils.checkRoot
 import com.cherret.zaprett.utils.getAppList
 import com.cherret.zaprett.utils.getStartOnBoot
 import com.cherret.zaprett.utils.removePackageFromList
@@ -27,12 +33,15 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val _selectedPackages = MutableStateFlow<Set<String>>(emptySet())
     val selectedPackages: StateFlow<Set<String>> = _selectedPackages.asStateFlow()
     private val _currentListType = MutableStateFlow(AppListType.Whitelist)
+    private val _useModule = MutableStateFlow(false)
+    val useModule: StateFlow<Boolean> = _useModule
 
     private val _autoRestart = MutableStateFlow(false)
     val autoRestart: StateFlow<Boolean> = _autoRestart
 
     init {
         refreshApplications()
+        _useModule.value = context.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("use_module", false)
         getStartOnBoot { value ->
             _autoRestart.value = value
         }
@@ -107,6 +116,40 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         removePackageFromList(listType, packageName, prefs, context)
         selectedPackages.value.minus(packageName)
         refreshApplications()
+    }
+
+    fun useModule(context: Context, checked: Boolean, openNoRootDialog: MutableState<Boolean>, openNoModuleDialog: MutableState<Boolean>) {
+        val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        if (checked) {
+            checkRoot { hasRoot ->
+                if (hasRoot) {
+                    checkModuleInstallation { hasModule ->
+                        if (hasModule) {
+                            editor.putBoolean("use_module", true).apply()
+                            if (ByeDpiVpnService.status == ServiceStatus.Connected) {
+                                context.startService(Intent(context, ByeDpiVpnService::class.java).apply {
+                                    action = "STOP_VPN"
+                                })
+                            }
+                            editor.remove("lists").apply()
+                            editor.remove("active_strategy").apply()
+                            editor.remove("applist").apply()
+                            editor.remove("whitelist").apply()
+                            editor.remove("blacklist").apply()
+                            _useModule.value = true
+                        } else {
+                            openNoModuleDialog.value = true
+                        }
+                    }
+                } else {
+                    openNoRootDialog.value = true
+                }
+            }
+        } else {
+            editor.putBoolean("use_module", false).apply()
+            _useModule.value = false
+        }
     }
 
     fun handleAutoRestart(context: Context) {
