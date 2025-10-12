@@ -5,11 +5,7 @@ import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
@@ -17,8 +13,6 @@ import com.cherret.zaprett.data.StrategyCheckResult
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveLists
-import com.cherret.zaprett.utils.getActiveStrategy
-import com.cherret.zaprett.utils.getAllNfqwsStrategies
 import com.cherret.zaprett.utils.getAllStrategies
 import com.cherret.zaprett.utils.getStatus
 import com.cherret.zaprett.utils.startService
@@ -28,7 +22,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.OkHttpClient
@@ -86,7 +79,6 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
 
     suspend fun readActiveListsLines(): List<String> = withContext(Dispatchers.IO) {
         val result = mutableListOf<String>()
-
         getActiveLists(prefs).forEach { path ->
             runCatching {
                 File(path).useLines { lines ->
@@ -106,7 +98,6 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         for (index in strategyStates.indices) {
             val current = strategyStates[index]
             strategyStates[index] = current.copy(status = R.string.strategy_status_testing)
-
             enableStrategy(current.path, prefs)
 
             if (prefs.getBoolean("use_module", false)) {
@@ -147,8 +138,8 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
                 if (connected) delay(150L)
                 try {
                     val progress = countReachable(targets)
-
                     val old = strategyStates[index]
+
                     strategyStates[index] = old.copy(
                         progress = progress,
                         status = R.string.strategy_status_tested

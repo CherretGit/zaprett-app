@@ -38,7 +38,9 @@ import com.cherret.zaprett.R
 import com.cherret.zaprett.data.StrategyCheckResult
 import com.cherret.zaprett.ui.viewmodel.BaseRepoViewModel
 import com.cherret.zaprett.utils.RepoItemInfo
+import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
+import com.cherret.zaprett.utils.getActiveStrategy
 import kotlinx.coroutines.launch
 
 @Composable
@@ -203,6 +205,7 @@ fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferen
                 )
                 FilledTonalIconButton(
                     onClick = {
+                        disableStrategy(getActiveStrategy(prefs)[0], prefs)
                         enableStrategy(strategy.path, prefs)
                         scope.launch {
                             snackbarHostState.showSnackbar(
