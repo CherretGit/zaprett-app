@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
@@ -71,7 +72,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var showUpdateDialog = mutableStateOf(false)
 
     fun checkForUpdate() {
-        if (prefs.getBoolean("auto_update", true)) {
+        if (prefs.getBoolean("auto_update", BuildConfig.auto_update)) {
             getUpdate(prefs) {
                 if (it != null) {
                     downloadUrl.value = it.downloadUrl.toString()

@@ -64,16 +64,20 @@ fun getConfigFile(): File {
     return File(Environment.getExternalStorageDirectory(), "zaprett/config")
 }
 
-fun setStartOnBoot(callback: (Boolean) -> Unit) {
-    Shell.cmd("zaprett autostart").submit { result ->
-        if (result.out.isNotEmpty() && result.out.toString().contains("true")) callback(true) else callback(false)
+fun setStartOnBoot(prefs : SharedPreferences, callback: (Boolean) -> Unit) {
+    if (prefs.getBoolean("use_module", false)) {
+        Shell.cmd("zaprett autostart").submit { result ->
+            if (result.out.isNotEmpty() && result.out.toString().contains("true")) callback(true) else callback(false)
+        }
     }
 }
 
-fun getStartOnBoot(callback: (Boolean) -> Unit) {
-    Shell.cmd("zaprett get-autostart").submit { result ->
-        if (result.out.isNotEmpty() && result.out.toString().contains("true")) callback(true) else callback(false)
-    }
+fun getStartOnBoot(prefs : SharedPreferences, callback: (Boolean) -> Unit) {
+    if (prefs.getBoolean("use_module", false)) {
+        Shell.cmd("zaprett get-autostart").submit { result ->
+            if (result.out.isNotEmpty() && result.out.toString().contains("true")) callback(true) else callback(false)
+        }
+    } else { callback(false) }
 }
 
 fun getZaprettPath(): String {
@@ -138,6 +142,11 @@ fun getAllByeDPIStrategies(): Array<String> {
         ?.map { it.absolutePath }
         ?.toTypedArray()
         ?: emptyArray()
+}
+
+fun getAllStrategies(sharedPreferences : SharedPreferences) : Array<String> {
+    return if (sharedPreferences.getBoolean("use_module", false)) getAllNfqwsStrategies()
+        else getAllByeDPIStrategies()
 }
 
 
@@ -230,7 +239,7 @@ fun getActiveExcludeIpsets(sharedPreferences: SharedPreferences): Array<String> 
     else return emptyArray()
 }
 
-fun getActiveNfqwsStrategies(): Array<String> {
+fun getActiveNfqwsStrategy(): Array<String> {
     val configFile = File("${getZaprettPath()}/config")
     if (configFile.exists()) {
         val props = Properties()
@@ -248,7 +257,7 @@ fun getActiveNfqwsStrategies(): Array<String> {
     return emptyArray()
 }
 
-fun getActiveByeDPIStrategies(sharedPreferences: SharedPreferences): Array<String> {
+fun getActiveByeDPIStrategy(sharedPreferences: SharedPreferences): Array<String> {
     val path = sharedPreferences.getString("active_strategy", "")
     if (!path.isNullOrBlank() && File(path).exists()) {
         return arrayOf(path)
@@ -256,12 +265,18 @@ fun getActiveByeDPIStrategies(sharedPreferences: SharedPreferences): Array<Strin
     return emptyArray()
 }
 
-fun getActiveStrategy(sharedPreferences: SharedPreferences): List<String> {
+fun getActiveByeDPIStrategyContent(sharedPreferences: SharedPreferences): List<String> {
     val path = sharedPreferences.getString("active_strategy", "")
     if (!path.isNullOrBlank() && File(path).exists()) {
         return File(path).readLines()
     }
     return emptyList()
+}
+
+fun getActiveStrategy(sharedPreferences: SharedPreferences): Array<String> {
+    return if (sharedPreferences.getBoolean("use_module", false)) getActiveNfqwsStrategy()
+        else getActiveByeDPIStrategy(sharedPreferences)
+
 }
 
 fun enableList(path: String, sharedPreferences: SharedPreferences) {

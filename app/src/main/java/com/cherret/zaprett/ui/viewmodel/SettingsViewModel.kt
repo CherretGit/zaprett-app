@@ -42,7 +42,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     init {
         refreshApplications()
         _useModule.value = context.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("use_module", false)
-        getStartOnBoot { value ->
+        getStartOnBoot(prefs) { value ->
             _autoRestart.value = value
         }
     }
@@ -155,7 +155,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun handleAutoRestart(context: Context) {
         val sharedPreferences = context.getSharedPreferences("settings", MODE_PRIVATE)
         if (sharedPreferences.getBoolean("use_module", false)) {
-            setStartOnBoot{ value ->
+            setStartOnBoot(prefs) { value ->
                 _autoRestart.value = value
             }
         }

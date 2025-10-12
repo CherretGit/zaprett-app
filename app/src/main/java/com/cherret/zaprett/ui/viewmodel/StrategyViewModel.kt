@@ -8,8 +8,8 @@ import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
-import com.cherret.zaprett.utils.getActiveByeDPIStrategies
-import com.cherret.zaprett.utils.getActiveNfqwsStrategies
+import com.cherret.zaprett.utils.getActiveByeDPIStrategy
+import com.cherret.zaprett.utils.getActiveNfqwsStrategy
 import com.cherret.zaprett.utils.getAllByeDPIStrategies
 import com.cherret.zaprett.utils.getAllNfqwsStrategies
 import com.cherret.zaprett.utils.getStatus
@@ -84,10 +84,10 @@ interface StrategyProvider {
 
 class NfqwsStrategyProvider : StrategyProvider {
     override fun getAll() = getAllNfqwsStrategies()
-    override fun getActive() = getActiveNfqwsStrategies()
+    override fun getActive() = getActiveNfqwsStrategy()
 }
 
 class ByeDPIStrategyProvider(private val sharedPreferences: SharedPreferences) : StrategyProvider {
     override fun getAll() = getAllByeDPIStrategies()
-    override fun getActive() = getActiveByeDPIStrategies(sharedPreferences)
+    override fun getActive() = getActiveByeDPIStrategy(sharedPreferences)
 }

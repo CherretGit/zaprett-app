@@ -29,6 +29,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("boolean", "send_firebase_analytics", "true")
+            buildConfigField("boolean", "auto_update", "true")
+        }
+        debug {
+            buildConfigField("boolean", "send_firebase_analytics", "false")
+            buildConfigField("boolean", "auto_update", "false")
         }
     }
     compileOptions {

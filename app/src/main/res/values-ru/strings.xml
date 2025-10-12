@@ -100,4 +100,18 @@
     <string name="log_copied">Лог скопирован</string>
     <string name="download_error">Произошла ошибка скачивания, пожалуйста, сообщите о ней разработчикам</string>
     <string name="ipset_repo_url">URL репозитория ipset</string>
+    <string name="title_selection">Подбор стратегии</string>
+    <string name="btn_repository_url_ipsets">URL репозитория ipset</string>
+    <string name="hint_enter_repository_url_ipsets">Введите URL репозитория ipset</string>
+    <string name="strategy_status_waiting">ожидание...</string>
+    <string name="strategy_status_testing">проверка...</string>
+    <string name="strategy_status_tested">проверка завершена</string>
+    <string name="strategy_applied">Стратегия применена</string>
+    <string name="begin_selection">Начать подбор</string>
+    <string name="begin_selection_snack">Начат подбор стратегии. Не закрывайте эту вкладку</string>
+    <string name="change_probe_timeout">Изменить таймаут пробы</string>
+    <string name="probe_timeout">Таймаут пробы</string>
+    <string name="hint_enter_probe_timeout">Введите таймаут пробы</string>
+    <string name="strategy_selection_info_title">Информация</string>
+    <string name="strategy_selection_info_msg">"В этом разделе настроек приложения представлен перебор стратегий\n Подбор проходит среди скачанных стратегий, поэтому заранее скачайте из репозитория или добавьте из файловой системы интересующие вас стратегии для сравнения. \n Перед началом так же выберете один или несколько листов доменов на вкладке \"Листы\", затем нажмите на \"Начать подбор\". Не используйте для перебора списки с большим количеством доменов."</string>
 </resources>

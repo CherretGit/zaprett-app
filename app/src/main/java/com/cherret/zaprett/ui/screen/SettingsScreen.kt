@@ -100,8 +100,8 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     val useModule = viewModel.useModule.collectAsState()
     val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", true)) }
     val autoRestart = viewModel.autoRestart.collectAsState()
-    val autoUpdate = remember { mutableStateOf(sharedPreferences.getBoolean("auto_update", true)) }
-    val sendFirebaseAnalytics = remember { mutableStateOf(sharedPreferences.getBoolean("send_firebase_analytics", true)) }
+    val autoUpdate = remember { mutableStateOf(sharedPreferences.getBoolean("auto_update", BuildConfig.auto_update)) }
+    val sendFirebaseAnalytics = remember { mutableStateOf(sharedPreferences.getBoolean("send_firebase_analytics", BuildConfig.send_firebase_analytics)) }
     val ipv6 = remember { mutableStateOf(sharedPreferences.getBoolean("ipv6",false)) }
     val openNoRootDialog = remember { mutableStateOf(false) }
     val openNoModuleDialog = remember { mutableStateOf(false) }
@@ -117,6 +117,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     val showBlackDialog = remember { mutableStateOf(false) }
     val showAppsListsSheet = remember { mutableStateOf(false) }
     val showSystemApps = remember { mutableStateOf(sharedPreferences.getBoolean("show_system_apps", false)) }
+    val showChangeProbeTimeout = remember { mutableStateOf(false) }
 
     val settingsList = listOf(
         Setting.Section(stringResource(R.string.general_section)),
@@ -155,13 +156,6 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
                 editor.putBoolean("send_firebase_analytics", it).apply()
             }
         ),
-        Setting.Toggle(
-            title = "",
-            checked = false,
-            onToggle = {
-
-            }
-        ),
         Setting.Action(
             title = stringResource(R.string.btn_repository_url_lists),
             onClick = {
@@ -183,9 +177,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
                 showStrategyRepoUrlDialog.value = true
             }
         ),
-        Setting.Section(
-            title = stringResource(R.string.shared_section)
-        ),
+        Setting.Section(title = stringResource(R.string.shared_section)),
         Setting.Action(
             title = stringResource(R.string.btn_applist),
             onClick = {
@@ -202,6 +194,20 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
             title = stringResource(R.string.btn_blacklist),
             onClick = {
                 showBlackDialog.value = true
+            }
+        ),
+        Setting.Section(stringResource(R.string.title_selection)),
+        Setting.Action(
+            title = stringResource(R.string.begin_selection),
+            onClick = {
+                navController.navigate("selectionScreen")
+            }
+        ),
+        Setting.Action(
+            title = stringResource(R.string.change_probe_timeout),
+            onClick = {
+                textDialogValue.value = sharedPreferences.getLong("probe_timeout", 1000L).toString()
+                showChangeProbeTimeout.value = true
             }
         ),
         Setting.Section(stringResource(R.string.byedpi_section)),
@@ -234,9 +240,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
                 showDNSDialog.value = true
             }
         ),
-        Setting.Section(
-            title = stringResource(R.string.zapret_section)
-        ),
+        Setting.Section(title = stringResource(R.string.zapret_section)),
         Setting.Toggle(
             title = stringResource(R.string.btn_autorestart),
             checked = autoRestart.value,
@@ -270,6 +274,11 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
         TextDialog(stringResource(R.string.btn_repository_url_lists), stringResource(R.string.hint_enter_repository_url_lists), textDialogValue.value, onConfirm = {
             editor.putString("hosts_repo_url", it).apply()
         }, onDismiss = { showHostsRepoUrlDialog.value = false })
+    }
+    if (showIpsetRepoUrlDialog.value) {
+        TextDialog(stringResource(R.string.btn_repository_url_ipsets), stringResource(R.string.hint_enter_repository_url_ipsets), textDialogValue.value, onConfirm = {
+            editor.putString("ipsets_repo_url", it).apply()
+        }, onDismiss = { showIpsetRepoUrlDialog.value = false })
     }
 
     if (showStrategyRepoUrlDialog.value) {
@@ -330,6 +339,12 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
             prefs = sharedPreferences,
             context
         )
+    }
+
+    if (showChangeProbeTimeout.value) {
+        TextDialog(stringResource(R.string.probe_timeout), stringResource(R.string.hint_enter_probe_timeout), textDialogValue.value, onConfirm = {
+            editor.putLong("probe_timeout", it.toLong()).apply()
+        }, onDismiss = { showChangeProbeTimeout.value = false })
     }
 
     Scaffold(

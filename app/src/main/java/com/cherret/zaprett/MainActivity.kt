@@ -54,6 +54,7 @@ import com.cherret.zaprett.ui.screen.IpsetsScreen
 import com.cherret.zaprett.ui.screen.RepoScreen
 import com.cherret.zaprett.ui.screen.SettingsScreen
 import com.cherret.zaprett.ui.screen.StrategyScreen
+import com.cherret.zaprett.ui.screen.StrategySelectionScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
 import com.cherret.zaprett.ui.viewmodel.HostRepoViewModel
@@ -72,7 +73,7 @@ sealed class Screen(val route: String, @StringRes val nameResId: Int, val icon: 
     object settings : Screen("settings", R.string.title_settings, Icons.Default.Settings)
 }
 val topLevelRoutes = listOf(Screen.home, Screen.hosts, Screen.strategies, Screen.ipsets, Screen.settings)
-val hideNavBar = listOf("repo?source={source}", "debugScreen")
+val hideNavBar = listOf("repo?source={source}", "debugScreen", "selectionScreen")
 class MainActivity : ComponentActivity() {
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
@@ -127,7 +128,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 var showWelcomeDialog by remember { mutableStateOf(sharedPreferences.getBoolean("welcome_dialog", true)) }
-                firebaseAnalytics.setAnalyticsCollectionEnabled(sharedPreferences.getBoolean("send_firebase_analytics", true))
+                firebaseAnalytics.setAnalyticsCollectionEnabled(sharedPreferences.getBoolean("send_firebase_analytics", BuildConfig.send_firebase_analytics))
                 BottomBar()
                 if (showStoragePermissionDialog) {
                     PermissionDialog(
@@ -239,6 +240,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 composable("debugScreen") { DebugScreen(navController) }
+                composable("selectionScreen") { StrategySelectionScreen(navController) }
             }
         }
     }

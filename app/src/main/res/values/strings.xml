@@ -105,4 +105,18 @@
     <string name="download_error">Occurred a file download error, please report to developers</string>
     <string name="ipset_repo_url">Ipset repository URL</string>
     <string name="title_ipset" translatable="false">Ipset</string>
+    <string name="title_selection">Strategy selection</string>
+    <string name="btn_repository_url_ipsets">Ipsets repository url</string>
+    <string name="hint_enter_repository_url_ipsets">Enter ipsets repository URL</string>
+    <string name="strategy_status_waiting">waiting...</string>
+    <string name="strategy_status_testing">testing...</string>
+    <string name="strategy_status_tested">testing ended</string>
+    <string name="strategy_applied">Strategy applied</string>
+    <string name="begin_selection">Begin selection</string>
+    <string name="begin_selection_snack">Strategy selection has begun. Please keep this tab open.</string>
+    <string name="change_probe_timeout">Change probe timeout</string>
+    <string name="probe_timeout">Probe timeout</string>
+    <string name="hint_enter_probe_timeout">Enter probe timeout</string>
+    <string name="strategy_selection_info_title">Tip</string>
+    <string name="strategy_selection_info_msg">This section of the application settings allows you to iterate through strategies.\n The selection is based on downloaded strategies, so download the strategies you\'re interested in from the repository or add them from the file system for comparison.\n Before starting, select one or more domain lists in the \"Lists\" tab, then click \"Start selection\". Avoid using lists with a large number of domains.</string>
 </resources>

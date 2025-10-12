@@ -15,6 +15,7 @@ import com.cherret.zaprett.MainActivity
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.utils.disableList
+import com.cherret.zaprett.utils.getActiveByeDPIStrategyContent
 import com.cherret.zaprett.utils.getActiveExcludeIpsets
 import com.cherret.zaprett.utils.getActiveExcludeLists
 import com.cherret.zaprett.utils.getActiveIpsets
@@ -191,7 +192,13 @@ class ByeDpiVpnService : VpnService() {
         val listSet = if (getHostListMode(sharedPreferences) == "whitelist") getActiveLists(sharedPreferences) else getActiveExcludeLists(sharedPreferences)
         val ipsetSet = if (getHostListMode(sharedPreferences) == "whitelist") getActiveIpsets(sharedPreferences) else getActiveExcludeIpsets(sharedPreferences)
         CoroutineScope(Dispatchers.IO).launch {
-            val args = parseArgs(socksIp, socksPort, getActiveStrategy(sharedPreferences), prepareList(listSet), prepareIpset(ipsetSet), sharedPreferences)
+            val args = parseArgs(
+                socksIp,
+                socksPort,
+                getActiveByeDPIStrategyContent(sharedPreferences),
+                prepareList(listSet),
+                prepareIpset(ipsetSet),
+                sharedPreferences)
             val result = NativeBridge().jniStartProxy(args)
             if (result < 0) {
                 Log.d("proxy","Failed to start byedpi proxy")
