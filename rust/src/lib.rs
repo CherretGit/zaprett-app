@@ -13,6 +13,8 @@ static PROXY_RUNNING: AtomicBool = AtomicBool::new(false);
 #[link(name = "byedpi", kind = "static")]
 unsafe extern "C" {
     static mut server_fd: i32;
+    static mut optind: i32;
+    static mut optreset: i32;
     fn main(argc: libc::c_int, argv: *const *const c_char) -> libc::c_int;
     fn clear_params();
 }
@@ -62,7 +64,11 @@ pub unsafe extern "system" fn Java_com_cherret_zaprett_byedpi_NativeBridge_jniSt
         return -1;
     }
     info!("stopping proxy");
-    unsafe { clear_params() };
     let ret = unsafe { shutdown(server_fd, SHUT_RDWR) };
+    unsafe {
+        optreset = 1;
+        optind = 1;
+    }
+    unsafe { clear_params() };
     ret as jint
 }
