@@ -28,7 +28,7 @@ class IpsetViewModel(application: Application): BaseListsViewModel(application) 
 
     override fun deleteItem(item: String, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         val wasChecked = checked[item] == true
-        disableList(item, sharedPreferences)
+        disableIpset(item, sharedPreferences)
         val success = File(item).delete()
         if (success) refresh()
         if (sharedPreferences.getBoolean("use_module", false)) {

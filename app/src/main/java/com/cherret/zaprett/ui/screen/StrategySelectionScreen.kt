@@ -1,6 +1,9 @@
 package com.cherret.zaprett.ui.screen
 
 import android.content.Context.MODE_PRIVATE
+import android.content.Intent
+import android.net.VpnService
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -33,27 +36,44 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
+import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.ui.component.StrategySelectionItem
 import com.cherret.zaprett.ui.viewmodel.StrategySelectionViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StrategySelectionScreen(navController: NavController, viewModel : StrategySelectionViewModel = viewModel()){
+fun StrategySelectionScreen(navController: NavController, vpnLauncher: ActivityResultLauncher<Intent>, viewModel : StrategySelectionViewModel = viewModel()){
     val snackbarHostState = remember { SnackbarHostState() }
     val strategyStates = viewModel.strategyStates
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
     var showDialog = remember { mutableStateOf(false) }
+    val requestVpnPermission by viewModel.requestVpnPermission.collectAsState()
 
     if (showDialog.value) {
         InfoAlert { showDialog.value = false }
+    }
+
+    LaunchedEffect(requestVpnPermission) {
+        if (requestVpnPermission) {
+            val intent = VpnService.prepare(context)
+            if (intent != null) {
+                vpnLauncher.launch(intent)
+            } else {
+                viewModel.startVpn()
+                viewModel.clearVpnPermissionRequest()
+            }
+        }
     }
 
     Scaffold(

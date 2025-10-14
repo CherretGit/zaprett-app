@@ -5,6 +5,7 @@ import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
@@ -22,6 +23,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.OkHttpClient
@@ -35,6 +38,9 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         .callTimeout(prefs.getLong("probe_timeout", 1000L), TimeUnit.MILLISECONDS)
         .build()
     val context = application
+
+    private val _requestVpnPermission = MutableStateFlow(false)
+    val requestVpnPermission = _requestVpnPermission.asStateFlow()
 
     val strategyStates = mutableStateListOf<StrategyCheckResult>()
 
@@ -124,9 +130,10 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
                     })
                     delay(300L)
                 }
-                context.startService(Intent(context, ByeDpiVpnService::class.java).apply {
+                _requestVpnPermission.value = true
+                /*context.startService(Intent(context, ByeDpiVpnService::class.java).apply {
                     action = "START_VPN"
-                })
+                })*/
 
                 val connected = withTimeoutOrNull(10_000L) {
                     while (ByeDpiVpnService.status != ServiceStatus.Connected) {
@@ -157,5 +164,11 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         val sorted = strategyStates.sortedByDescending { it.progress }
         strategyStates.clear()
         strategyStates.addAll(sorted)
+    }
+    fun startVpn() {
+        ContextCompat.startForegroundService(context, Intent(context, ByeDpiVpnService::class.java).apply { action = "START_VPN" })
+    }
+    fun clearVpnPermissionRequest() {
+        _requestVpnPermission.value = false
     }
 }

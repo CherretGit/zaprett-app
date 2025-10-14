@@ -205,7 +205,7 @@ fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferen
                 )
                 FilledTonalIconButton(
                     onClick = {
-                        disableStrategy(getActiveStrategy(prefs)[0], prefs)
+                        if (getActiveStrategy(prefs).isNotEmpty()) disableStrategy(getActiveStrategy(prefs)[0], prefs)
                         enableStrategy(strategy.path, prefs)
                         scope.launch {
                             snackbarHostState.showSnackbar(

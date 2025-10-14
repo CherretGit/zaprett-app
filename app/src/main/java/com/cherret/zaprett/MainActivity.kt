@@ -240,7 +240,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 composable("debugScreen") { DebugScreen(navController) }
-                composable("selectionScreen") { StrategySelectionScreen(navController) }
+                composable("selectionScreen") { StrategySelectionScreen(navController, vpnPermissionLauncher) }
             }
         }
     }
