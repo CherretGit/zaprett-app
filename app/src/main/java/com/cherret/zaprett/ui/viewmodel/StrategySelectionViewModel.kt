@@ -5,6 +5,7 @@ import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
@@ -14,6 +15,7 @@ import com.cherret.zaprett.data.StrategyCheckResult
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveLists
+import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getAllStrategies
 import com.cherret.zaprett.utils.getStatus
 import com.cherret.zaprett.utils.startService
@@ -41,9 +43,12 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     private val _requestVpnPermission = MutableStateFlow(false)
     val requestVpnPermission = _requestVpnPermission.asStateFlow()
     val strategyStates = mutableStateListOf<StrategyCheckResult>()
+    var noHostsCard = mutableStateOf(false)
+        private set
 
     init {
         loadStrategies()
+        checkHosts()
     }
 
     fun loadStrategies() {
@@ -154,6 +159,11 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         val sorted = strategyStates.sortedByDescending { it.progress }
         strategyStates.clear()
         strategyStates.addAll(sorted)
+    }
+
+    fun checkHosts() {
+        if (getActiveLists(prefs).isEmpty()) noHostsCard.value = true
+        Log.d("getActiveLists.isEmpty", getActiveLists(prefs).isEmpty().toString())
     }
     fun startVpn() {
         ContextCompat.startForegroundService(context, Intent(context, ByeDpiVpnService::class.java).apply { action = "START_VPN" })
