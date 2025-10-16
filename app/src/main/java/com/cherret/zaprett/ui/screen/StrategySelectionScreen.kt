@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,7 +46,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
-import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.ui.component.StrategySelectionItem
 import com.cherret.zaprett.ui.viewmodel.StrategySelectionViewModel
 import kotlinx.coroutines.launch
@@ -122,6 +122,7 @@ fun StrategySelectionScreen(navController: NavController, vpnLauncher: ActivityR
                         horizontalArrangement = Arrangement.Center
                     )
                     {
+                        NoHostsCard(viewModel.noHostsCard)
                         FilledTonalButton(
                             onClick = {
                                 viewModel.viewModelScope.launch {
@@ -173,5 +174,23 @@ fun InfoAlert(onDismiss: () -> Unit) {
             }
         }
     )
+}
+
+@Composable
+private fun NoHostsCard(noHostsCard: MutableState<Boolean>) {
+    if (noHostsCard.value) {
+        AlertDialog(
+            title = { Text(text = stringResource(R.string.selection_no_hosts_title)) },
+            text = { Text(text = stringResource(R.string.selection_no_hosts_message)) },
+            onDismissRequest = {
+                noHostsCard.value = false
+            },
+            confirmButton = {
+                TextButton(onClick = { noHostsCard.value = false }) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
+    }
 }
 
