@@ -192,7 +192,7 @@ fun getActiveIpsets(sharedPreferences: SharedPreferences): Array<String> {
         }
         return emptyArray()
     }
-    else return emptyArray()
+    else return sharedPreferences.getStringSet("ipsets", emptySet())?.toTypedArray() ?: emptyArray()
 }
 fun getActiveExcludeLists(sharedPreferences: SharedPreferences): Array<String> {
     if (sharedPreferences.getBoolean("use_module", false)) {
@@ -236,7 +236,7 @@ fun getActiveExcludeIpsets(sharedPreferences: SharedPreferences): Array<String> 
         }
         return emptyArray()
     }
-    else return emptyArray()
+    else return sharedPreferences.getStringSet("exclude_ipsets", emptySet())?.toTypedArray() ?: emptyArray()
 }
 
 fun getActiveNfqwsStrategy(): Array<String> {
@@ -363,7 +363,7 @@ fun enableIpset(path: String, sharedPreferences: SharedPreferences) {
             currentSet.add(path)
             sharedPreferences.edit { putStringSet(
                 if (getHostListMode(sharedPreferences) == "whitelist") "ipsets"
-                else "exclude_ipsetss", currentSet) }
+                else "exclude_ipsets", currentSet) }
         }
     }
 }

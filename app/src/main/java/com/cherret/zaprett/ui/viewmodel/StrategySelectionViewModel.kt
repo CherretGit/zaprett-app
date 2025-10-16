@@ -38,10 +38,8 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         .callTimeout(prefs.getLong("probe_timeout", 1000L), TimeUnit.MILLISECONDS)
         .build()
     val context = application
-
     private val _requestVpnPermission = MutableStateFlow(false)
     val requestVpnPermission = _requestVpnPermission.asStateFlow()
-
     val strategyStates = mutableStateListOf<StrategyCheckResult>()
 
     init {
@@ -64,7 +62,6 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         val request = Request.Builder()
             .url("https://${domain}")
             .build()
-
         try {
             client.newCall(request).execute().use { response ->
                 response.isSuccessful || (response.code in 300..399)
@@ -100,19 +97,15 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     }
     suspend fun performTest() {
         val targets = readActiveListsLines()
-
         for (index in strategyStates.indices) {
             val current = strategyStates[index]
             strategyStates[index] = current.copy(status = R.string.strategy_status_testing)
             enableStrategy(current.path, prefs)
-
             if (prefs.getBoolean("use_module", false)) {
                 getStatus { if (it) stopService {} }
                 startService {}
-
                 try {
                     val progress = countReachable(targets)
-
                     val old = strategyStates[index]
                     strategyStates[index] = old.copy(
                         progress = progress,
@@ -134,14 +127,12 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
                 /*context.startService(Intent(context, ByeDpiVpnService::class.java).apply {
                     action = "START_VPN"
                 })*/
-
                 val connected = withTimeoutOrNull(10_000L) {
                     while (ByeDpiVpnService.status != ServiceStatus.Connected) {
                         delay(100L)
                     }
                     true
                 } ?: false
-
                 if (connected) delay(150L)
                 try {
                     val progress = countReachable(targets)
@@ -160,7 +151,6 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
                 }
             }
         }
-
         val sorted = strategyStates.sortedByDescending { it.progress }
         strategyStates.clear()
         strategyStates.addAll(sorted)

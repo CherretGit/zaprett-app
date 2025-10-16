@@ -9,6 +9,7 @@ import com.cherret.zaprett.utils.enableIpset
 import com.cherret.zaprett.utils.enableList
 import com.cherret.zaprett.utils.getActiveExcludeIpsets
 import com.cherret.zaprett.utils.getActiveExcludeLists
+import com.cherret.zaprett.utils.getActiveIpsets
 import com.cherret.zaprett.utils.getAllExcludeIpsets
 import com.cherret.zaprett.utils.getAllIpsets
 import com.cherret.zaprett.utils.getHostListMode
@@ -23,8 +24,8 @@ class IpsetViewModel(application: Application): BaseListsViewModel(application) 
         if (getHostListMode(sharedPreferences) == "whitelist") getAllIpsets()
         else getAllExcludeIpsets()
     override fun loadActiveItems(): Array<String> =
-        if (getHostListMode(sharedPreferences) == "whitelist") getActiveExcludeIpsets(sharedPreferences)
-        else getActiveExcludeLists(sharedPreferences)
+        if (getHostListMode(sharedPreferences) == "whitelist") getActiveIpsets(sharedPreferences)
+        else getActiveExcludeIpsets(sharedPreferences)
 
     override fun deleteItem(item: String, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         val wasChecked = checked[item] == true
@@ -61,5 +62,4 @@ class IpsetViewModel(application: Application): BaseListsViewModel(application) 
         setHostListMode(sharedPreferences, type)
         refresh()
     }
-
 }
