@@ -2,17 +2,24 @@ package com.cherret.zaprett.ui.component
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
@@ -26,8 +33,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.StrategyCheckResult
+import com.cherret.zaprett.data.StrategyTestingStatus
 import com.cherret.zaprett.ui.viewmodel.BaseRepoViewModel
 import com.cherret.zaprett.utils.RepoItemInfo
 import com.cherret.zaprett.utils.disableStrategy
@@ -184,9 +195,15 @@ fun RepoItem(
 @Composable
 fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferences, context : Context, snackbarHostState : SnackbarHostState) {
     val scope = rememberCoroutineScope()
+    var expanded by remember { mutableStateOf(false) }
     ElevatedCard (
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        onClick = {
+            if (strategy.status == StrategyTestingStatus.Completed) {
+                expanded = !expanded
+            }
+        },
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp, end = 10.dp, top = 25.dp, bottom = 0.dp)
@@ -213,7 +230,7 @@ fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferen
                             )
                         }
                     },
-                    enabled = strategy.status == R.string.strategy_status_tested
+                    enabled = strategy.status == StrategyTestingStatus.Completed
                 ) {
                     Icon(
                         imageVector = Icons.Default.Check,
@@ -223,7 +240,7 @@ fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferen
             }
             Row {
                 Text(
-                    text = stringResource(strategy.status),
+                    text = stringResource(strategy.status.resId),
                     modifier = Modifier
                         .weight(1f),
                     fontSize = 12.sp,
@@ -253,6 +270,35 @@ fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferen
                         .padding(start = 16.dp),
 
                 )
+            }
+        }
+        AnimatedVisibility(
+            visible = expanded,
+            enter = expandVertically(),
+            exit = shrinkVertically()
+        ) {
+            Card (
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .fillMaxWidth()
+            ) {
+                LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                    items(strategy.domains) { item ->
+                        Card(
+                            elevation = CardDefaults.cardElevation(4.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = item,
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
             }
         }
     }

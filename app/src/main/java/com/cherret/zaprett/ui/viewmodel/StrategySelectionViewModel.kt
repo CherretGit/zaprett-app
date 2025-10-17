@@ -12,6 +12,7 @@ import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.data.StrategyCheckResult
+import com.cherret.zaprett.data.StrategyTestingStatus
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveLists
@@ -26,6 +27,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -57,8 +59,9 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         strategyList.forEach { name ->
             strategyStates += StrategyCheckResult(
                 path = name,
-                status = R.string.strategy_status_waiting,
-                progress = 0f
+                status = StrategyTestingStatus.Waiting,
+                progress = 0f,
+                domains = emptyList()
             )
         }
     }
@@ -76,13 +79,13 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         }
     }
 
-    suspend fun countReachable(urls: List<String>): Float = coroutineScope {
+    suspend fun countReachable(index: Int, urls: List<String>): Float = coroutineScope {
         if (urls.isEmpty()) return@coroutineScope 0f
-        val results: List<Boolean> = urls.map { url ->
-            async { testDomain(url) }
-        }.awaitAll()
-        val successCount = results.count { it }
-        (successCount.toFloat() / urls.size.toFloat()).coerceIn(0f, 1f)
+        val results: List<String> = urls.map { url ->
+            async { if (testDomain(url)) url else null }
+        }.awaitAll().filterNotNull()
+        strategyStates[index].domains = results
+        (results.size.toFloat() / urls.size.toFloat()).coerceIn(0f, 1f)
     }
 
     suspend fun readActiveListsLines(): List<String> = withContext(Dispatchers.IO) {
@@ -104,17 +107,17 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         val targets = readActiveListsLines()
         for (index in strategyStates.indices) {
             val current = strategyStates[index]
-            strategyStates[index] = current.copy(status = R.string.strategy_status_testing)
+            strategyStates[index] = current.copy(status = StrategyTestingStatus.Testing)
             enableStrategy(current.path, prefs)
             if (prefs.getBoolean("use_module", false)) {
                 getStatus { if (it) stopService {} }
                 startService {}
                 try {
-                    val progress = countReachable(targets)
+                    val progress = countReachable(index, targets)
                     val old = strategyStates[index]
                     strategyStates[index] = old.copy(
                         progress = progress,
-                        status = R.string.strategy_status_tested
+                        status = StrategyTestingStatus.Completed
                     )
                 } finally {
                     stopService {}
@@ -140,12 +143,12 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
                 } ?: false
                 if (connected) delay(150L)
                 try {
-                    val progress = countReachable(targets)
+                    val progress = countReachable(index,targets)
                     val old = strategyStates[index]
 
                     strategyStates[index] = old.copy(
                         progress = progress,
-                        status = R.string.strategy_status_tested
+                        status = StrategyTestingStatus.Completed
                     )
                 } finally {
                     context.startService(Intent(context, ByeDpiVpnService::class.java).apply {
