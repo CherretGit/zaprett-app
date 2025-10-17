@@ -98,7 +98,7 @@ fun getZaprettPath(): String {
 
 fun getAllLists(): Array<String> {
     val listsDir = File("${getZaprettPath()}/lists/include")
-    return listsDir.listFiles { file -> file.isFile }
+    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
         ?: emptyArray()
@@ -106,7 +106,7 @@ fun getAllLists(): Array<String> {
 
 fun getAllIpsets(): Array<String> {
     val listsDir = File("${getZaprettPath()}/ipset/include")
-    return listsDir.listFiles { file -> file.isFile }
+    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
         ?: emptyArray()
@@ -114,7 +114,7 @@ fun getAllIpsets(): Array<String> {
 
 fun getAllExcludeLists(): Array<String> {
     val listsDir = File("${getZaprettPath()}/lists/exclude/")
-    return listsDir.listFiles { file -> file.isFile }
+    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
         ?: emptyArray()
@@ -122,7 +122,7 @@ fun getAllExcludeLists(): Array<String> {
 
 fun getAllExcludeIpsets(): Array<String> {
     val listsDir = File("${getZaprettPath()}/ipset/exclude/")
-    return listsDir.listFiles { file -> file.isFile }
+    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
         ?: emptyArray()
@@ -130,7 +130,7 @@ fun getAllExcludeIpsets(): Array<String> {
 
 fun getAllNfqwsStrategies(): Array<String> {
     val listsDir = File("${getZaprettPath()}/strategies/nfqws")
-    return listsDir.listFiles { file -> file.isFile }
+    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
         ?: emptyArray()
@@ -138,7 +138,7 @@ fun getAllNfqwsStrategies(): Array<String> {
 
 fun getAllByeDPIStrategies(): Array<String> {
     val listsDir = File("${getZaprettPath()}/strategies/byedpi")
-    return listsDir.listFiles { file -> file.isFile }
+    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
         ?: emptyArray()
