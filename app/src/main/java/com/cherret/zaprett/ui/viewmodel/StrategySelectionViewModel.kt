@@ -34,13 +34,12 @@ import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import java.net.InetSocketAddress
+import java.net.Proxy
 import java.util.concurrent.TimeUnit
 
 class StrategySelectionViewModel(application: Application) : AndroidViewModel(application) {
     val prefs = application.getSharedPreferences("settings", MODE_PRIVATE)
-    val client = OkHttpClient.Builder()
-        .callTimeout(prefs.getLong("probe_timeout", 1000L), TimeUnit.MILLISECONDS)
-        .build()
     val context = application
     private val _requestVpnPermission = MutableStateFlow(false)
     val requestVpnPermission = _requestVpnPermission.asStateFlow()
@@ -51,6 +50,20 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     init {
         loadStrategies()
         checkHosts()
+    }
+
+    fun buildHttpClient(): OkHttpClient {
+        val builder = OkHttpClient.Builder()
+            .callTimeout(prefs.getLong("probe_timeout", 1000L), TimeUnit.MILLISECONDS)
+            .followRedirects(true)
+            .followSslRedirects(true)
+        if (!prefs.getBoolean("use_module", false)) {
+            val ip = prefs.getString("ip", "127.0.0.1") ?: "127.0.0.1"
+            val port = prefs.getString("port", "1080")?.toIntOrNull() ?: 1080
+            val proxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(ip, port))
+            builder.proxy(proxy)
+        }
+        return builder.build()
     }
 
     fun loadStrategies() {
@@ -71,8 +84,10 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
             .url("https://${domain}")
             .build()
         try {
-            client.newCall(request).execute().use { response ->
-                response.isSuccessful || (response.code in 300..399)
+            buildHttpClient().newCall(request).execute().use { response ->
+                val body = response.body.byteStream().readBytes()
+                val contentLength = response.body.contentLength()
+                contentLength <= 0 || body.size.toLong() >= contentLength
             }
         } catch (e: Exception) {
             false
