@@ -82,7 +82,7 @@ fun StrategySelectionScreen(navController: NavController, vpnLauncher: ActivityR
                 title = {
                     Text(
                         text = stringResource(R.string.title_selection),
-                        fontSize = 40.sp,
+                        fontSize = 30.sp,
                         fontFamily = FontFamily(Font(R.font.unbounded, FontWeight.Normal))
                     )
                 },

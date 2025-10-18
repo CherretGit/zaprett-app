@@ -283,11 +283,9 @@ fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferen
                     .padding(horizontal = 8.dp)
                     .fillMaxWidth()
             ) {
-                if (strategy.domains.isNotEmpty()){
-                    Text(
-                        text = stringResource(R.string.selection_available_domains)
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.selection_available_domains)
+                )
                 LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                     items(strategy.domains) { item ->
                         Card(
