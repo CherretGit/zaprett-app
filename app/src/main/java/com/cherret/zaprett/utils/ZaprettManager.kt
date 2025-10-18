@@ -725,7 +725,7 @@ fun getAppsListMode(prefs : SharedPreferences) : String {
         }
     }
     else {
-        return prefs.getString("applist", "")!!
+        return prefs.getString("app_list", "none")!!
     }
     return "none"
 }
@@ -753,7 +753,7 @@ fun setAppsListMode(prefs: SharedPreferences, mode: String) {
         }
     }
     else {
-        prefs.edit { putString("app-list", mode) }
+        prefs.edit { putString("app_list", mode) }
     }
     Log.d("App List", "Changed to $mode")
 }
