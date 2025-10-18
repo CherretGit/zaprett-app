@@ -200,7 +200,7 @@ fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferen
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         onClick = {
-            if (strategy.status == StrategyTestingStatus.Completed) {
+            if (strategy.status == StrategyTestingStatus.Completed && strategy.domains.isNotEmpty()) {
                 expanded = !expanded
             }
         },
@@ -283,6 +283,11 @@ fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferen
                     .padding(horizontal = 8.dp)
                     .fillMaxWidth()
             ) {
+                if (strategy.domains.isNotEmpty()){
+                    Text(
+                        text = stringResource(R.string.selection_available_domains)
+                    )
+                }
                 LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                     items(strategy.domains) { item ->
                         Card(
