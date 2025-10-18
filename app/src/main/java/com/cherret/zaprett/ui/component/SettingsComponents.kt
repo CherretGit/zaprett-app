@@ -35,9 +35,9 @@ fun SettingsItem(title: String, checked: Boolean, onToggle: (Boolean) -> Unit, o
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
-            .clickable { onToggle(!checked) },
+            .height(80.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        onClick = { onToggle(!checked) },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
@@ -63,9 +63,9 @@ fun SettingsActionItem(title: String, onClick: () -> Unit) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
-            .clickable { onClick() },
+            .height(80.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        onClick = { onClick() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
