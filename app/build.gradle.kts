@@ -16,8 +16,8 @@ android {
         applicationId = "com.cherret.zaprett"
         minSdk = 29
         targetSdk = 35
-        versionCode = 22
-        versionName = "2.10"
+        versionCode = 23
+        versionName = "2.11"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
