@@ -47,6 +47,11 @@ pub unsafe extern "system" fn Java_com_cherret_zaprett_byedpi_NativeBridge_jniSt
     let mut argv: Vec<*const c_char> = cstrings.iter().map(|s| s.as_ptr()).collect();
     argv.push(std::ptr::null());
     info!("starting proxy");
+    unsafe {
+        optind = 1;
+        optreset = 1;
+        clear_params();
+    }
     PROXY_RUNNING.store(true, Ordering::SeqCst);
     let ret = unsafe { main(argc as i32, argv.as_ptr()) };
     PROXY_RUNNING.store(false, Ordering::SeqCst);
@@ -65,10 +70,5 @@ pub unsafe extern "system" fn Java_com_cherret_zaprett_byedpi_NativeBridge_jniSt
     }
     info!("stopping proxy");
     let ret = unsafe { shutdown(server_fd, SHUT_RDWR) };
-    unsafe {
-        optreset = 1;
-        optind = 1;
-    }
-    unsafe { clear_params() };
     ret as jint
 }
