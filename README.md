@@ -1,5 +1,10 @@
 # zaprett
 ## О приложении
+
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/CherretGit/zaprett-app/total)
+![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/CherretGit/zaprett-app/latest/total)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/CherretGit/zaprett-app/workflow.yml)
+
 Приложение разработано для работы с модулем [zaprett](https://github.com/egor-white/zaprett)
 > [!IMPORTANT]
 > 📢 [Официальный Telegram-канал приложения](https://t.me/zaprett_module)
