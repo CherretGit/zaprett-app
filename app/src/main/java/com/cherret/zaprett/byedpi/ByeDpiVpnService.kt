@@ -266,24 +266,18 @@ class ByeDpiVpnService : VpnService() {
             .flatMap { arg ->
                 if (getHostListMode(sharedPreferences) == "whitelist") {
                     when {
-                        arg == "\$hostlist" && list.isNotEmpty() -> listOf("-H", list)
+                        arg == "\$hostlist" && list.isNotEmpty() -> listOf("--hosts", list)
                         arg == "\$hostlist" && list.isEmpty() -> emptyList()
-                        arg == "\$ipset" && list.isNotEmpty() -> listOf("-H", list)
+                        arg == "\$ipset" && list.isNotEmpty() -> listOf("--ipset", list)
                         arg == "\$ipset" && list.isEmpty() -> emptyList()
                         else -> listOf(arg)
                     }
                 } else {
-                    if (list.isNotEmpty()) {
-                        listOf("-H", list, "-An", arg).filter { it != "\$hostlist" }
-                    } else {
-                        listOf("-An", arg).filter { it != "\$hostlist" }
-                    }
-                    if (ipset.isEmpty()) {
-                        listOf("-H", list, "-An", arg).filter { it != "\$ipset" }
-
-                    }
-                    else {
-                        listOf("-An", arg).filter { it != "\$ipset" }
+                    when {
+                        arg == "\$hostlist" && list.isNotEmpty() -> listOf("--hosts", list, "-An", list)
+                        arg == "\$ipset" && ipset.isNotEmpty() -> listOf("--ipset", ipset, "-An", ipset)
+                        arg == "\$hostlist" || arg == "\$ipset" -> emptyList()
+                        else -> listOf(arg)
                     }
                 }
             }
