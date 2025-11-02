@@ -16,6 +16,7 @@ private val json = Json {
     prettyPrint = true
     ignoreUnknownKeys = true
     coerceInputValues = true
+    encodeDefaults = true
 }
 
 private fun readConfig(): ZaprettConfig {
@@ -78,13 +79,13 @@ fun restartService(callback: (Boolean) -> Unit) {
 }
 
 fun getModuleVersion(callback: (String) -> Unit) {
-    Shell.cmd("zaprett module-ver").submit { result ->
+    Shell.cmd("zaprett module-version").submit { result ->
         if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
     }
 }
 
 fun getBinVersion(callback: (String) -> Unit) {
-    Shell.cmd("zaprett bin-ver").submit { result ->
+    Shell.cmd("zaprett binary-version").submit { result ->
         if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
     }
 }
@@ -95,7 +96,7 @@ fun getConfigFile(): File {
 
 fun setStartOnBoot(prefs: SharedPreferences, callback: (Boolean) -> Unit) {
     if (prefs.getBoolean("use_module", false)) {
-        Shell.cmd("zaprett autostart").submit { result ->
+        Shell.cmd("zaprett set-autostart").submit { result ->
             if (result.out.isNotEmpty() && result.out.toString().contains("true")) callback(true) else callback(false)
         }
     }
