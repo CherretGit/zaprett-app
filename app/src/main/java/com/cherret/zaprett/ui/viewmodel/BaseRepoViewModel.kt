@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.cherret.zaprett.utils.RepoItemInfo
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ItemType
+import com.cherret.zaprett.utils.checkStoragePermission
 import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getFileSha256
 import com.cherret.zaprett.utils.getHostListMode
@@ -35,6 +36,9 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     private val _downloadErrorFlow = MutableStateFlow<String?>(null)
 
     val downloadErrorFlow: StateFlow<String?> = _downloadErrorFlow
+
+    private var _showPermissionDialog = MutableStateFlow(false)
+    val showPermissionDialog: StateFlow<Boolean> = _showPermissionDialog
 
     var hostLists = mutableStateOf<List<RepoItemInfo>>(emptyList())
         protected set
@@ -95,32 +99,41 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun install(item: RepoItemInfo) {
-        isInstalling[item.name] = true
-        val downloadId = download(context, item.url)
-        registerDownloadListener(context, downloadId, { uri ->
-            viewModelScope.launch(Dispatchers.IO) {
-                val sourceFile = File(uri.path!!)
-                val targetDir = when (item.type) {
-                    ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
-                    ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
-                    ItemType.list -> File(getZaprettPath(), "lists/include")
-                    ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
-                    ItemType.ipset -> File(getZaprettPath(), "ipset/include")
-                    ItemType.ipset_exclude -> File(getZaprettPath(), "ipset/exclude")
-                }
-                val targetFile = File(targetDir, uri.lastPathSegment!!)
-                sourceFile.copyTo(targetFile, overwrite = true)
-                sourceFile.delete()
-                isInstalling[item.name] = false
-                isUpdate[item.name] = false
-                refresh()
+        when (checkStoragePermission(context)) {
+            true -> {
+                isInstalling[item.name] = true
+                val downloadId = download(context, item.url)
+                registerDownloadListener(context, downloadId, { uri ->
+                    viewModelScope.launch(Dispatchers.IO) {
+                        val sourceFile = File(uri.path!!)
+                        val targetDir = when (item.type) {
+                            ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
+                            ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
+                            ItemType.list -> File(getZaprettPath(), "lists/include")
+                            ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
+                            ItemType.ipset -> File(getZaprettPath(), "ipset/include")
+                            ItemType.ipset_exclude -> File(getZaprettPath(), "ipset/exclude")
+                        }
+                        val targetFile = File(targetDir, uri.lastPathSegment!!)
+                        sourceFile.copyTo(targetFile, overwrite = true)
+                        sourceFile.delete()
+                        isInstalling[item.name] = false
+                        isUpdate[item.name] = false
+                        refresh()
+                    }
+                }, onError = {
+                    isInstalling[item.name] = false
+                    isUpdate[item.name] = false
+                    refresh()
+                    _downloadErrorFlow.value = it
+                })
             }
-        }, onError = {
-            isInstalling[item.name] = false
-            isUpdate[item.name] = false
-            refresh()
-            _downloadErrorFlow.value = it
-        })
+            false -> _showPermissionDialog.value = true
+        }
+    }
+
+    fun hideNoPermissionDialog() {
+        _showPermissionDialog.value = false
     }
 
     fun update(item: RepoItemInfo) {
@@ -156,7 +169,6 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
             }
         )
     }
-
 
     fun showRestartSnackbar(snackbarHostState: SnackbarHostState) {
         viewModelScope.launch {

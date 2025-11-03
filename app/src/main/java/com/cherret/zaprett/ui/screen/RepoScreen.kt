@@ -57,6 +57,7 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
     val error by viewModel.errorFlow.collectAsState()
     val downloadError by viewModel.downloadErrorFlow.collectAsState()
+    val showPermissionDialog by viewModel.showPermissionDialog.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.refresh()
     }
@@ -131,6 +132,24 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
         )
     }
 
+    if (showPermissionDialog) {
+        AlertDialog(
+            title = { Text(text = stringResource(R.string.error_no_storage_title)) },
+            text = { Text(text = stringResource(R.string.no_storage_permission_message)) },
+            onDismissRequest = {
+                viewModel.hideNoPermissionDialog()
+                navController.popBackStack()
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.hideNoPermissionDialog()
+                    navController.popBackStack()
+                }) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {

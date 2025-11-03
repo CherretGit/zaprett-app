@@ -18,12 +18,12 @@ import java.io.File
 
 class StrategyViewModel(application: Application): BaseListsViewModel(application) {
     private val sharedPreferences = application.getSharedPreferences("settings", Context.MODE_PRIVATE)
-    private val useModule = sharedPreferences.getBoolean("use_module", false)
-    private val strategyProvider: StrategyProvider = if (useModule) {
-        NfqwsStrategyProvider()
-    } else {
-        ByeDPIStrategyProvider(sharedPreferences)
-    }
+    private val strategyProvider: StrategyProvider
+        get() = if (sharedPreferences.getBoolean("use_module", false)) {
+            NfqwsStrategyProvider()
+        } else {
+            ByeDPIStrategyProvider(sharedPreferences)
+        }
 
     override fun loadAllItems(): Array<String> = strategyProvider.getAll()
     override fun loadActiveItems(): Array<String> = strategyProvider.getActive()

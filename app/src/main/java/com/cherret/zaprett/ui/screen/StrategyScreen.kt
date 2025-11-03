@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,10 +26,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +63,7 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
     val allLists = viewModel.allItems
     val checked = viewModel.checked
     val isRefreshing = viewModel.isRefreshing
+    val showPermissionDialog by viewModel.showNoPermissionDialog.collectAsState()
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -139,6 +143,24 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     )
+    if (showPermissionDialog) {
+        AlertDialog(
+            title = { Text(text = stringResource(R.string.error_no_storage_title)) },
+            text = { Text(text = stringResource(R.string.no_storage_permission_message)) },
+            onDismissRequest = {
+                viewModel.hideNoPermissionDialog()
+                navController.popBackStack()
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.hideNoPermissionDialog()
+                    navController.popBackStack()
+                }) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
+    }
 }
 
 @Composable

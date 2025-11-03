@@ -117,4 +117,5 @@
     <string name="selection_no_hosts_title">Нет активных листов</string>
     <string name="selection_no_hosts_message">Не обнаружено активных списков хостов, включите один или несколько, иначе подбор не сработает</string>
     <string name="selection_available_domains">Доступные домены</string>
+    <string name="no_storage_permission_message">Нет разрешения на доступ к файлам</string>
 </resources>

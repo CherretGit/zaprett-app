@@ -1,10 +1,14 @@
 package com.cherret.zaprett.utils
 
+import android.Manifest
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Environment
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.data.ZaprettConfig
@@ -41,6 +45,17 @@ private fun writeConfig(config: ZaprettConfig) {
         configFile.writeText(content)
     } catch (e: Exception) {
         Log.e("ZaprettManager", "Error writing config", e)
+    }
+}
+
+fun checkStoragePermission(context: Context): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        Environment.isExternalStorageManager()
+    } else {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
     }
 }
 

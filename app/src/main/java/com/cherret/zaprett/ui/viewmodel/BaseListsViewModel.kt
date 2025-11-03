@@ -16,9 +16,12 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
+import com.cherret.zaprett.utils.checkStoragePermission
 import com.cherret.zaprett.utils.getZaprettPath
 import com.cherret.zaprett.utils.restartService
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -34,20 +37,32 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     var isRefreshing by mutableStateOf(false)
         private set
 
+    private var _showNoPermissionDialog = MutableStateFlow(false)
+    val showNoPermissionDialog: StateFlow<Boolean> = _showNoPermissionDialog
+
     abstract fun loadAllItems(): Array<String>
     abstract fun loadActiveItems(): Array<String>
     abstract fun onCheckedChange(item: String, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
     abstract fun deleteItem(item: String, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
 
     fun refresh() {
-        isRefreshing = true
-        allItems = loadAllItems().toList()
-        activeItems = loadActiveItems().toList()
-        checked.clear()
-        allItems.forEach { list ->
-            checked[list] = activeItems.contains(list)
+        when (checkStoragePermission(context)) {
+            true -> {
+                isRefreshing = true
+                allItems = loadAllItems().toList()
+                activeItems = loadActiveItems().toList()
+                checked.clear()
+                allItems.forEach { list ->
+                    checked[list] = activeItems.contains(list)
+                }
+                isRefreshing = false
+            }
+            false -> _showNoPermissionDialog.value = true
         }
-        isRefreshing = false
+    }
+
+    fun hideNoPermissionDialog() {
+        _showNoPermissionDialog.value = false
     }
     
     fun showRestartSnackbar(context: Context, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {

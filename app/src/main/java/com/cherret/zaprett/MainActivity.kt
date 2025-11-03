@@ -61,6 +61,7 @@ import com.cherret.zaprett.ui.viewmodel.HostRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.IpsetRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.StrategyRepoViewModel
 import com.cherret.zaprett.utils.checkModuleInstallation
+import com.cherret.zaprett.utils.checkStoragePermission
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
@@ -110,16 +111,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 var showStoragePermissionDialog by remember {
-                    mutableStateOf(
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            !Environment.isExternalStorageManager()
-                        } else {
-                            ContextCompat.checkSelfPermission(
-                                this,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                            ) != PackageManager.PERMISSION_GRANTED
-                        }
-                    )
+                    mutableStateOf(!checkStoragePermission(this))
                 }
                 var showNotificationPermissionDialog by remember {
                     mutableStateOf(
@@ -272,5 +264,4 @@ class MainActivity : ComponentActivity() {
             }
         )
     }
-
 }

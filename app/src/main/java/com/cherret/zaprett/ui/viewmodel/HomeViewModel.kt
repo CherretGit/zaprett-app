@@ -103,7 +103,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun checkServiceStatus() {
-        val updateOnBoot = prefs.getBoolean("update_on_boot", false)
+        val updateOnBoot = prefs.getBoolean("update_on_boot", true)
         if (updateOnBoot) {
             val useModule = prefs.getBoolean("use_module", false)
             updateServiceStatus(useModule)
