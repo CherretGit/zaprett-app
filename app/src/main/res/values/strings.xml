@@ -123,4 +123,6 @@
     <string name="selection_no_hosts_message">No active host lists found, please enable one or more, otherwise the selection will not work</string>
     <string name="selection_available_domains">Available domains</string>
     <string name="no_storage_permission_message">Missing permission to access files</string>
+    <string name="reset_settings_title">Reset settings</string>
+    <string name="reset_settings_message">Are you sure you want to reset the settings?</string>
 </resources>

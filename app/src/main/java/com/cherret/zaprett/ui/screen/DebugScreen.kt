@@ -1,5 +1,6 @@
 package com.cherret.zaprett.ui.screen
 
+import android.app.Activity
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,6 +51,7 @@ fun DebugScreen(navController: NavController) {
     val editor = remember { sharedPreferences.edit() }
     val showUpdateUrlDialog = remember { mutableStateOf(false) }
     val textDialogValue = remember { mutableStateOf("") }
+    val showResetSettingsDialog = remember { mutableStateOf(false) }
     val settingsList = listOf(
         Setting.Action(
             title = stringResource(R.string.btn_update_repository_url),
@@ -56,6 +60,12 @@ fun DebugScreen(navController: NavController) {
                 showUpdateUrlDialog.value = true
             }
         ),
+        Setting.Action(
+            title = stringResource(R.string.reset_settings_title),
+            onClick = {
+                showResetSettingsDialog.value = true
+            }
+        )
     )
     Scaffold(
         topBar = {
@@ -114,5 +124,32 @@ fun DebugScreen(navController: NavController) {
         TextDialog(stringResource(R.string.btn_update_repository_url), stringResource(R.string.hint_enter_update_repository_url), textDialogValue.value, onConfirm = {
             editor.putString("update_repo_url", it).apply()
         }, onDismiss = { showUpdateUrlDialog.value = false })
+    }
+
+    if (showResetSettingsDialog.value) {
+        AlertDialog(title = { Text(text = stringResource(R.string.reset_settings_title)) },
+            text = { Text(text = stringResource(R.string.reset_settings_message)) },
+            onDismissRequest = {
+            showResetSettingsDialog.value = false
+        },
+            dismissButton = {
+                TextButton(onClick = {
+                    showResetSettingsDialog.value = false
+                }) {
+                    Text(stringResource(R.string.btn_dismiss))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    context.deleteSharedPreferences("settings")
+                    showResetSettingsDialog.value = false
+                    val activity = context as Activity
+                    val intent = activity.intent
+                    activity.finish()
+                    activity.startActivity(intent)
+                }) {
+                    Text(text = stringResource(R.string.btn_continue))
+                }
+            })
     }
 }
