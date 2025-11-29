@@ -11,7 +11,7 @@
     <string name="btn_continue">Continue</string>
     <string name="btn_update">Update</string>
     <string name="btn_dismiss">Dismiss</string>
-    <string name="text_welcome">Hello to zaprett! This application is designed to bypass censorship and other blockages. For full functionality you need to install Magisk module.</string>
+    <string name="text_welcome">Welcome to zaprett! This application is designed to bypass censorship and other blockages. For full functionality you need to install Magisk module.</string>
     <string name="btn_use_root">Use module</string>
     <string name="error_root_title">Can\'t get root</string>
     <string name="error_root_message">Couldn\'t get root access. Give root access to use the Magisk module</string>
@@ -24,7 +24,7 @@
     <string name="status_enabled">zaprett service is working. Tap to update</string>
     <string name="status_disabled">zaprett service disabled.</string>
     <string name="status_crashed">zaprett service crashed. Tap restart button below</string>
-    <string name="update_available">New update available!</string>
+    <string name="update_available">Update available</string>
     <string name="btn_update_on_boot">Update the status when the Home page is launched</string>
     <string name="btn_start_service">Start service</string>
     <string name="btn_stop_service">Stop service</string>
