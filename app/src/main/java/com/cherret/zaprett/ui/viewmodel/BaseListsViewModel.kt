@@ -22,6 +22,7 @@ import com.cherret.zaprett.utils.restartService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -36,6 +37,9 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     val checked = mutableStateMapOf<String, Boolean>()
     var isRefreshing by mutableStateOf(false)
         private set
+
+    private val _errorFlow = MutableStateFlow("")
+    val errorFlow = _errorFlow.asStateFlow()
 
     private var _showNoPermissionDialog = MutableStateFlow(false)
     val showNoPermissionDialog: StateFlow<Boolean> = _showNoPermissionDialog
@@ -72,10 +76,16 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
                 actionLabel = context.getString(R.string.btn_restart_service)
             )
             if (result == SnackbarResult.ActionPerformed) {
-                restartService {}
+                restartService { error ->
+                    _errorFlow.value = error
+                }
                 snackbarHostState.showSnackbar(context.getString(R.string.snack_reload))
             }
         }
+    }
+
+    fun clearError() {
+        _errorFlow.value = ""
     }
 
     fun copySelectedFile(context: Context, path: String, uri: Uri) {

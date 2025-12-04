@@ -1,6 +1,10 @@
 package com.cherret.zaprett.ui.screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -73,9 +77,41 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
             it
         ) }
     }
+    val error by viewModel.errorFlow.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
+    }
+
+    if (error.isNotEmpty()) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.clearError()
+            },
+            title = { Text(stringResource(R.string.error_text)) },
+            text = {
+                Text(stringResource(R.string.error_unknown))
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip: ClipData = ClipData.newPlainText("Error log", error)
+                    clipboard.setPrimaryClip(clip)
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
+                        Toast.makeText(context, context.getString(R.string.log_copied), Toast.LENGTH_SHORT).show()
+                    }
+                }) {
+                    Text(stringResource(R.string.btn_copy_log))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearError()
+                }) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
     }
 
     Scaffold(

@@ -43,6 +43,8 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     val context = application
     private val _requestVpnPermission = MutableStateFlow(false)
     val requestVpnPermission = _requestVpnPermission.asStateFlow()
+    private val _errorFlow = MutableStateFlow("")
+    val errorFlow = _errorFlow.asStateFlow()
     val strategyStates = mutableStateListOf<StrategyCheckResult>()
     var noHostsCard = mutableStateOf(false)
         private set
@@ -125,8 +127,12 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
             strategyStates[index] = current.copy(status = StrategyTestingStatus.Testing)
             enableStrategy(current.path, prefs)
             if (prefs.getBoolean("use_module", false)) {
-                getStatus { if (it) stopService {} }
-                startService {}
+                getStatus { if (it) stopService { error ->
+                    _errorFlow.value = error
+                } }
+                startService { error ->
+                    _errorFlow.value = error
+                }
                 try {
                     val progress = countReachable(index, targets)
                     val old = strategyStates[index]
@@ -135,7 +141,9 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
                         status = StrategyTestingStatus.Completed
                     )
                 } finally {
-                    stopService {}
+                    stopService { error ->
+                        _errorFlow.value = error
+                    }
                     disableStrategy(current.path, prefs)
                 }
             }
@@ -188,5 +196,8 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     }
     fun clearVpnPermissionRequest() {
         _requestVpnPermission.value = false
+    }
+    fun clearError() {
+        _errorFlow.value = ""
     }
 }
