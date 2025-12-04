@@ -81,7 +81,7 @@ import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = viewModel(), navController: NavController, vpnLauncher: ActivityResultLauncher<Intent>) {
+fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResultLauncher<Intent>) {
     val context = LocalContext.current
     val sharedPreferences: SharedPreferences = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val requestVpnPermission by viewModel.requestVpnPermission.collectAsState()
@@ -119,7 +119,6 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), navController: NavControl
         AlertDialog(
             onDismissRequest = {
                 viewModel.clearError()
-                navController.popBackStack()
             },
             title = { Text(stringResource(R.string.error_text)) },
             text = {
@@ -140,7 +139,6 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), navController: NavControl
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearError()
-                    navController.popBackStack()
                 }) {
                     Text(stringResource(R.string.btn_continue))
                 }
