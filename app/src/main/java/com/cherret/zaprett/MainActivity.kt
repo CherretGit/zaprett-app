@@ -209,7 +209,7 @@ class MainActivity : ComponentActivity() {
                 startDestination = Screen.home.route,
                 Modifier.padding(innerPadding)
             ) {
-                composable(Screen.home.route) { HomeScreen(viewModel = viewModel, vpnPermissionLauncher) }
+                composable(Screen.home.route) { HomeScreen(viewModel = viewModel, navController,vpnPermissionLauncher) }
                 composable(Screen.hosts.route) { HostsScreen(navController) }
                 composable(Screen.strategies.route) { StrategyScreen(navController) }
                 composable(Screen.ipsets.route) { IpsetsScreen(navController) }

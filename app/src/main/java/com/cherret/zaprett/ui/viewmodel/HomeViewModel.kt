@@ -45,6 +45,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _serviceStatus = MutableStateFlow(ServiceStatusUI())
     val serviceStatus: StateFlow<ServiceStatusUI> = _serviceStatus.asStateFlow()
 
+    private val _errorFlow = MutableStateFlow("")
+    val errorFlow = _errorFlow.asStateFlow()
+
     var moduleVer = mutableStateOf(context.getString(R.string.unknown_text))
         private set
 
@@ -129,7 +132,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         )
                     )
                 }
-                if (!isEnabled) startService {}
+                if (!isEnabled) startService { error ->
+                    _errorFlow.value = error
+                    onCardClick()
+                }
             }
         } else {
             if (ByeDpiVpnService.status == ServiceStatus.Disconnected || ByeDpiVpnService.status == ServiceStatus.Failed) {
@@ -169,7 +175,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         )
                     )
                 }
-                if (isEnabled) stopService {}
+                if (isEnabled) stopService { error ->
+                    _errorFlow.value = error
+                    onCardClick()
+                }
             }
         } else {
             if (ByeDpiVpnService.status == ServiceStatus.Connected) {
@@ -192,7 +201,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onBtnRestart(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         if (prefs.getBoolean("use_module", false)) {
-            restartService {}
+            restartService { error ->
+                _errorFlow.value = error
+                onCardClick()
+            }
             scope.launch {
                 snackbarHostState.showSnackbar(context.getString(R.string.snack_reload))
             }
@@ -242,6 +254,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // unused?
     fun parseArgs(ip: String, port: String, lines: List<String>): Array<String> {
         val regex = Regex("""--?\S+(?:=(?:[^"'\s]+|"[^"]*"|'[^']*'))?|[^\s]+""")
         val parsedArgs = lines
@@ -249,4 +262,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         return arrayOf("ciadpi", "--ip", ip, "--port", port) + parsedArgs
     }
 
+    fun clearError() {
+        _errorFlow.value = ""
+    }
 }

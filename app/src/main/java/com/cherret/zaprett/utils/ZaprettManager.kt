@@ -75,21 +75,31 @@ fun getStatus(callback: (Boolean) -> Unit) {
     }
 }
 
-fun startService(callback: (Boolean) -> Unit) {
-    Shell.cmd("zaprett start").submit { result ->
-        callback(result.isSuccess)
+fun startService(callback: (String) -> Unit) {
+    Shell.cmd("zaprett start 2>&1").submit { result ->
+        callback(
+            if (result.isSuccess) ""
+            else result.out.joinToString("\n")
+        )
     }
 }
 
-fun stopService(callback: (Boolean) -> Unit) {
-    Shell.cmd("zaprett stop").submit { result ->
-        callback(result.isSuccess)
+
+fun stopService(callback: (String) -> Unit) {
+    Shell.cmd("zaprett stop 2>&1").submit { result ->
+        callback(
+            if (result.isSuccess) ""
+            else result.out.joinToString("\n")
+        )
     }
 }
 
-fun restartService(callback: (Boolean) -> Unit) {
-    Shell.cmd("zaprett restart").submit { result ->
-        callback(result.isSuccess)
+fun restartService(callback: (String) -> Unit) {
+    Shell.cmd("zaprett restart 2>&1").submit { result ->
+        callback(
+            if (result.isSuccess) ""
+            else result.out.joinToString("\n")
+        )
     }
 }
 

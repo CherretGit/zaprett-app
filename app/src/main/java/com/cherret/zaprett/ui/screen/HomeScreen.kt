@@ -1,9 +1,13 @@
 package com.cherret.zaprett.ui.screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.VpnService
+import android.os.Build
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -65,16 +69,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ServiceStatusUI
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.SerializationException
+import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResultLauncher<Intent>) {
+fun HomeScreen(viewModel: HomeViewModel = viewModel(), navController: NavController, vpnLauncher: ActivityResultLauncher<Intent>) {
     val context = LocalContext.current
     val sharedPreferences: SharedPreferences = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val requestVpnPermission by viewModel.requestVpnPermission.collectAsState()
@@ -89,6 +96,7 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResu
     val nfqwsVer = viewModel.nfqwsVer;
     val byedpiVer = viewModel.byedpiVer;
     val serviceMode = viewModel.serviceMode
+    val error by viewModel.errorFlow.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.checkForUpdate()
         viewModel.checkServiceStatus()
@@ -105,6 +113,39 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResu
                 viewModel.clearVpnPermissionRequest()
             }
         }
+    }
+
+    if (error.isNotEmpty()) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.clearError()
+                navController.popBackStack()
+            },
+            title = { Text(stringResource(R.string.error_text)) },
+            text = {
+                Text(stringResource(R.string.error_unknown))
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip: ClipData = ClipData.newPlainText("Error log", error)
+                    clipboard.setPrimaryClip(clip)
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
+                        Toast.makeText(context, context.getString(R.string.log_copied), Toast.LENGTH_SHORT).show()
+                    }
+                }) {
+                    Text(stringResource(R.string.btn_copy_log))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearError()
+                    navController.popBackStack()
+                }) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
     }
 
     Scaffold(
