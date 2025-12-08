@@ -157,8 +157,7 @@ fun StrategySelectionScreen(navController: NavController, vpnLauncher: ActivityR
                     top = paddingValues.calculateTopPadding(),
                     bottom = paddingValues.calculateBottomPadding() + 40.dp
                 ),
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             ) {
                 item {
                     Row (
