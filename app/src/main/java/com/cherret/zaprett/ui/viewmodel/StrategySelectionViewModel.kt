@@ -188,8 +188,8 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun checkHosts() {
-        if (getActiveLists(prefs).isEmpty()) noHostsCard.value = true
-        Log.d("getActiveLists.isEmpty", getActiveLists(prefs).isEmpty().toString())
+        if (getActiveLists(prefs).isEmpty() || getAllStrategies(prefs).isEmpty()) noHostsCard.value = true
+        Log.d("getActiveLists.isEmpty || getAllStrategies.isEmpty", getActiveLists(prefs).isEmpty().toString())
     }
     fun startVpn() {
         ContextCompat.startForegroundService(context, Intent(context, ByeDpiVpnService::class.java).apply { action = "START_VPN" })

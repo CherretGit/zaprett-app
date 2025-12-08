@@ -119,8 +119,8 @@
     <string name="hint_enter_probe_timeout">Enter probe timeout</string>
     <string name="strategy_selection_info_title">Tip</string>
     <string name="strategy_selection_info_msg">This section of the application settings allows you to iterate through strategies.\n The selection is based on downloaded strategies, so download the strategies you\'re interested in from the repository or add them from the file system for comparison.\n Before starting, select one or more domain lists in the \"Lists\" tab, then click \"Start selection\". Avoid using lists with a large number of domains.</string>
-    <string name="selection_no_hosts_title">No active hosts</string>
-    <string name="selection_no_hosts_message">No active host lists found, please enable one or more, otherwise the selection will not work</string>
+    <string name="selection_no_hosts_title">No active hosts/strategies</string>
+    <string name="selection_no_hosts_message">No active host lists or available strategies were found. Please enable one or more, or download strategies for testing, otherwise the selection will not work.</string>
     <string name="selection_available_domains">Available domains</string>
     <string name="no_storage_permission_message">Missing permission to access files</string>
     <string name="reset_settings_title">Reset settings</string>
