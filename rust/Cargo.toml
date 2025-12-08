@@ -15,3 +15,9 @@ crate-type = ["cdylib"]
 
 [build-dependencies]
 cmake = "0.1.49"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
+codegen-units = 1
