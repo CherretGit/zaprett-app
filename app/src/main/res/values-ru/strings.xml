@@ -114,8 +114,8 @@
     <string name="hint_enter_probe_timeout">Введите таймаут пробы</string>
     <string name="strategy_selection_info_title">Информация</string>
     <string name="strategy_selection_info_msg">"В этом разделе настроек приложения представлен перебор стратегий\n Подбор проходит среди скачанных стратегий, поэтому заранее скачайте из репозитория или добавьте из файловой системы интересующие вас стратегии для сравнения. \n Перед началом так же выберете один или несколько листов доменов на вкладке \"Листы\", затем нажмите на \"Начать подбор\". Не используйте для перебора списки с большим количеством доменов."</string>
-    <string name="selection_no_hosts_title">Нет активных листов</string>
-    <string name="selection_no_hosts_message">Не обнаружено активных списков хостов, включите один или несколько, иначе подбор не сработает</string>
+    <string name="selection_no_hosts_title">Нет включенных листов/стратегий</string>
+    <string name="selection_no_hosts_message">Не обнаружено активных списков хостов, либо доступных стратегий. Включите один или несколько, или скачайте стратегии для проверки, иначе подбор не сработает</string>
     <string name="selection_available_domains">Доступные домены</string>
     <string name="no_storage_permission_message">Нет разрешения на доступ к файлам</string>
     <string name="reset_settings_title">Сброс настроек</string>

@@ -122,16 +122,20 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     }
     suspend fun performTest() {
         val targets = readActiveListsLines()
+        var stopTest : Boolean = false;
         for (index in strategyStates.indices) {
             val current = strategyStates[index]
+            if (stopTest) break
             strategyStates[index] = current.copy(status = StrategyTestingStatus.Testing)
             enableStrategy(current.path, prefs)
             if (prefs.getBoolean("use_module", false)) {
                 getStatus { if (it) stopService { error ->
                     _errorFlow.value = error
+                    if (error.isNotEmpty()) stopTest = true
                 } }
                 startService { error ->
                     _errorFlow.value = error
+                    if (error.isNotEmpty()) stopTest = true
                 }
                 try {
                     val progress = countReachable(index, targets)
@@ -143,6 +147,7 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
                 } finally {
                     stopService { error ->
                         _errorFlow.value = error
+                        if (error.isNotEmpty()) stopTest = true
                     }
                     disableStrategy(current.path, prefs)
                 }
@@ -188,8 +193,8 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun checkHosts() {
-        if (getActiveLists(prefs).isEmpty()) noHostsCard.value = true
-        Log.d("getActiveLists.isEmpty", getActiveLists(prefs).isEmpty().toString())
+        if (getActiveLists(prefs).isEmpty() || getAllStrategies(prefs).isEmpty()) noHostsCard.value = true
+        Log.d("getActiveLists.isEmpty || getAllStrategies.isEmpty", getActiveLists(prefs).isEmpty().toString())
     }
     fun startVpn() {
         ContextCompat.startForegroundService(context, Intent(context, ByeDpiVpnService::class.java).apply { action = "START_VPN" })
