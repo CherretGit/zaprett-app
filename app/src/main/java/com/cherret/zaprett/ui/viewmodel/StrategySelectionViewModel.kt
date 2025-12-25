@@ -122,7 +122,7 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     }
     suspend fun performTest() {
         val targets = readActiveListsLines()
-        var stopTest : Boolean = false;
+        var stopTest = false
         for (index in strategyStates.indices) {
             val current = strategyStates[index]
             if (stopTest) break
@@ -133,9 +133,11 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
                     _errorFlow.value = error
                     if (error.isNotEmpty()) stopTest = true
                 } }
-                startService { error ->
-                    _errorFlow.value = error
-                    if (error.isNotEmpty()) stopTest = true
+                getStatus {
+                    if (!it) startService { error ->
+                        _errorFlow.value = error
+                        if (error.isNotEmpty()) stopTest = true
+                    }
                 }
                 try {
                     val progress = countReachable(index, targets)
