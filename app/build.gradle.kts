@@ -14,10 +14,10 @@ android {
 
     defaultConfig {
         applicationId = "com.cherret.zaprett"
-        minSdk = 29
+        minSdk = 28
         targetSdk = 35
-        versionCode = 25
-        versionName = "2.13"
+        versionCode = 26
+        versionName = "2.14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
