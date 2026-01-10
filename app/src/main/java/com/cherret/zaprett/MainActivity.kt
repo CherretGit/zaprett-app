@@ -41,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -210,7 +209,7 @@ class MainActivity : ComponentActivity() {
             NavHost(
                 navController,
                 startDestination = Screen.home.route,
-                Modifier.padding(top = innerPadding.calculateTopPadding(), bottom = 80.dp)
+                Modifier.padding(innerPadding)
             ) {
                 composable(Screen.home.route) { HomeScreen(viewModel = viewModel,vpnPermissionLauncher) }
                 composable(Screen.hosts.route) { HostsScreen(navController) }
