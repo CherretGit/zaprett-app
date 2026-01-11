@@ -17,6 +17,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -28,6 +29,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -209,7 +211,7 @@ class MainActivity : ComponentActivity() {
             NavHost(
                 navController,
                 startDestination = Screen.home.route,
-                Modifier.padding(innerPadding)
+                Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
             ) {
                 composable(Screen.home.route) { HomeScreen(viewModel = viewModel,vpnPermissionLauncher) }
                 composable(Screen.hosts.route) { HostsScreen(navController) }
