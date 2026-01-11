@@ -18,5 +18,5 @@ cmake = "0.1.49"
 [profile.release]
 opt-level = "z"
 lto = true
-strip = true
+strip = "symbols"
 codegen-units = 1
