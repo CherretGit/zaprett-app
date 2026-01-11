@@ -4,8 +4,6 @@ import android.app.Application
 import com.cherret.zaprett.utils.RepoItemInfo
 import com.cherret.zaprett.utils.getAllExcludeIpsets
 import com.cherret.zaprett.utils.getAllIpsets
-import com.cherret.zaprett.utils.getAllLists
-import com.cherret.zaprett.utils.getHostList
 import com.cherret.zaprett.utils.getHostListMode
 import com.cherret.zaprett.utils.getIpsetList
 

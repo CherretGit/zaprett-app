@@ -63,7 +63,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
 import com.cherret.zaprett.ui.component.ListSwitchItem
-import com.cherret.zaprett.ui.viewmodel.HostsViewModel
 import com.cherret.zaprett.ui.viewmodel.IpsetViewModel
 import com.cherret.zaprett.utils.getHostListMode
 

@@ -21,7 +21,6 @@ import com.cherret.zaprett.utils.getActiveExcludeIpsets
 import com.cherret.zaprett.utils.getActiveExcludeLists
 import com.cherret.zaprett.utils.getActiveIpsets
 import com.cherret.zaprett.utils.getActiveLists
-import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getAppsListMode
 import com.cherret.zaprett.utils.getHostListMode
 import kotlinx.coroutines.CoroutineScope

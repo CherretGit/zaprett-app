@@ -43,7 +43,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,23 +74,16 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
-import com.cherret.zaprett.byedpi.ByeDpiVpnService
+import com.cherret.zaprett.data.AppListType
+import com.cherret.zaprett.data.Setting
+import com.cherret.zaprett.ui.component.InfoDialog
 import com.cherret.zaprett.ui.component.SettingsActionItem
 import com.cherret.zaprett.ui.component.SettingsItem
 import com.cherret.zaprett.ui.component.SettingsSection
-import com.cherret.zaprett.data.AppListType
-import com.cherret.zaprett.data.ServiceStatus
-import com.cherret.zaprett.ui.component.InfoDialog
-import com.cherret.zaprett.data.Setting
 import com.cherret.zaprett.ui.component.TextDialog
 import com.cherret.zaprett.ui.viewmodel.SettingsViewModel
-import com.cherret.zaprett.utils.checkModuleInstallation
-import com.cherret.zaprett.utils.checkRoot
 import com.cherret.zaprett.utils.getAppsListMode
-import com.cherret.zaprett.utils.getStartOnBoot
 import com.cherret.zaprett.utils.setAppsListMode
-import com.cherret.zaprett.utils.setStartOnBoot
-import com.cherret.zaprett.utils.stopService
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

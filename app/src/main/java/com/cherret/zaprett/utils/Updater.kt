@@ -1,16 +1,11 @@
 package com.cherret.zaprett.utils
 
-import android.annotation.SuppressLint
 import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import com.cherret.zaprett.BuildConfig
