@@ -1,3 +1,4 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.cherret.zaprett
 
 import android.Manifest
@@ -7,7 +8,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +16,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.MultipleStop
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SettingsInputComposite
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -207,7 +209,7 @@ class MainActivity : ComponentActivity() {
             NavHost(
                 navController,
                 startDestination = Screen.home.route,
-                Modifier.padding(innerPadding)
+                Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
             ) {
                 composable(Screen.home.route) { HomeScreen(viewModel = viewModel,vpnPermissionLauncher) }
                 composable(Screen.hosts.route) { HostsScreen(navController) }

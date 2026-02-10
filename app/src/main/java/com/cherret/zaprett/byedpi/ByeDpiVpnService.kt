@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.VpnService
+import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -20,7 +21,6 @@ import com.cherret.zaprett.utils.getActiveExcludeIpsets
 import com.cherret.zaprett.utils.getActiveExcludeLists
 import com.cherret.zaprett.utils.getActiveIpsets
 import com.cherret.zaprett.utils.getActiveLists
-import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getAppsListMode
 import com.cherret.zaprett.utils.getHostListMode
 import kotlinx.coroutines.CoroutineScope
@@ -130,7 +130,9 @@ class ByeDpiVpnService : VpnService() {
             .addAddress("10.10.10.10", 32)
             .addDnsServer(dns)
             .addRoute("0.0.0.0", 0)
-            .setMetered(false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            builder.setMetered(false)
+        }
         if (ipv6) {
             builder.addAddress("fd00::1", 128)
                 .addRoute("::", 0)

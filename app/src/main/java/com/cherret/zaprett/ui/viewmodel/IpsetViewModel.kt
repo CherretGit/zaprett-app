@@ -4,11 +4,8 @@ import android.app.Application
 import android.content.Context
 import androidx.compose.material3.SnackbarHostState
 import com.cherret.zaprett.utils.disableIpset
-import com.cherret.zaprett.utils.disableList
 import com.cherret.zaprett.utils.enableIpset
-import com.cherret.zaprett.utils.enableList
 import com.cherret.zaprett.utils.getActiveExcludeIpsets
-import com.cherret.zaprett.utils.getActiveExcludeLists
 import com.cherret.zaprett.utils.getActiveIpsets
 import com.cherret.zaprett.utils.getAllExcludeIpsets
 import com.cherret.zaprett.utils.getAllIpsets

@@ -1,11 +1,11 @@
 use android_logger::Config;
+use core::ffi::{c_char, c_int};
 use jni::JNIEnv;
 use jni::objects::{JClass, JObjectArray, JString};
 use jni::sys::jint;
-use libc::{SHUT_RDWR, shutdown};
-use log::{LevelFilter, info};
+use log::{LevelFilter, error, info};
+use nix::sys::socket::{Shutdown, shutdown};
 use std::ffi::CString;
-use std::os::raw::c_char;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static PROXY_RUNNING: AtomicBool = AtomicBool::new(false);
@@ -15,7 +15,7 @@ unsafe extern "C" {
     static mut server_fd: i32;
     static mut optind: i32;
     static mut optreset: i32;
-    fn main(argc: libc::c_int, argv: *const *const c_char) -> libc::c_int;
+    fn main(argc: c_int, argv: *const *const c_char) -> c_int;
     fn clear_params();
 }
 
@@ -65,10 +65,19 @@ pub unsafe extern "system" fn Java_com_cherret_zaprett_byedpi_NativeBridge_jniSt
 ) -> jint {
     init_logger();
     if !PROXY_RUNNING.load(Ordering::SeqCst) {
-        info!("failed to stop proxy");
+        info!("proxy already stopped");
         return -1;
     }
     info!("stopping proxy");
-    let ret = unsafe { shutdown(server_fd, SHUT_RDWR) };
-    ret as jint
+    let ret = unsafe { shutdown(server_fd, Shutdown::Both) };
+    match ret {
+        Ok(_) => {
+            info!("proxy stopped successfully");
+            0
+        }
+        Err(e) => {
+            error!("failed to stop proxy {}", e);
+            -1
+        }
+    }
 }

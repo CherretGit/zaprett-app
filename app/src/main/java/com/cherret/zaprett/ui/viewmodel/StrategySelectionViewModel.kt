@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.data.StrategyCheckResult
@@ -16,7 +15,6 @@ import com.cherret.zaprett.data.StrategyTestingStatus
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveLists
-import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getAllStrategies
 import com.cherret.zaprett.utils.getStatus
 import com.cherret.zaprett.utils.startService
@@ -27,7 +25,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -122,7 +119,7 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     }
     suspend fun performTest() {
         val targets = readActiveListsLines()
-        var stopTest : Boolean = false;
+        var stopTest = false
         for (index in strategyStates.indices) {
             val current = strategyStates[index]
             if (stopTest) break
@@ -133,9 +130,11 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
                     _errorFlow.value = error
                     if (error.isNotEmpty()) stopTest = true
                 } }
-                startService { error ->
-                    _errorFlow.value = error
-                    if (error.isNotEmpty()) stopTest = true
+                getStatus {
+                    if (!it) startService { error ->
+                        _errorFlow.value = error
+                        if (error.isNotEmpty()) stopTest = true
+                    }
                 }
                 try {
                     val progress = countReachable(index, targets)
