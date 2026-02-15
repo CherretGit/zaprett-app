@@ -76,6 +76,7 @@
     <string name="qs_stopping">Stopping…</string>
     <string name="module_version">Module version</string>
     <string name="nfqws_version">nfqws version</string>
+    <string name="nfqws2_version">nfwqs2 version</string>
     <string name="ciadpi_version">ciadpi version</string>
     <string name="unknown_text">unknown</string>
     <string name="service_mode">Service mode</string>

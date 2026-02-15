@@ -6,77 +6,101 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.cherret.zaprett.data.ItemType
-import kotlinx.serialization.Serializable
+import com.cherret.zaprett.data.DependencyEntry
+import com.cherret.zaprett.data.RepoIndex
+import com.cherret.zaprett.data.RepoItemFull
+import com.cherret.zaprett.data.RepoManifest
+import com.cherret.zaprett.data.ResolveResult
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okio.IOException
 import java.io.File
 import java.security.MessageDigest
 
-private val client = OkHttpClient()
+private val client = HttpClient(OkHttp)
+
 private val json = Json { ignoreUnknownKeys = true }
 
-fun getHostList(sharedPreferences: SharedPreferences, callback: (Result<List<RepoItemInfo>>) -> Unit) {
-    getRepo(
-        sharedPreferences.getString(
-            "hosts_repo_url",
-            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
-        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json",
-        callback
-    )
+//suspend fun getHostList(sharedPreferences: SharedPreferences): Flow<List<RepoManifest>> {
+//    return getRepo(
+//        sharedPreferences.getString(
+//            "hosts_repo_url",
+//            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
+//        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
+//    )
+//}
+//
+//suspend fun getIpsetList(sharedPreferences: SharedPreferences): Flow<List<RepoManifest>> {
+//    return getRepo(
+//        sharedPreferences.getString(
+//            "ipset_repo_url",
+//            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json"
+//        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json"
+//    )
+//}
+//
+//suspend fun getStrategiesList(sharedPreferences: SharedPreferences): Flow<List<RepoManifest>> {
+//    return getRepo(
+//        sharedPreferences.getString(
+//            "strategies_repo_url",
+//            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json"
+//        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json",
+//    )
+//}
+
+fun getRepo(url: String): Flow<List<RepoItemFull>> = flow {
+    val index = client.get(url).bodyAsText()
+    val indexJson = json.decodeFromString<RepoIndex>(index)
+    val manifest = coroutineScope {
+        indexJson.items.map { item ->
+            async {
+                val manifest = json.decodeFromString<RepoManifest>(client.get(item.manifest).bodyAsText())
+                RepoItemFull(item, manifest)
+            }
+        }.awaitAll()
+    }
+    emit(manifest)
 }
 
-fun getIpsetList(sharedPreferences: SharedPreferences, callback: (Result<List<RepoItemInfo>>) -> Unit) {
-    getRepo(
-        sharedPreferences.getString(
-            "ipset_repo_url",
-            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json"
-        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json",
-        callback
-    )
-}
-
-fun getStrategiesList(sharedPreferences: SharedPreferences, callback: (Result<List<RepoItemInfo>>) -> Unit) {
-    getRepo(
-        sharedPreferences.getString(
-            "strategies_repo_url",
-            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json"
-        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json",
-        callback
-    )
-}
-
-fun getRepo(url: String, callback: (Result<List<RepoItemInfo>>) -> Unit) {
-    val request = Request.Builder().url(url).build()
-    client.newCall(request).enqueue(object : Callback {
-        override fun onFailure(call: Call, e: IOException) {
-            e.printStackTrace()
-            callback(Result.failure(e))
-        }
-        override fun onResponse(call: Call, response: Response) {
-            response.use {
-                if (!response.isSuccessful) {
-                    callback(Result.failure(IOException("Unexpected HTTP code ${response.code}")))
-                    return
-                }
-                val jsonString = response.body.string()
-                val result = runCatching {
-                    json.decodeFromString<List<RepoItemInfo>>(jsonString)
-                }
-                callback(result)
+fun resolveDependencies(
+    items: List<RepoItemFull>,
+    resolved: MutableSet<String> = mutableSetOf(),
+    depsMap: MutableMap<String, DependencyEntry> = mutableMapOf()
+): Flow<ResolveResult> = flow {
+    suspend fun collect(manifest: RepoManifest, rootName: String) {
+        manifest.dependencies.forEach { depUrl ->
+            val dep = json.decodeFromString<RepoManifest>(
+                client.get(depUrl).bodyAsText()
+            )
+            val entry = depsMap.getOrPut(dep.name) {
+                DependencyEntry(dep)
+            }
+            entry.dependencies += rootName
+            if (resolved.add(dep.name)) {
+                collect(dep, rootName)
             }
         }
-    })
+    }
+    items.forEach { item ->
+        collect(item.manifest, item.index.name)
+    }
+    emit(
+        ResolveResult(
+            roots = items,
+            dependencies = depsMap.values.toList()
+        )
+    )
 }
 
 fun registerDownloadListener(context: Context, downloadId: Long, onDownloaded: (Uri) -> Unit, onError: (String) -> Unit) {// AI Generated
@@ -141,13 +165,3 @@ fun getFileSha256(file: File): String {
     }
     return digest.digest().joinToString("") { "%02x".format(it) }
 }
-
-@Serializable
-data class RepoItemInfo(
-    val name: String,
-    val author: String,
-    val description: String,
-    val type: ItemType,
-    val hash: String,
-    val url: String
-)

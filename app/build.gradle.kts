@@ -101,6 +101,7 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.compose.icons)
     implementation(libs.libsu.core)
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.okhttp)
     implementation(libs.serialization.json)
     implementation(platform(libs.firebase.bom))

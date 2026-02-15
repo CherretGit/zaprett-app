@@ -16,7 +16,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.Card
@@ -26,11 +28,13 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,10 +49,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.DependencyUI
+import com.cherret.zaprett.data.RepoItemUI
 import com.cherret.zaprett.data.StrategyCheckResult
 import com.cherret.zaprett.data.StrategyTestingStatus
 import com.cherret.zaprett.ui.viewmodel.BaseRepoViewModel
-import com.cherret.zaprett.utils.RepoItemInfo
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveStrategy
@@ -70,7 +75,27 @@ fun ListSwitchItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) 
                 .padding(16.dp)
         ) {
             Text(text = item, modifier = Modifier.weight(1f))
-            Switch(checked = isChecked, onCheckedChange = onCheckedChange)
+            Switch(
+                checked = isChecked,
+                onCheckedChange = onCheckedChange,
+                thumbContent = if (isChecked) {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(SwitchDefaults.IconSize)
+                        )
+                    }
+                } else {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(SwitchDefaults.IconSize)
+                        )
+                    }
+                }
+            )
         }
         HorizontalDivider(thickness = Dp.Hairline)
         Row(
@@ -94,7 +119,8 @@ fun ListSwitchItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) 
 
 @Composable
 fun RepoItem(
-    item: RepoItemInfo,
+    item: RepoItemUI,
+    dependencies: List<DependencyUI>,
     viewModel: BaseRepoViewModel,
     isInstalling: Map<String, Boolean>,
     isUpdateInstalling: Map<String, Boolean>,
@@ -186,6 +212,13 @@ fun RepoItem(
                         }
                     )
                 }
+                IconButton(onClick = {}) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null
+                    )
+                }
+//                Text(dependencies)
             }
         }
     }

@@ -51,7 +51,8 @@ import java.io.IOException
 @Composable
 fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
     val context = LocalContext.current
-    val hostLists = viewModel.hostLists.value
+    val hostLists = viewModel.hostLists
+    val dependencies = viewModel.dependencyList.collectAsState()
     val isUpdate = viewModel.isUpdate
     val isInstalling = viewModel.isInstalling
     val isUpdateInstalling = viewModel.isUpdateInstalling
@@ -200,6 +201,7 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
                         items(hostLists) { item ->
                             RepoItem(
                                 item = item,
+                                dependencies = dependencies.value,
                                 viewModel = viewModel,
                                 isInstalling = isInstalling,
                                 isUpdateInstalling = isUpdateInstalling,

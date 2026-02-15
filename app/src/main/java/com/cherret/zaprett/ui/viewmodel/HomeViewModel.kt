@@ -21,9 +21,10 @@ import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.data.ServiceStatusUI
 import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getActiveStrategy
-import com.cherret.zaprett.utils.getBinVersion
 import com.cherret.zaprett.utils.getChangelog
 import com.cherret.zaprett.utils.getModuleVersion
+import com.cherret.zaprett.utils.getNfqws2Version
+import com.cherret.zaprett.utils.getNfqwsVersion
 import com.cherret.zaprett.utils.getStatus
 import com.cherret.zaprett.utils.getUpdate
 import com.cherret.zaprett.utils.installApk
@@ -53,6 +54,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     var nfqwsVer = mutableStateOf(context.getString(R.string.unknown_text))
         private set
+
+    var nfqws2Ver = mutableStateOf(context.getString(R.string.unknown_text))
 
     var byedpiVer = mutableStateOf("0.17.3")
         private set
@@ -220,8 +223,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             getModuleVersion { value ->
                 moduleVer.value = value
             }
-            getBinVersion { value ->
+            getNfqwsVersion { value ->
                 nfqwsVer.value = value
+            }
+            getNfqws2Version { value ->
+                nfqws2Ver.value = value
             }
             serviceMode.intValue = R.string.service_mode_nfqws;
         }

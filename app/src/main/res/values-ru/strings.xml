@@ -74,6 +74,7 @@
     <string name="qs_stopping">Остановка…</string>
     <string name="module_version">Версия модуля</string>
     <string name="nfqws_version">Версия nfqws</string>
+    <string name="nfqws2_version">Версия nfqws2</string>
     <string name="ciadpi_version">Версия ciadpi</string>
     <string name="unknown_text">неизвестно</string>
     <string name="service_mode">Режим работы</string>

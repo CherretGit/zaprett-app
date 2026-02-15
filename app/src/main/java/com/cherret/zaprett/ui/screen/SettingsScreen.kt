@@ -271,7 +271,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     }
     if (showIpsetRepoUrlDialog.value) {
         TextDialog(stringResource(R.string.btn_repository_url_ipsets), stringResource(R.string.hint_enter_repository_url_ipsets), textDialogValue.value, onConfirm = {
-            editor.putString("ipsets_repo_url", it).apply()
+            editor.putString("ipset_repo_url", it).apply()
         }, onDismiss = { showIpsetRepoUrlDialog.value = false })
     }
 

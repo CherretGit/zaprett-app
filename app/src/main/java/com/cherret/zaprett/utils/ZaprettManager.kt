@@ -104,14 +104,20 @@ fun restartService(callback: (String) -> Unit) {
 }
 
 fun getModuleVersion(callback: (String) -> Unit) {
-    Shell.cmd("zaprett module-version").submit { result ->
-        if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
+    Shell.cmd("zaprett --version").submit { result ->
+        callback(result.out.first())
     }
 }
 
-fun getBinVersion(callback: (String) -> Unit) {
-    Shell.cmd("zaprett binary-version").submit { result ->
-        if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
+fun getNfqwsVersion(callback: (String) -> Unit) {
+    Shell.cmd("zaprett nfqws-version").submit { result ->
+        callback(result.out.first())
+    }
+}
+
+fun getNfqws2Version(callback: (String) -> Unit) {
+    Shell.cmd("zaprett nfqws2-version").submit { result ->
+        callback(result.out.first())
     }
 }
 
