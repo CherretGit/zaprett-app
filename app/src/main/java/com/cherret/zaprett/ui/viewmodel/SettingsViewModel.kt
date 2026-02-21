@@ -136,11 +136,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                                         action = "STOP_VPN"
                                     })
                                 }
-                                editor.remove("lists").apply()
-                                editor.remove("active_strategy").apply()
-                                editor.remove("applist").apply()
-                                editor.remove("whitelist").apply()
-                                editor.remove("blacklist").apply()
                                 _serviceType.value = serviceType
                             } else {
                                 openNoModuleDialog.value = true
