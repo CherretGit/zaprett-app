@@ -15,12 +15,15 @@ import com.cherret.zaprett.R
 import com.cherret.zaprett.data.DependencyEntry
 import com.cherret.zaprett.data.DependencyUI
 import com.cherret.zaprett.data.ItemType
+import com.cherret.zaprett.data.ListType
 import com.cherret.zaprett.data.RepoItemFull
 import com.cherret.zaprett.data.RepoItemUI
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.utils.checkStoragePermission
 import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getHostListMode
 import com.cherret.zaprett.utils.getRepo
+import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getZaprettPath
 import com.cherret.zaprett.utils.registerDownloadListener
 import com.cherret.zaprett.utils.resolveDependencies
@@ -78,16 +81,17 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
             getRepoList()
                 .onStart { isRefreshing.value = true }
                 .flatMapConcat { list ->
-                    val useModule = sharedPreferences.getBoolean("use_module", false)
+                    val serviceType = getServiceType(sharedPreferences)
                     val listType = getHostListMode(sharedPreferences)
                     val filteredList = list.filter { item ->
                         when (item.index.type) {
-                            ItemType.list -> listType == "whitelist"
-                            ItemType.list_exclude -> listType == "blacklist"
-                            ItemType.ipset -> listType == "whitelist"
-                            ItemType.ipset_exclude -> listType == "blacklist"
-                            ItemType.nfqws -> useModule
-                            ItemType.byedpi -> !useModule
+                            ItemType.list -> listType == ListType.whitelist
+                            ItemType.list_exclude -> listType == ListType.blacklist
+                            ItemType.ipset -> listType == ListType.whitelist
+                            ItemType.ipset_exclude -> listType == ListType.blacklist
+                            ItemType.nfqws -> serviceType == ServiceType.nfqws
+                            ItemType.nfqws2 -> serviceType == ServiceType.nfqws2
+                            ItemType.byedpi -> serviceType == ServiceType.byedpi
                         }
                     }
                     resolveDependencies(filteredList.map { it })
@@ -142,6 +146,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                         val targetDir = when (index.type) {
                             ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
                             ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
+                            ItemType.nfqws2 -> File(getZaprettPath(), "strategies/nfqws2")
                             ItemType.list -> File(getZaprettPath(), "lists/include")
                             ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
                             ItemType.ipset -> File(getZaprettPath(), "ipset/include")
@@ -183,6 +188,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     val targetDir = when (index.type) {
                         ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
                         ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
+                        ItemType.nfqws2 -> File(getZaprettPath(), "strategies/nfqws2")
                         ItemType.list -> File(getZaprettPath(), "lists/include")
                         ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
                         ItemType.ipset -> File(getZaprettPath(), "ipset/include")

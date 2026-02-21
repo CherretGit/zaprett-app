@@ -19,12 +19,14 @@ import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.data.ServiceStatusUI
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.getChangelog
 import com.cherret.zaprett.utils.getModuleVersion
 import com.cherret.zaprett.utils.getNfqws2Version
 import com.cherret.zaprett.utils.getNfqwsVersion
+import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getStatus
 import com.cherret.zaprett.utils.getUpdate
 import com.cherret.zaprett.utils.installApk
@@ -90,8 +92,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun updateServiceStatus(useModule: Boolean) {
-        if (useModule) {
+    private fun updateServiceStatus(serviceType: ServiceType) {
+        if (serviceType != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 _serviceStatus.value = if (isEnabled) {
                     ServiceStatusUI(R.string.status_enabled, Icons.Filled.CheckCircle)
@@ -111,14 +113,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun checkServiceStatus() {
         val updateOnBoot = prefs.getBoolean("update_on_boot", true)
         if (updateOnBoot) {
-            val useModule = prefs.getBoolean("use_module", false)
-            updateServiceStatus(useModule)
+            val serviceType = getServiceType(prefs)
+            updateServiceStatus(serviceType)
         }
     }
 
     fun onCardClick() {
-        val useModule = prefs.getBoolean("use_module", false)
-        updateServiceStatus(useModule)
+        val serviceType = getServiceType(prefs)
+        updateServiceStatus(serviceType)
     }
 
     fun startVpn() {
@@ -126,7 +128,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onBtnStartService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        if (prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 scope.launch {
                     snackbarHostState.showSnackbar(
@@ -169,7 +171,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onBtnStopService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        if (prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 scope.launch {
                     snackbarHostState.showSnackbar(
@@ -203,7 +205,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onBtnRestart(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        if (prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) != ServiceType.byedpi) {
             restartService { error ->
                 _errorFlow.value = error
                 onCardClick()
@@ -219,7 +221,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun checkModuleInfo() {
-        if (prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) != ServiceType.byedpi) {
             getModuleVersion { value ->
                 moduleVer.value = value
             }

@@ -75,8 +75,11 @@ import coil3.compose.AsyncImage
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.AppListType
+import com.cherret.zaprett.data.DropdownItem
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.Setting
 import com.cherret.zaprett.ui.component.InfoDialog
+import com.cherret.zaprett.ui.component.SettingDropDown
 import com.cherret.zaprett.ui.component.SettingsActionItem
 import com.cherret.zaprett.ui.component.SettingsItem
 import com.cherret.zaprett.ui.component.SettingsSection
@@ -91,7 +94,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     val context = LocalContext.current
     val sharedPreferences = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val editor = remember { sharedPreferences.edit() }
-    val useModule = viewModel.useModule.collectAsState()
+    val serviceType = viewModel.serviceType.collectAsState()
     val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", true)) }
     val autoRestart = viewModel.autoRestart.collectAsState()
     val autoUpdate = remember { mutableStateOf(sharedPreferences.getBoolean("auto_update", BuildConfig.auto_update)) }
@@ -115,16 +118,44 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
 
     val settingsList = listOf(
         Setting.Section(stringResource(R.string.general_section)),
-        Setting.Toggle(
+        Setting.Dropdown(
             title = stringResource(R.string.btn_use_root),
-            checked = useModule.value,
-            onToggle = { isChecked ->
-                viewModel.useModule(
-                    context = context,
-                    checked = isChecked,
-                    openNoRootDialog = openNoRootDialog,
-                    openNoModuleDialog = openNoModuleDialog)
-            }
+            selected = serviceType.value.name,
+            items = listOf(
+                DropdownItem(
+                    title = stringResource(R.string.service_mode_ciadpi),
+                    onClick = {
+                        viewModel.changeServiceType(
+                            context = context,
+                            serviceType = ServiceType.byedpi,
+                            openNoRootDialog = openNoRootDialog,
+                            openNoModuleDialog = openNoRootDialog
+                        )
+                    }
+                ),
+                DropdownItem(
+                    title = stringResource(R.string.service_mode_nfqws),
+                    onClick = {
+                        viewModel.changeServiceType(
+                            context = context,
+                            serviceType = ServiceType.nfqws,
+                            openNoRootDialog = openNoRootDialog,
+                            openNoModuleDialog = openNoRootDialog
+                        )
+                    }
+                ),
+                DropdownItem(
+                    title = stringResource(R.string.service_mode_nfqws2),
+                    onClick = {
+                        viewModel.changeServiceType(
+                            context = context,
+                            serviceType = ServiceType.nfqws2,
+                            openNoRootDialog = openNoRootDialog,
+                            openNoModuleDialog = openNoRootDialog
+                        )
+                    }
+                )
+            )
         ),
         Setting.Toggle(
             title = stringResource(R.string.btn_update_on_boot),
@@ -394,6 +425,13 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
                             SettingsActionItem(
                                 title = setting.title,
                                 setting.onClick
+                            )
+                        }
+                        is Setting.Dropdown -> {
+                            SettingDropDown(
+                                title = setting.title,
+                                selected = setting.selected,
+                                items = setting.items
                             )
                         }
                         is Setting.Section -> {

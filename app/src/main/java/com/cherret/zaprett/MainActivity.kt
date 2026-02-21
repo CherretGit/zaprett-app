@@ -49,6 +49,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.ui.screen.DebugScreen
 import com.cherret.zaprett.ui.screen.HomeScreen
 import com.cherret.zaprett.ui.screen.HostsScreen
@@ -64,6 +65,8 @@ import com.cherret.zaprett.ui.viewmodel.IpsetRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.StrategyRepoViewModel
 import com.cherret.zaprett.utils.checkModuleInstallation
 import com.cherret.zaprett.utils.checkStoragePermission
+import com.cherret.zaprett.utils.getServiceType
+import com.cherret.zaprett.utils.setServiceType
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
@@ -97,17 +100,10 @@ class MainActivity : ComponentActivity() {
             ZaprettTheme {
                 val sharedPreferences = remember { getSharedPreferences("settings", MODE_PRIVATE) }
                 LaunchedEffect(Unit) {
-                    if (sharedPreferences.getBoolean("use_module", false)) {
+                    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
                         checkModuleInstallation { result ->
-                            if (getSharedPreferences(
-                                    "settings",
-                                    Context.MODE_PRIVATE
-                                ).getBoolean("use_module", false) && !result
-                            ) sharedPreferences.edit {
-                                putBoolean(
-                                    "use_module",
-                                    false
-                                )
+                            if ((getServiceType(sharedPreferences) != ServiceType.byedpi) && !result) sharedPreferences.edit {
+                                setServiceType(sharedPreferences, ServiceType.byedpi)
                             }
                         }
                     }

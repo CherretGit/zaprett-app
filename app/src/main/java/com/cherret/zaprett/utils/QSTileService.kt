@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
+import com.cherret.zaprett.data.ServiceType
 
 class QSTileService: TileService() {
     private lateinit var prefs: SharedPreferences
@@ -32,7 +33,7 @@ class QSTileService: TileService() {
             qsTile.subtitle = getString(R.string.qs_starting)
             qsTile.state = Tile.STATE_UNAVAILABLE
             qsTile.updateTile()
-            if (prefs.getBoolean("use_module", false)){
+            if (getServiceType(prefs) != ServiceType.byedpi){
                 startService {}
             }
             else {
@@ -43,7 +44,7 @@ class QSTileService: TileService() {
             qsTile.subtitle = getString(R.string.qs_stopping)
             qsTile.state = Tile.STATE_UNAVAILABLE
             qsTile.updateTile()
-            if (prefs.getBoolean("use_module", false)){
+            if (getServiceType(prefs) != ServiceType.byedpi){
                 stopService {}
             }
             else {
@@ -54,7 +55,7 @@ class QSTileService: TileService() {
     }
 
     private fun updateStatus() {
-        if (prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) != ServiceType.byedpi) {
             getStatus {
                 if (it) {
                     qsTile.label = getString(R.string.qs_name)

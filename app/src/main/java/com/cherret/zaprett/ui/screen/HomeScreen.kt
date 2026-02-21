@@ -77,7 +77,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ServiceStatusUI
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
+import com.cherret.zaprett.utils.getServiceType
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.CoroutineScope
 
@@ -281,7 +283,7 @@ private fun ServiceControlButtons(viewModel: HomeViewModel, sharedPreferences: S
         )
         Text(stringResource(R.string.btn_stop_service))
     }
-    if (sharedPreferences.getBoolean("use_module", false)) {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
         FilledTonalButton(
             onClick = { viewModel.onBtnRestart(snackbarHostState, scope) },
             modifier = Modifier

@@ -6,12 +6,16 @@ import android.content.SharedPreferences
 import androidx.compose.material3.SnackbarHostState
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveByeDPIStrategy
+import com.cherret.zaprett.utils.getActiveNfqws2Strategy
 import com.cherret.zaprett.utils.getActiveNfqwsStrategy
 import com.cherret.zaprett.utils.getAllByeDPIStrategies
+import com.cherret.zaprett.utils.getAllNfqws2Strategies
 import com.cherret.zaprett.utils.getAllNfqwsStrategies
+import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getStatus
 import kotlinx.coroutines.CoroutineScope
 import java.io.File
@@ -19,12 +23,11 @@ import java.io.File
 class StrategyViewModel(application: Application): BaseListsViewModel(application) {
     private val sharedPreferences = application.getSharedPreferences("settings", Context.MODE_PRIVATE)
     private val strategyProvider: StrategyProvider
-        get() = if (sharedPreferences.getBoolean("use_module", false)) {
-            NfqwsStrategyProvider()
-        } else {
-            ByeDPIStrategyProvider(sharedPreferences)
+        get() = when(getServiceType(sharedPreferences)) {
+            ServiceType.nfqws -> NfqwsStrategyProvider()
+            ServiceType.nfqws2 -> Nfqws2StrategyProvider()
+            ServiceType.byedpi -> ByeDPIStrategyProvider(sharedPreferences)
         }
-
     override fun loadAllItems(): Array<String> = strategyProvider.getAll()
     override fun loadActiveItems(): Array<String> = strategyProvider.getActive()
 
@@ -33,7 +36,7 @@ class StrategyViewModel(application: Application): BaseListsViewModel(applicatio
         disableStrategy(item, sharedPreferences)
         val success = File(item).delete()
         if (success) refresh()
-        if (sharedPreferences.getBoolean("use_module", false)) {
+        if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 if (isEnabled && wasChecked) {
                     snackbarHostState.currentSnackbarData?.dismiss()
@@ -62,7 +65,7 @@ class StrategyViewModel(application: Application): BaseListsViewModel(applicatio
             checked[item] = false
             disableStrategy(item, sharedPreferences)
         }
-        if (sharedPreferences.getBoolean("use_module", false)) {
+        if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 if (isEnabled) {
                     snackbarHostState.currentSnackbarData?.dismiss()
@@ -85,6 +88,11 @@ interface StrategyProvider {
 class NfqwsStrategyProvider : StrategyProvider {
     override fun getAll() = getAllNfqwsStrategies()
     override fun getActive() = getActiveNfqwsStrategy()
+}
+
+class Nfqws2StrategyProvider : StrategyProvider {
+    override fun getAll() = getAllNfqws2Strategies()
+    override fun getActive() = getActiveNfqws2Strategy()
 }
 
 class ByeDPIStrategyProvider(private val sharedPreferences: SharedPreferences) : StrategyProvider {

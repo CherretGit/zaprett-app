@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ZaprettConfig(
+    @SerialName("service_type")
+    val serviceType: ServiceType = ServiceType.byedpi,
     @SerialName("active_lists")
     val activeLists: List<String> = emptyList(),
     @SerialName("active_ipsets")
@@ -14,9 +16,11 @@ data class ZaprettConfig(
     @SerialName("active_exclude_ipsets")
     val activeExcludeIpsets: List<String> = emptyList(),
     @SerialName("list_type")
-    val listType: String = "whitelist",
+    val listType: ListType = ListType.whitelist,
     @SerialName("strategy")
     val strategy: String = "",
+    @SerialName("strategy_nfqws2")
+    val strategyNfqws2: String = "",
     @SerialName("app_list")
     val appList: String = "none",
     @SerialName("whitelist")

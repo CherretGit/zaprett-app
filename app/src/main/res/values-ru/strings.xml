@@ -12,9 +12,9 @@
     <string name="btn_update">Обновить</string>
     <string name="btn_dismiss">Отмена</string>
     <string name="text_welcome">Добро пожаловать в zaprett! Это приложение предназначено для обхода цензуры и иных блокировок. Для полноценной работоспособности необходимо установить Magisk модуль.</string>
-    <string name="btn_use_root">Использовать модуль</string>
+    <string name="btn_use_root">Тип сервиса</string>
     <string name="error_root_title">Root не получен</string>
-    <string name="error_root_message">Не получилось получить root доступ. Дайте права root для использования модуля Magisk</string>
+    <string name="error_root_message">Не получилось получить root доступ. Выдайте права root для использования модуля Magisk</string>
     <string name="error_no_module_title">Модуль не установлен</string>
     <string name="error_no_module_message">Magisk модуль zaprett не найден. Пожалуйста, установите его</string>
     <string name="snack_reload">Перезагружаем zaprett…</string>

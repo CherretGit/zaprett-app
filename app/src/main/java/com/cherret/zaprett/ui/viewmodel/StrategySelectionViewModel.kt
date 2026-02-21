@@ -10,12 +10,14 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.StrategyCheckResult
 import com.cherret.zaprett.data.StrategyTestingStatus
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveLists
 import com.cherret.zaprett.utils.getAllStrategies
+import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getStatus
 import com.cherret.zaprett.utils.startService
 import com.cherret.zaprett.utils.stopService
@@ -56,7 +58,7 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
             .callTimeout(prefs.getLong("probe_timeout", 1000L), TimeUnit.MILLISECONDS)
             .followRedirects(true)
             .followSslRedirects(true)
-        if (!prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) == ServiceType.byedpi) {
             val ip = prefs.getString("ip", "127.0.0.1") ?: "127.0.0.1"
             val port = prefs.getString("port", "1080")?.toIntOrNull() ?: 1080
             val proxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(ip, port))
@@ -125,7 +127,7 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
             if (stopTest) break
             strategyStates[index] = current.copy(status = StrategyTestingStatus.Testing)
             enableStrategy(current.path, prefs)
-            if (prefs.getBoolean("use_module", false)) {
+            if (getServiceType(prefs) != ServiceType.byedpi) {
                 getStatus { if (it) stopService { error ->
                     _errorFlow.value = error
                     if (error.isNotEmpty()) stopTest = true

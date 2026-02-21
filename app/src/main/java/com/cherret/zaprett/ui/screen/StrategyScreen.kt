@@ -56,8 +56,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.ui.component.ListSwitchItem
 import com.cherret.zaprett.ui.viewmodel.StrategyViewModel
+import com.cherret.zaprett.utils.getServiceType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +77,11 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
     ) { uri ->
         uri?.let { viewModel.copySelectedFile(
             context,
-            if (sharedPreferences.getBoolean("use_module", false)) "/strategies/nfqws" else "/strategies/byedpi",
+            when(getServiceType(sharedPreferences)) {
+                ServiceType.nfqws -> "/strategies/nfqws"
+                ServiceType.nfqws2 -> "/strategies/nfqws2"
+                ServiceType.byedpi -> "/strategies/byedpi"
+            },
             it
         ) }
     }

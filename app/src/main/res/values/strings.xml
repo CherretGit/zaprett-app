@@ -12,7 +12,7 @@
     <string name="btn_update">Update</string>
     <string name="btn_dismiss">Dismiss</string>
     <string name="text_welcome">Welcome to zaprett! This application is designed to bypass censorship and other blockages. For full functionality you need to install Magisk module.</string>
-    <string name="btn_use_root">Use module</string>
+    <string name="btn_use_root">Service type</string>
     <string name="error_root_title">Can\'t get root</string>
     <string name="error_root_message">Couldn\'t get root access. Give root access to use the Magisk module</string>
     <string name="error_no_module_title">Module is not installed</string>
@@ -81,7 +81,8 @@
     <string name="unknown_text">unknown</string>
     <string name="service_mode">Service mode</string>
     <string name="service_mode_nfqws" translatable="false">nfqws</string>
-    <string name="service_mode_ciadpi" translatable="false">ciadpi</string>
+    <string name="service_mode_nfqws2" translatable="false">nfqws2</string>
+    <string name="service_mode_ciadpi" translatable="false">byedpi</string>
     <string name="qs_not_available">Not available</string>
     <string name="qs_working">Working</string>
     <string name="qs_not_working">Not working</string>
