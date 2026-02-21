@@ -342,13 +342,22 @@ fun enableIpset(path: String, sharedPreferences: SharedPreferences) {
 }
 
 fun enableStrategy(path: String, sharedPreferences: SharedPreferences) {
-    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
-        val config = readConfig()
-        if (config.strategy != path) {
-            writeConfig(config.copy(strategy = path))
+    when(getServiceType(sharedPreferences)) {
+        ServiceType.nfqws -> {
+            val config = readConfig()
+            if (config.strategy != path) {
+                writeConfig(config.copy(strategy = path))
+            }
         }
-    } else {
-        sharedPreferences.edit { putString("active_strategy", path) }
+        ServiceType.nfqws2 -> {
+            val config = readConfig()
+            if (config.strategyNfqws2 != path) {
+                writeConfig(config.copy(strategy = path))
+            }
+        }
+        ServiceType.byedpi -> {
+            sharedPreferences.edit { putString("active_strategy", path)}
+        }
     }
 }
 
@@ -407,13 +416,22 @@ fun disableIpset(path: String, sharedPreferences: SharedPreferences) {
 }
 
 fun disableStrategy(path: String, sharedPreferences: SharedPreferences) {
-    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
-        val config = readConfig()
-        if (config.strategy == path) {
-            writeConfig(config.copy(strategy = ""))
+    when(getServiceType(sharedPreferences)) {
+        ServiceType.nfqws -> {
+            val config = readConfig()
+            if (config.strategy == path) {
+                writeConfig(config.copy(strategy = ""))
+            }
         }
-    } else {
-        sharedPreferences.edit { remove("active_strategy") }
+        ServiceType.nfqws2 -> {
+            val config = readConfig()
+            if (config.strategyNfqws2 == path) {
+                writeConfig(config.copy(strategy = ""))
+            }
+        }
+        ServiceType.byedpi -> {
+            sharedPreferences.edit { remove("active_strategy") }
+        }
     }
 }
 
