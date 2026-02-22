@@ -352,7 +352,7 @@ fun enableStrategy(path: String, sharedPreferences: SharedPreferences) {
         ServiceType.nfqws2 -> {
             val config = readConfig()
             if (config.strategyNfqws2 != path) {
-                writeConfig(config.copy(strategy = path))
+                writeConfig(config.copy(strategyNfqws2 = path))
             }
         }
         ServiceType.byedpi -> {
@@ -426,7 +426,7 @@ fun disableStrategy(path: String, sharedPreferences: SharedPreferences) {
         ServiceType.nfqws2 -> {
             val config = readConfig()
             if (config.strategyNfqws2 == path) {
-                writeConfig(config.copy(strategy = ""))
+                writeConfig(config.copy(strategyNfqws2 = ""))
             }
         }
         ServiceType.byedpi -> {
