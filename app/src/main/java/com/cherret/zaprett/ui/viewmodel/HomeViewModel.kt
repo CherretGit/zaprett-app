@@ -231,7 +231,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             getNfqws2Version { value ->
                 nfqws2Ver.value = value
             }
-            serviceMode.intValue = R.string.service_mode_nfqws;
+            when(getServiceType(prefs)) {
+                ServiceType.nfqws -> serviceMode.intValue = R.string.service_mode_nfqws
+                ServiceType.nfqws2 -> serviceMode.intValue = R.string.service_mode_nfqws2
+                ServiceType.byedpi -> serviceMode.intValue = R.string.service_mode_ciadpi
+            }
         }
     }
 
