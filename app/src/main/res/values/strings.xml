@@ -46,10 +46,8 @@
     <string name="btn_autorestart">Restart service periodically</string>
     <string name="btn_autoupdate">Autoupdate</string>
     <string name="btn_send_firebase_analytics">Send Firebase Analytics</string>
-    <string name="btn_repository_url_lists">Hosts repository URL</string>
-    <string name="hint_enter_repository_url_lists">Enter hosts repository URL</string>
-    <string name="btn_repository_url_strategies">Strategies repository URL</string>
-    <string name="hint_enter_repository_url_strategies">Enter strategies repository URL</string>
+    <string name="btn_repository_url">Repository URL</string>
+    <string name="hint_enter_repository_url">Enter repository URL</string>
     <string name="btn_update_repository_url">Update repository URL</string>
     <string name="hint_enter_update_repository_url">Enter update repository URL</string>
     <string name="btn_ipv6">IPv6</string>
@@ -105,11 +103,8 @@
     <string name="btn_copy_log">Copy log</string>
     <string name="log_copied">Log copied</string>
     <string name="download_error">Occurred a file download error, please report to developers</string>
-    <string name="ipset_repo_url">Ipset repository URL</string>
     <string name="title_ipset" translatable="false">Ipset</string>
     <string name="title_selection">Strategy selection</string>
-    <string name="btn_repository_url_ipsets">Ipsets repository url</string>
-    <string name="hint_enter_repository_url_ipsets">Enter ipsets repository URL</string>
     <string name="strategy_status_waiting">waiting...</string>
     <string name="strategy_status_testing">testing...</string>
     <string name="strategy_status_tested">testing ended</string>

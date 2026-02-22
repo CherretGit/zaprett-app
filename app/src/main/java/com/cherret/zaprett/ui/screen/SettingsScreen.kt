@@ -103,9 +103,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     val openNoRootDialog = remember { mutableStateOf(false) }
     val openNoModuleDialog = remember { mutableStateOf(false) }
     val showAboutDialog = remember { mutableStateOf(false) }
-    val showHostsRepoUrlDialog = remember { mutableStateOf(false) }
-    val showIpsetRepoUrlDialog = remember { mutableStateOf(false) }
-    val showStrategyRepoUrlDialog = remember { mutableStateOf(false) }
+    val showRepoUrlDialog = remember { mutableStateOf(false) }
     val showIPDialog = remember { mutableStateOf(false) }
     val showPortDialog = remember { mutableStateOf(false) }
     val showDNSDialog = remember { mutableStateOf(false) }
@@ -182,24 +180,10 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
             }
         ),
         Setting.Action(
-            title = stringResource(R.string.btn_repository_url_lists),
+            title = stringResource(R.string.btn_repository_url),
             onClick = {
-                textDialogValue.value = sharedPreferences.getString("hosts_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
-                showHostsRepoUrlDialog.value = true
-            }
-        ),
-        Setting.Action(
-            title = stringResource(R.string.ipset_repo_url),
-            onClick = {
-                textDialogValue.value = sharedPreferences.getString("ipset_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json"
-                showIpsetRepoUrlDialog.value = true
-            }
-        ),
-        Setting.Action(
-            title = stringResource(R.string.btn_repository_url_strategies),
-            onClick = {
-                textDialogValue.value = sharedPreferences.getString("strategy_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json"
-                showStrategyRepoUrlDialog.value = true
+                textDialogValue.value = sharedPreferences.getString("repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json"
+                showRepoUrlDialog.value = true
             }
         ),
         Setting.Section(title = stringResource(R.string.shared_section)),
@@ -295,21 +279,10 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
         AboutDialog(navController, onDismiss = { showAboutDialog.value = false })
     }
 
-    if (showHostsRepoUrlDialog.value) {
-        TextDialog(stringResource(R.string.btn_repository_url_lists), stringResource(R.string.hint_enter_repository_url_lists), textDialogValue.value, onConfirm = {
-            editor.putString("hosts_repo_url", it).apply()
-        }, onDismiss = { showHostsRepoUrlDialog.value = false })
-    }
-    if (showIpsetRepoUrlDialog.value) {
-        TextDialog(stringResource(R.string.btn_repository_url_ipsets), stringResource(R.string.hint_enter_repository_url_ipsets), textDialogValue.value, onConfirm = {
-            editor.putString("ipset_repo_url", it).apply()
-        }, onDismiss = { showIpsetRepoUrlDialog.value = false })
-    }
-
-    if (showStrategyRepoUrlDialog.value) {
-        TextDialog(stringResource(R.string.btn_repository_url_strategies), stringResource(R.string.hint_enter_repository_url_strategies), textDialogValue.value, onConfirm = {
-            editor.putString("strategies_repo_url", it).apply()
-        }, onDismiss = { showStrategyRepoUrlDialog.value = false })
+    if (showRepoUrlDialog.value) {
+        TextDialog(stringResource(R.string.btn_repository_url), stringResource(R.string.hint_enter_repository_url), textDialogValue.value, onConfirm = {
+            editor.putString("repo_url", it).apply()
+        }, onDismiss = { showRepoUrlDialog.value = false })
     }
 
     if (showIPDialog.value) {

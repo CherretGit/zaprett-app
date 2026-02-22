@@ -1,6 +1,7 @@
 package com.cherret.zaprett.ui.viewmodel
 
 import android.app.Application
+import com.cherret.zaprett.data.RepoTab
 import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.utils.getAllByeDPIStrategies
 import com.cherret.zaprett.utils.getAllNfqwsStrategies
@@ -13,4 +14,5 @@ class StrategyRepoViewModel(application: Application): BaseRepoViewModel(applica
         } else {
             getAllByeDPIStrategies()
         }
+    override val repoTab = RepoTab.strategies
 }

@@ -45,10 +45,8 @@
     <string name="btn_autorestart">Периодически перезапускать сервис</string>
     <string name="btn_autoupdate">Автообновление</string>
     <string name="btn_send_firebase_analytics">Отправлять аналитику Firebase</string>
-    <string name="btn_repository_url_lists">URL репозитория хостов</string>
-    <string name="hint_enter_repository_url_lists">Введите URL репозитория хостов</string>
-    <string name="btn_repository_url_strategies">URL репозитория стратегий</string>
-    <string name="hint_enter_repository_url_strategies">Введите URL репозитория стратегий</string>
+    <string name="btn_repository_url">URL репозитория</string>
+    <string name="hint_enter_repository_url">Введите URL репозитория</string>
     <string name="btn_update_repository_url">URL репозитория обновлений</string>
     <string name="hint_enter_update_repository_url">Введите URL репозитория обновлений</string>
     <string name="btn_ipv6">IPv6</string>
@@ -100,10 +98,7 @@
     <string name="btn_copy_log">Скопировать лог</string>
     <string name="log_copied">Лог скопирован</string>
     <string name="download_error">Произошла ошибка скачивания, пожалуйста, сообщите о ней разработчикам</string>
-    <string name="ipset_repo_url">URL репозитория ipset</string>
     <string name="title_selection">Подбор стратегии</string>
-    <string name="btn_repository_url_ipsets">URL репозитория ipset</string>
-    <string name="hint_enter_repository_url_ipsets">Введите URL репозитория ipset</string>
     <string name="strategy_status_waiting">ожидание...</string>
     <string name="strategy_status_testing">проверка...</string>
     <string name="strategy_status_tested">проверка завершена</string>

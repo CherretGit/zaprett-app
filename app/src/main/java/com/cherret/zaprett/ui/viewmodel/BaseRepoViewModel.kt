@@ -19,6 +19,7 @@ import com.cherret.zaprett.data.ListType
 import com.cherret.zaprett.data.RepoItemFull
 import com.cherret.zaprett.data.RepoItemUI
 import com.cherret.zaprett.data.ServiceType
+import com.cherret.zaprett.data.RepoTab
 import com.cherret.zaprett.utils.checkStoragePermission
 import com.cherret.zaprett.utils.download
 import com.cherret.zaprett.utils.getHostListMode
@@ -59,8 +60,8 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     val dependencyItems: List<DependencyEntry> = _dependencyItems
 
 
-    private val _hostLists = mutableStateOf<List<RepoItemUI>>(emptyList())
-    val hostLists: List<RepoItemUI> get() = _hostLists.value
+    private val _items = mutableStateOf<List<RepoItemUI>>(emptyList())
+    val items: List<RepoItemUI> get() = _items.value
 
     private var _dependencyList = MutableStateFlow<List<DependencyUI>>(emptyList())
     val dependencyList: StateFlow<List<DependencyUI>> = _dependencyList
@@ -73,7 +74,8 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     val isUpdateInstalling = mutableStateMapOf<String, Boolean>()
 
     abstract fun getInstalledLists(): Array<String>
-    fun getRepoList() = getRepo("https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/refactor/index.json") // Todo: get url from sharedPrefs
+    abstract val repoTab: RepoTab
+    fun getRepoList() = getRepo(sharedPreferences.getString("repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json")
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun refresh() {
@@ -84,14 +86,23 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     val serviceType = getServiceType(sharedPreferences)
                     val listType = getHostListMode(sharedPreferences)
                     val filteredList = list.filter { item ->
-                        when (item.index.type) {
-                            ItemType.list -> listType == ListType.whitelist
-                            ItemType.list_exclude -> listType == ListType.blacklist
-                            ItemType.ipset -> listType == ListType.whitelist
-                            ItemType.ipset_exclude -> listType == ListType.blacklist
-                            ItemType.nfqws -> serviceType == ServiceType.nfqws
-                            ItemType.nfqws2 -> serviceType == ServiceType.nfqws2
-                            ItemType.byedpi -> serviceType == ServiceType.byedpi
+                        when(repoTab) {
+                            RepoTab.lists -> when (item.index.type) {
+                                ItemType.list -> listType == ListType.whitelist
+                                ItemType.list_exclude -> listType == ListType.blacklist
+                                else -> false
+                            }
+                            RepoTab.ipsets -> when (item.index.type) {
+                                ItemType.ipset -> listType == ListType.whitelist
+                                ItemType.ipset_exclude -> listType == ListType.blacklist
+                                else -> false
+                            }
+                            RepoTab.strategies -> when (item.index.type) {
+                                ItemType.nfqws -> serviceType == ServiceType.nfqws
+                                ItemType.nfqws2 -> serviceType == ServiceType.nfqws2
+                                ItemType.byedpi -> serviceType == ServiceType.byedpi
+                                else -> false
+                            }
                         }
                     }
                     resolveDependencies(filteredList.map { it })
@@ -99,7 +110,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 .onEach { result ->
                     _dependencyItems.clear()
                     _dependencyItems.addAll(result.dependencies)
-                    _hostLists.value = result.roots.map { item ->
+                    _items.value = result.roots.map { item ->
                         repoItems[item.manifest.name] = item
                         RepoItemUI(
                             name = item.manifest.name,

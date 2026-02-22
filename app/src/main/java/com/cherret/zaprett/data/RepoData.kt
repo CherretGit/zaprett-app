@@ -17,7 +17,7 @@ data class RepoIndexItem (
 
 @Serializable
 data class RepoManifest(
-    val scheme: Int,
+    val schema: Int,
     val name: String,
     val author: String,
     val description: String,
