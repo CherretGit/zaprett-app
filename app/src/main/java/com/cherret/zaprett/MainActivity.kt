@@ -59,6 +59,7 @@ import com.cherret.zaprett.ui.screen.SettingsScreen
 import com.cherret.zaprett.ui.screen.StrategyScreen
 import com.cherret.zaprett.ui.screen.StrategySelectionScreen
 import com.cherret.zaprett.ui.theme.ZaprettTheme
+import com.cherret.zaprett.ui.viewmodel.BinRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
 import com.cherret.zaprett.ui.viewmodel.HostRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.IpsetRepoViewModel
@@ -225,6 +226,10 @@ class MainActivity : ComponentActivity() {
                         }
                         "strategies" -> {
                             val viewModel: StrategyRepoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                            RepoScreen(navController, viewModel)
+                        }
+                        "bin" -> {
+                            val viewModel: BinRepoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
                             RepoScreen(navController, viewModel)
                         }
                     }

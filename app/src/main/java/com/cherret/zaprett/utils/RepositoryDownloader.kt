@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.cherret.zaprett.data.DependencyEntry
@@ -73,22 +74,23 @@ fun getRepo(url: String): Flow<List<RepoItemFull>> = flow {
     emit(manifest)
 }
 
-fun resolveDependencies(
-    items: List<RepoItemFull>,
-    resolved: MutableSet<String> = mutableSetOf(),
-    depsMap: MutableMap<String, DependencyEntry> = mutableMapOf()
-): Flow<ResolveResult> = flow {
+fun resolveDependencies(items: List<RepoItemFull>): Flow<ResolveResult> = flow {
+    val resolved = mutableSetOf<String>()
+    val depsMap = mutableMapOf<String, DependencyEntry>()
+    val manifestCache = mutableMapOf<String, RepoManifest>()
     suspend fun collect(manifest: RepoManifest, rootName: String) {
         manifest.dependencies.forEach { depUrl ->
-            val dep = json.decodeFromString<RepoManifest>(
-                client.get(depUrl).bodyAsText()
-            )
+            val dep = manifestCache.getOrPut(depUrl) {
+                json.decodeFromString<RepoManifest>(
+                    client.get(depUrl).bodyAsText()
+                )
+            }
             val entry = depsMap.getOrPut(dep.name) {
                 DependencyEntry(dep)
             }
             entry.dependencies += rootName
             if (resolved.add(dep.name)) {
-                collect(dep, rootName)
+                collect(dep, dep.name)
             }
         }
     }

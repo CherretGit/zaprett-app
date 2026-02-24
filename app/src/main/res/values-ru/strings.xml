@@ -8,6 +8,7 @@
     <string name="title_debug">Отладка</string>
     <string name="general_section">Основные настройки</string>
     <string name="byedpi_section">Настройки ByeDPI</string>
+    <string name="bins_repo">Репозиторий фейков</string>
     <string name="btn_continue">Продолжить</string>
     <string name="btn_update">Обновить</string>
     <string name="btn_dismiss">Отмена</string>

@@ -256,6 +256,12 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
             onToggle = {
                 viewModel.handleAutoRestart(context)
             }
+        ),
+        Setting.Action(
+            title = stringResource(R.string.bins_repo),
+            onClick = {
+                navController.navigate("repo?source=bin") { launchSingleTop = true }
+            }
         )
     )
 

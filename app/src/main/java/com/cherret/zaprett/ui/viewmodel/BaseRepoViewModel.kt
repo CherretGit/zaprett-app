@@ -87,6 +87,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     val listType = getHostListMode(sharedPreferences)
                     val filteredList = list.filter { item ->
                         when(repoTab) {
+                            RepoTab.bins -> when(item.index.type) {
+                                ItemType.bin -> true
+                                else -> false
+                            }
                             RepoTab.lists -> when (item.index.type) {
                                 ItemType.list -> listType == ListType.whitelist
                                 ItemType.list_exclude -> listType == ListType.blacklist
@@ -155,6 +159,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     viewModelScope.launch(Dispatchers.IO) {
                         val sourceFile = File(uri.path!!)
                         val targetDir = when (index.type) {
+                            ItemType.bin -> File(getZaprettPath(), "bin")
                             ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
                             ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
                             ItemType.nfqws2 -> File(getZaprettPath(), "strategies/nfqws2")
@@ -197,6 +202,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 viewModelScope.launch(Dispatchers.IO) {
                     val sourceFile = File(uri.path!!)
                     val targetDir = when (index.type) {
+                        ItemType.bin -> File(getZaprettPath(), "bin")
                         ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
                         ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
                         ItemType.nfqws2 -> File(getZaprettPath(), "strategies/nfqws2")
