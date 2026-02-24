@@ -20,6 +20,9 @@ android {
         versionName = "2.15"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters += listOf("x86", "x86_64", "armeabi-v7a", "arm64-v8a")
+        }
     }
     buildTypes {
         release {
@@ -37,6 +40,11 @@ android {
             buildConfigField("boolean", "auto_update", "false")
         }
     }
+    externalNativeBuild {
+        ndkBuild {
+            path("src/main/jni/Android.mk")
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -48,29 +56,6 @@ android {
         compose = true
         buildConfig = true
     }
-}
-
-tasks.register<Exec>("runNdkBuild") {
-    group = "build"
-
-    val ndkDir = android.ndkDirectory
-    executable = if (System.getProperty("os.name").startsWith("Windows", ignoreCase = true)) {
-        "$ndkDir\\ndk-build.cmd"
-    } else {
-        "$ndkDir/ndk-build"
-    }
-    setArgs(listOf(
-        "NDK_PROJECT_PATH=build/intermediates/ndkBuild",
-        "NDK_LIBS_OUT=src/main/jniLibs",
-        "APP_BUILD_SCRIPT=src/main/jni/Android.mk",
-        "NDK_APPLICATION_MK=src/main/jni/Application.mk"
-    ))
-
-    println("Command: $commandLine")
-}
-
-tasks.preBuild {
-    dependsOn("runNdkBuild")
 }
 
 cargo {
