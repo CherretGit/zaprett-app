@@ -19,6 +19,7 @@ import com.cherret.zaprett.data.ItemType
 import com.cherret.zaprett.data.ListType
 import com.cherret.zaprett.data.RepoItemFull
 import com.cherret.zaprett.data.RepoItemUI
+import com.cherret.zaprett.data.RepoManifest
 import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.RepoTab
 import com.cherret.zaprett.data.StorageData
@@ -154,69 +155,11 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun install(item: RepoItemUI) {
-        val index = repoItems[item.name]!!.index
         val item = repoItems[item.name]!!.manifest
         if (checkStoragePermission(context)) {
                 isInstalling[item.name] = true
                 val downloadId = download(context, item.artifact.url)
-                registerDownloadListener(context, downloadId, { uri ->
-                    viewModelScope.launch(Dispatchers.IO) {
-                        val baseDir = File(getZaprettPath())
-                        val sourceFile = File(uri.path!!)
-
-                        if (getFileSha256(sourceFile) == item.artifact.sha256) {
-                            val targetDirSuffix = when (index.type) {
-                                ItemType.bin -> "bin"
-                                ItemType.byedpi -> "strategies/byedpi"
-                                ItemType.nfqws -> "strategies/nfqws"
-                                ItemType.nfqws2 -> "strategies/nfqws2"
-                                ItemType.list -> "lists/include"
-                                ItemType.list_exclude -> "lists/exclude"
-                                ItemType.ipset -> "ipset/include"
-                                ItemType.ipset_exclude -> "ipset/exclude"
-                            }
-
-                            val targetFile = baseDir
-                                .resolve(targetDirSuffix)
-                                .resolve(uri.lastPathSegment!!
-                                    .replace(Regex("""-\d+(?=\.|$)"""), ""))
-
-                            targetFile.parentFile!!.mkdirs()
-                            sourceFile.copyTo(targetFile, overwrite = true)
-                            sourceFile.delete()
-
-                            val manifestFile = baseDir.resolve("manifests").resolve(targetDirSuffix).resolve("${targetFile.name.substringBeforeLast(".")}.json")
-                            manifestFile.parentFile!!.mkdirs()
-                            manifestFile.writeText(
-                                Json.encodeToString(
-                                    StorageData(
-                                        item.schema,
-                                        item.name,
-                                        item.author,
-                                        item.description,
-                                        item.dependencies,
-                                        file = targetFile.path
-                                    )
-                                )
-                            )
-
-                            isInstalling[item.name] = false
-                            isUpdate[item.name] = false
-                            refresh()
-                        }
-                        else {
-                            isInstalling[item.name] = false
-                            _downloadErrorFlow.value = context.getString(R.string.error_hash_mismatch)
-                            sourceFile.delete()
-                            refresh()
-                        }
-                    }
-                }, onError = {
-                    isInstalling[item.name] = false
-                    isUpdate[item.name] = false
-                    refresh()
-                    _downloadErrorFlow.value = it
-                })
+                downloadAndProcess(item, context, downloadId)
             }
         else _showPermissionDialog.value = true
     }
@@ -226,41 +169,79 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun update(item: RepoItemUI) {
+        val item = repoItems[item.name]!!.manifest
+        if (checkStoragePermission(context)) {
+            isUpdateInstalling[item.name] = true
+            val downloadId = download(context, item.artifact.url)
+            downloadAndProcess(item, context, downloadId)
+        }
+        else _showPermissionDialog.value = true
+    }
+
+    fun downloadAndProcess(item: RepoManifest, context: Context, downloadId: Long) {
         val index = repoItems[item.name]!!.index
         val item = repoItems[item.name]!!.manifest
-        isUpdateInstalling[item.name] = true
-        val downloadId = download(context, item.artifact.url)
-        registerDownloadListener(
-            context,
-            downloadId,
-            onDownloaded = { uri ->
-                viewModelScope.launch(Dispatchers.IO) {
-                    val sourceFile = File(uri.path!!)
-                    val targetDir = when (index.type) {
-                        ItemType.bin -> File(getZaprettPath(), "bin")
-                        ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
-                        ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
-                        ItemType.nfqws2 -> File(getZaprettPath(), "strategies/nfqws2")
-                        ItemType.list -> File(getZaprettPath(), "lists/include")
-                        ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
-                        ItemType.ipset -> File(getZaprettPath(), "ipset/include")
-                        ItemType.ipset_exclude -> File(getZaprettPath(), "ipset/exclude")
+        registerDownloadListener(context, downloadId, { uri ->
+            viewModelScope.launch(Dispatchers.IO) {
+                val baseDir = File(getZaprettPath())
+                val sourceFile = File(uri.path!!)
+
+                if (getFileSha256(sourceFile) == item.artifact.sha256) {
+                    val targetDirSuffix = when (index.type) {
+                        ItemType.bin -> "bin"
+                        ItemType.byedpi -> "strategies/byedpi"
+                        ItemType.nfqws -> "strategies/nfqws"
+                        ItemType.nfqws2 -> "strategies/nfqws2"
+                        ItemType.list -> "lists/include"
+                        ItemType.list_exclude -> "lists/exclude"
+                        ItemType.ipset -> "ipset/include"
+                        ItemType.ipset_exclude -> "ipset/exclude"
                     }
-                    val targetFile = File(targetDir, uri.lastPathSegment!!)
+
+                    val targetFile = baseDir
+                        .resolve(targetDirSuffix)
+                        .resolve(uri.lastPathSegment!!
+                            .replace(Regex("""-\d+(?=\.|$)"""), ""))
+
+                    targetFile.parentFile!!.mkdirs()
                     sourceFile.copyTo(targetFile, overwrite = true)
                     sourceFile.delete()
+
+                    val manifestFile = baseDir.resolve("manifests").resolve(targetDirSuffix).resolve("${targetFile.name.substringBeforeLast(".")}.json")
+                    manifestFile.parentFile!!.mkdirs()
+                    manifestFile.writeText(
+                        Json.encodeToString(
+                            StorageData(
+                                item.schema,
+                                item.name,
+                                item.author,
+                                item.description,
+                                item.dependencies,
+                                file = targetFile.path
+                            )
+                        )
+                    )
+
+                    isInstalling[item.name] = false
                     isUpdateInstalling[item.name] = false
                     isUpdate[item.name] = false
                     refresh()
                 }
-            },
-            onError = { error ->
-                isUpdateInstalling[item.name] = false
-                isUpdate[item.name] = false
-                refresh()
-                _downloadErrorFlow.value = error
+                else {
+                    isInstalling[item.name] = false
+                    isUpdateInstalling[item.name] = false
+                    _downloadErrorFlow.value = context.getString(R.string.error_hash_mismatch)
+                    sourceFile.delete()
+                    refresh()
+                }
             }
-        )
+        }, onError = {
+            isInstalling[item.name] = false
+            isUpdateInstalling[item.name] = false
+            isUpdate[item.name] = false
+            refresh()
+            _downloadErrorFlow.value = it
+        })
     }
 
     fun showRestartSnackbar(snackbarHostState: SnackbarHostState) {
