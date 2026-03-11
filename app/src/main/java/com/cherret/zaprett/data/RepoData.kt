@@ -21,6 +21,7 @@ data class RepoManifest(
     val name: String,
     val author: String,
     val description: String,
+    val version: String,
     val dependencies: List<String> = emptyList(),
     val artifact: Artifact
 )
@@ -49,9 +50,11 @@ data class ResolveResult(
 data class RepoItemUI(
     val name: String,
     val author: String,
-    val description: String
+    val description: String,
+    val version: String
 )
 
 data class DependencyUI(
-    val name: String
+    val name: String,
+    val version: String
 )

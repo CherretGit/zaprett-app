@@ -118,12 +118,14 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                         RepoItemUI(
                             name = item.manifest.name,
                             author = item.manifest.author,
-                            description = item.manifest.description
+                            description = item.manifest.description,
+                            version = item.manifest.version
                         )
                     }
                     _dependencyList.value = result.dependencies.map { item ->
                         DependencyUI(
-                            name = item.manifest.name
+                            name = item.manifest.name,
+                            version = item.manifest.version
                         )
                     }
                     dependencyItems
