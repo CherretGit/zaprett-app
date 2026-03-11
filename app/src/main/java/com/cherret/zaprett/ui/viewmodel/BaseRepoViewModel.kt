@@ -152,8 +152,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     fun install(item: RepoItemUI) {
         val index = repoItems[item.name]!!.index
         val item = repoItems[item.name]!!.manifest
-        when (checkStoragePermission(context)) {
-            true -> {
+        if (checkStoragePermission(context)) {
                 isInstalling[item.name] = true
                 val downloadId = download(context, item.artifact.url)
                 registerDownloadListener(context, downloadId, { uri ->
@@ -183,8 +182,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     _downloadErrorFlow.value = it
                 })
             }
-            false -> _showPermissionDialog.value = true
-        }
+        else _showPermissionDialog.value = true
     }
 
     fun hideNoPermissionDialog() {
