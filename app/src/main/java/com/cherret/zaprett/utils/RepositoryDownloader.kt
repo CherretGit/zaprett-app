@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.cherret.zaprett.data.DependencyEntry
 import com.cherret.zaprett.data.RepoIndex
+import com.cherret.zaprett.data.RepoIndexItem
 import com.cherret.zaprett.data.RepoItemFull
 import com.cherret.zaprett.data.RepoManifest
 import com.cherret.zaprett.data.ResolveResult
@@ -25,6 +26,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.security.MessageDigest
@@ -33,41 +36,18 @@ private val client = HttpClient(OkHttp)
 
 private val json = Json { ignoreUnknownKeys = true }
 
-//suspend fun getHostList(sharedPreferences: SharedPreferences): Flow<List<RepoManifest>> {
-//    return getRepo(
-//        sharedPreferences.getString(
-//            "hosts_repo_url",
-//            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
-//        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
-//    )
-//}
-//
-//suspend fun getIpsetList(sharedPreferences: SharedPreferences): Flow<List<RepoManifest>> {
-//    return getRepo(
-//        sharedPreferences.getString(
-//            "ipset_repo_url",
-//            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json"
-//        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json"
-//    )
-//}
-//
-//suspend fun getStrategiesList(sharedPreferences: SharedPreferences): Flow<List<RepoManifest>> {
-//    return getRepo(
-//        sharedPreferences.getString(
-//            "strategies_repo_url",
-//            "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json"
-//        ) ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json",
-//    )
-//}
-
-fun getRepo(url: String): Flow<List<RepoItemFull>> = flow {
+fun getRepo(url: String, filter: (RepoIndexItem) -> Boolean): Flow<List<RepoItemFull>> = flow {
     val index = client.get(url).bodyAsText()
     val indexJson = json.decodeFromString<RepoIndex>(index)
+    val filtered = indexJson.items.filter(filter)
     val manifest = coroutineScope {
-        indexJson.items.map { item ->
+        filtered.map { item ->
             async {
-                val manifest = json.decodeFromString<RepoManifest>(client.get(item.manifest).bodyAsText())
-                RepoItemFull(item, manifest)
+                Semaphore(15).withPermit {
+                    val manifest =
+                        json.decodeFromString<RepoManifest>(client.get(item.manifest).bodyAsText())
+                    RepoItemFull(item, manifest)
+                }
             }
         }.awaitAll()
     }

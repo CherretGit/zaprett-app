@@ -75,41 +75,40 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
 
     abstract fun getInstalledLists(): Array<String>
     abstract val repoTab: RepoTab
-    fun getRepoList() = getRepo(sharedPreferences.getString("repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json")
+    val repoUrl = sharedPreferences.getString("repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json"
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun refresh() {
         viewModelScope.launch {
-            getRepoList()
+            val serviceType = getServiceType(sharedPreferences)
+            val listType = getHostListMode(sharedPreferences)
+            getRepo(repoUrl) { item ->
+                when(repoTab) {
+                    RepoTab.bins -> when(item.type) {
+                        ItemType.bin -> true
+                        else -> false
+                    }
+                    RepoTab.lists -> when (item.type) {
+                        ItemType.list -> listType == ListType.whitelist
+                        ItemType.list_exclude -> listType == ListType.blacklist
+                        else -> false
+                    }
+                    RepoTab.ipsets -> when (item.type) {
+                        ItemType.ipset -> listType == ListType.whitelist
+                        ItemType.ipset_exclude -> listType == ListType.blacklist
+                        else -> false
+                    }
+                    RepoTab.strategies -> when (item.type) {
+                        ItemType.nfqws -> serviceType == ServiceType.nfqws
+                        ItemType.nfqws2 -> serviceType == ServiceType.nfqws2
+                        ItemType.byedpi -> serviceType == ServiceType.byedpi
+                        else -> false
+                    }
+                }
+            }
                 .onStart { isRefreshing.value = true }
                 .flatMapConcat { list ->
-                    val serviceType = getServiceType(sharedPreferences)
-                    val listType = getHostListMode(sharedPreferences)
-                    val filteredList = list.filter { item ->
-                        when(repoTab) {
-                            RepoTab.bins -> when(item.index.type) {
-                                ItemType.bin -> true
-                                else -> false
-                            }
-                            RepoTab.lists -> when (item.index.type) {
-                                ItemType.list -> listType == ListType.whitelist
-                                ItemType.list_exclude -> listType == ListType.blacklist
-                                else -> false
-                            }
-                            RepoTab.ipsets -> when (item.index.type) {
-                                ItemType.ipset -> listType == ListType.whitelist
-                                ItemType.ipset_exclude -> listType == ListType.blacklist
-                                else -> false
-                            }
-                            RepoTab.strategies -> when (item.index.type) {
-                                ItemType.nfqws -> serviceType == ServiceType.nfqws
-                                ItemType.nfqws2 -> serviceType == ServiceType.nfqws2
-                                ItemType.byedpi -> serviceType == ServiceType.byedpi
-                                else -> false
-                            }
-                        }
-                    }
-                    resolveDependencies(filteredList.map { it })
+                    resolveDependencies(list)
                 }
                 .onEach { result ->
                     _dependencyItems.clear()
