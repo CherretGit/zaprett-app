@@ -9,6 +9,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.cherret.zaprett.R
@@ -20,8 +21,10 @@ import com.cherret.zaprett.data.RepoItemFull
 import com.cherret.zaprett.data.RepoItemUI
 import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.RepoTab
+import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.utils.checkStoragePermission
 import com.cherret.zaprett.utils.download
+import com.cherret.zaprett.utils.getFileSha256
 import com.cherret.zaprett.utils.getHostListMode
 import com.cherret.zaprett.utils.getRepo
 import com.cherret.zaprett.utils.getServiceType
@@ -40,6 +43,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import java.io.File
 
 abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(application) {
@@ -157,23 +161,55 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 val downloadId = download(context, item.artifact.url)
                 registerDownloadListener(context, downloadId, { uri ->
                     viewModelScope.launch(Dispatchers.IO) {
+                        val baseDir = File(getZaprettPath())
                         val sourceFile = File(uri.path!!)
-                        val targetDir = when (index.type) {
-                            ItemType.bin -> File(getZaprettPath(), "bin")
-                            ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
-                            ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
-                            ItemType.nfqws2 -> File(getZaprettPath(), "strategies/nfqws2")
-                            ItemType.list -> File(getZaprettPath(), "lists/include")
-                            ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
-                            ItemType.ipset -> File(getZaprettPath(), "ipset/include")
-                            ItemType.ipset_exclude -> File(getZaprettPath(), "ipset/exclude")
+
+                        if (getFileSha256(sourceFile) == item.artifact.sha256) {
+                            val targetDirSuffix = when (index.type) {
+                                ItemType.bin -> "bin"
+                                ItemType.byedpi -> "strategies/byedpi"
+                                ItemType.nfqws -> "strategies/nfqws"
+                                ItemType.nfqws2 -> "strategies/nfqws2"
+                                ItemType.list -> "lists/include"
+                                ItemType.list_exclude -> "lists/exclude"
+                                ItemType.ipset -> "ipset/include"
+                                ItemType.ipset_exclude -> "ipset/exclude"
+                            }
+
+                            val targetFile = baseDir
+                                .resolve(targetDirSuffix)
+                                .resolve(uri.lastPathSegment!!
+                                    .replace(Regex("""-\d+(?=\.|$)"""), ""))
+
+                            targetFile.parentFile!!.mkdirs()
+                            sourceFile.copyTo(targetFile, overwrite = true)
+                            sourceFile.delete()
+
+                            val manifestFile = baseDir.resolve("manifests").resolve(targetDirSuffix).resolve("${targetFile.name.substringBeforeLast(".")}.json")
+                            manifestFile.parentFile!!.mkdirs()
+                            manifestFile.writeText(
+                                Json.encodeToString(
+                                    StorageData(
+                                        item.schema,
+                                        item.name,
+                                        item.author,
+                                        item.description,
+                                        item.dependencies,
+                                        file = targetFile.path
+                                    )
+                                )
+                            )
+
+                            isInstalling[item.name] = false
+                            isUpdate[item.name] = false
+                            refresh()
                         }
-                        val targetFile = File(targetDir, uri.lastPathSegment!!)
-                        sourceFile.copyTo(targetFile, overwrite = true)
-                        sourceFile.delete()
-                        isInstalling[item.name] = false
-                        isUpdate[item.name] = false
-                        refresh()
+                        else {
+                            isInstalling[item.name] = false
+                            _downloadErrorFlow.value = context.getString(R.string.error_hash_mismatch)
+                            sourceFile.delete()
+                            refresh()
+                        }
                     }
                 }, onError = {
                     isInstalling[item.name] = false

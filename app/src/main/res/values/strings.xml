@@ -123,4 +123,5 @@
     <string name="no_storage_permission_message">Missing permission to access files</string>
     <string name="reset_settings_title">Reset settings</string>
     <string name="reset_settings_message">Are you sure you want to reset the settings?</string>
+    <string name="error_hash_mismatch">File checksum mismatch, please try again later</string>
 </resources>
