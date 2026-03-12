@@ -10,7 +10,7 @@ data class RepoIndex (
 
 @Serializable
 data class RepoIndexItem (
-   val name: String,
+   val id: String,
    val type: ItemType,
    val manifest: String,
 )
@@ -18,6 +18,7 @@ data class RepoIndexItem (
 @Serializable
 data class RepoManifest(
     val schema: Int,
+    val id: String,
     val name: String,
     val author: String,
     val description: String,
@@ -48,6 +49,7 @@ data class ResolveResult(
 )
 
 data class RepoItemUI(
+    val id: String,
     val name: String,
     val author: String,
     val description: String,

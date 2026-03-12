@@ -75,7 +75,7 @@ fun resolveDependencies(items: List<RepoItemFull>): Flow<ResolveResult> = flow {
         }
     }
     items.forEach { item ->
-        collect(item.manifest, item.index.name)
+        collect(item.manifest, item.index.id)
     }
     emit(
         ResolveResult(

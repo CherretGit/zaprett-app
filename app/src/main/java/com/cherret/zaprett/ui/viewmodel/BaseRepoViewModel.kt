@@ -81,6 +81,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     abstract fun getInstalledLists(): Array<String>
     abstract val repoTab: RepoTab
     val repoUrl = sharedPreferences.getString("repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json"
+    private val Json = Json {
+        prettyPrint = true
+        ignoreUnknownKeys = true
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun refresh() {
@@ -119,8 +123,9 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     _dependencyItems.clear()
                     _dependencyItems.addAll(result.dependencies)
                     _items.value = result.roots.map { item ->
-                        repoItems[item.manifest.name] = item
+                        repoItems[item.manifest.id] = item
                         RepoItemUI(
+                            id = item.manifest.id,
                             name = item.manifest.name,
                             author = item.manifest.author,
                             description = item.manifest.description,
@@ -155,9 +160,9 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun install(item: RepoItemUI) {
-        val item = repoItems[item.name]!!.manifest
+        val item = repoItems[item.id]!!.manifest
         if (checkStoragePermission(context)) {
-                isInstalling[item.name] = true
+                isInstalling[item.id] = true
                 val downloadId = download(context, item.artifact.url)
                 downloadAndProcess(item, context, downloadId)
             }
@@ -169,9 +174,9 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun update(item: RepoItemUI) {
-        val item = repoItems[item.name]!!.manifest
+        val item = repoItems[item.id]!!.manifest
         if (checkStoragePermission(context)) {
-            isUpdateInstalling[item.name] = true
+            isUpdateInstalling[item.id] = true
             val downloadId = download(context, item.artifact.url)
             downloadAndProcess(item, context, downloadId)
         }
@@ -179,8 +184,8 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun downloadAndProcess(item: RepoManifest, context: Context, downloadId: Long) {
-        val index = repoItems[item.name]!!.index
-        val item = repoItems[item.name]!!.manifest
+        val index = repoItems[item.id]!!.index
+        val item = repoItems[item.id]!!.manifest
         registerDownloadListener(context, downloadId, { uri ->
             viewModelScope.launch(Dispatchers.IO) {
                 val baseDir = File(getZaprettPath())
@@ -213,6 +218,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                         Json.encodeToString(
                             StorageData(
                                 item.schema,
+                                item.id,
                                 item.name,
                                 item.author,
                                 item.description,
@@ -222,23 +228,23 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                         )
                     )
 
-                    isInstalling[item.name] = false
-                    isUpdateInstalling[item.name] = false
-                    isUpdate[item.name] = false
+                    isInstalling[item.id] = false
+                    isUpdateInstalling[item.id] = false
+                    isUpdate[item.id] = false
                     refresh()
                 }
                 else {
-                    isInstalling[item.name] = false
-                    isUpdateInstalling[item.name] = false
+                    isInstalling[item.id] = false
+                    isUpdateInstalling[item.id] = false
                     _downloadErrorFlow.value = context.getString(R.string.error_hash_mismatch)
                     sourceFile.delete()
                     refresh()
                 }
             }
         }, onError = {
-            isInstalling[item.name] = false
-            isUpdateInstalling[item.name] = false
-            isUpdate[item.name] = false
+            isInstalling[item.id] = false
+            isUpdateInstalling[item.id] = false
+            isUpdate[item.id] = false
             refresh()
             _downloadErrorFlow.value = it
         })

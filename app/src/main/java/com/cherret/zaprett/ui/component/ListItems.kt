@@ -128,8 +128,8 @@ fun RepoItem(
     modifier: Modifier = Modifier
 ) {
     val isInstalled = viewModel.isItemInstalled(item)
-    val installing = isInstalling[item.name] == true
-    val updating = isUpdateInstalling[item.name] == true
+    val installing = isInstalling[item.id] == true
+    val updating = isUpdateInstalling[item.id] == true
 
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
@@ -176,7 +176,7 @@ fun RepoItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                if (isUpdate[item.name] == true && isInstalled) {
+                if (isUpdate[item.id] == true && isInstalled) {
                     FilledTonalButton(
                         onClick = { viewModel.update(item) },
                         enabled = !updating,
