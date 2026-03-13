@@ -100,7 +100,7 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
             if (cursor.moveToFirst() && nameIndex != -1) cursor.getString(nameIndex) else "copied_file"
         } ?: "copied_file"
 
-        val directory = File(getZaprettPath() + path)
+        val directory = getZaprettPath().resolve(path)
         if (!directory.exists()) {
             directory.mkdirs()
         }
@@ -108,7 +108,7 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
         try {
             val outputFile = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (Environment.isExternalStorageManager()) {
-                    val outputDir = File(getZaprettPath() + path)
+                    val outputDir = getZaprettPath().resolve(path)
                     if (!outputDir.exists()) {
                         outputDir.mkdirs()
                     }

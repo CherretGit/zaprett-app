@@ -188,7 +188,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
         val item = repoItems[item.id]!!.manifest
         registerDownloadListener(context, downloadId, { uri ->
             viewModelScope.launch(Dispatchers.IO) {
-                val baseDir = File(getZaprettPath())
+                val baseDir = getZaprettPath()
                 val sourceFile = File(uri.path!!)
 
                 if (getFileSha256(sourceFile) == item.artifact.sha256) {

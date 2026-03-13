@@ -124,7 +124,7 @@ fun getNfqws2Version(callback: (String) -> Unit) {
 }
 
 fun getConfigFile(): File {
-    return File(Environment.getExternalStorageDirectory(), "zaprett/config.json")
+    return getZaprettPath().resolve("/config.json")
 }
 
 fun setStartOnBoot(prefs: SharedPreferences, callback: (Boolean) -> Unit) {
@@ -145,12 +145,12 @@ fun getStartOnBoot(prefs: SharedPreferences, callback: (Boolean) -> Unit) {
     }
 }
 
-fun getZaprettPath(): String {
-    return Environment.getExternalStorageDirectory().path + "/zaprett"
+fun getZaprettPath(): File {
+    return Environment.getExternalStorageDirectory().resolve("zaprett")
 }
 
 fun getAllLists(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/lists/include")
+    val listsDir = getZaprettPath().resolve("lists/include")
     return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
@@ -158,7 +158,7 @@ fun getAllLists(): Array<String> {
 }
 
 fun getAllIpsets(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/ipset/include")
+    val listsDir = getZaprettPath().resolve("ipset/include")
     return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
@@ -166,7 +166,7 @@ fun getAllIpsets(): Array<String> {
 }
 
 fun getAllExcludeLists(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/lists/exclude/")
+    val listsDir = getZaprettPath().resolve("lists/include")
     return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
@@ -174,7 +174,7 @@ fun getAllExcludeLists(): Array<String> {
 }
 
 fun getAllExcludeIpsets(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/ipset/exclude/")
+    val listsDir = getZaprettPath().resolve("ipset/exclude/")
     return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
@@ -182,7 +182,7 @@ fun getAllExcludeIpsets(): Array<String> {
 }
 
 fun getAllNfqwsStrategies(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/strategies/nfqws")
+    val listsDir = getZaprettPath().resolve("strategies/nfqws")
     return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
@@ -190,7 +190,7 @@ fun getAllNfqwsStrategies(): Array<String> {
 }
 
 fun getAllNfqws2Strategies(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/strategies/nfqws2")
+    val listsDir = getZaprettPath().resolve("strategies/nfqws2")
     return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
@@ -198,7 +198,7 @@ fun getAllNfqws2Strategies(): Array<String> {
 }
 
 fun getAllByeDPIStrategies(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/strategies/byedpi")
+    val listsDir = getZaprettPath().resolve("strategies/byedpi")
     return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
         ?.map { it.absolutePath }
         ?.toTypedArray()
