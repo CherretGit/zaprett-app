@@ -20,17 +20,16 @@ import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.data.ServiceStatusUI
 import com.cherret.zaprett.data.ServiceType
-import com.cherret.zaprett.utils.download
+import com.cherret.zaprett.utils.DownloadUtils.download
+import com.cherret.zaprett.utils.DownloadUtils.installApk
+import com.cherret.zaprett.utils.DownloadUtils.registerDownloadListener
+import com.cherret.zaprett.utils.NetworkUtils.getUpdate
 import com.cherret.zaprett.utils.getActiveStrategy
-import com.cherret.zaprett.utils.getChangelog
 import com.cherret.zaprett.utils.getModuleVersion
 import com.cherret.zaprett.utils.getNfqws2Version
 import com.cherret.zaprett.utils.getNfqwsVersion
 import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getStatus
-import com.cherret.zaprett.utils.getUpdate
-import com.cherret.zaprett.utils.installApk
-import com.cherret.zaprett.utils.registerDownloadListener
 import com.cherret.zaprett.utils.restartService
 import com.cherret.zaprett.utils.startService
 import com.cherret.zaprett.utils.stopService
@@ -79,16 +78,18 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     var showUpdateDialog = mutableStateOf(false)
 
-    fun checkForUpdate() {
+    suspend fun checkForUpdate() {
         if (prefs.getBoolean("auto_update", BuildConfig.auto_update)) {
-            getUpdate(prefs) {
-                if (it != null) {
-                    downloadUrl.value = it.downloadUrl.toString()
-                    getChangelog(it.changelogUrl.toString()) { log -> changeLog.value = log }
-                    newVersion.value = it.version
+            getUpdate(prefs)
+                .onSuccess { updateData ->
+                    downloadUrl.value = updateData.updateInfo.downloadUrl
+                    changeLog.value = updateData.changelog
+                    newVersion.value = updateData.updateInfo.version
                     updateAvailable.value = true
                 }
-            }
+                .onFailure { exception ->
+                    _errorFlow.value = exception.toString()
+                }
         }
     }
 
@@ -255,7 +256,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 installApk(context, uri)
                 },
                 onError = {
-
+                    _errorFlow.value = it
                 })
         }
         else {
