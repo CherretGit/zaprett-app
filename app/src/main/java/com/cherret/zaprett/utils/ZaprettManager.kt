@@ -128,7 +128,7 @@ fun getNfqws2Version(callback: (String) -> Unit) {
 }
 
 fun getConfigFile(): File {
-    return getZaprettPath().resolve("/config.json")
+    return getZaprettPath().resolve("config.json")
 }
 
 fun setStartOnBoot(prefs: SharedPreferences, callback: (Boolean) -> Unit) {
