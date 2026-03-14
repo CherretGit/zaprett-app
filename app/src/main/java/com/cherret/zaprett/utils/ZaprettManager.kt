@@ -211,6 +211,11 @@ fun getAllStrategies(sharedPreferences: SharedPreferences): Array<StorageData> {
     }
 }
 
+fun getAllBin(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("bin")
+    return getValidManifests(listsDir)
+}
+
 fun getActiveLists(sharedPreferences: SharedPreferences): Array<StorageData> {
     if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
         return readConfig().activeLists.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()

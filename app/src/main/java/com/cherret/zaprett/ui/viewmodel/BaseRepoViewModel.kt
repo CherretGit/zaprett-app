@@ -203,6 +203,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     }
 
                     val targetFile = baseDir
+                        .resolve("files")
                         .resolve(targetDirSuffix)
                         .resolve(uri.lastPathSegment!!
                             .replace(Regex("""-\d+(?=\.|$)"""), ""))
