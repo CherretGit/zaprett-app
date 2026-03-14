@@ -170,7 +170,7 @@ fun IpsetsScreen(navController: NavController, viewModel: IpsetViewModel = viewM
                         else -> {
                             items(allLists) { item ->
                                 ListSwitchItem (
-                                    item = item.name,
+                                    item = item,
                                     isChecked = checked[item] == true,
                                     onCheckedChange = { isChecked ->
                                         viewModel.onCheckedChange(item, isChecked, snackbarHostState, scope)

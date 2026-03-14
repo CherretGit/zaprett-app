@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.DependencyUI
 import com.cherret.zaprett.data.RepoItemUI
+import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.data.StrategyCheckResult
 import com.cherret.zaprett.data.StrategyTestingStatus
 import com.cherret.zaprett.ui.viewmodel.BaseRepoViewModel
@@ -60,7 +61,7 @@ import com.cherret.zaprett.utils.getActiveStrategy
 import kotlinx.coroutines.launch
 
 @Composable
-fun ListSwitchItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit, onDeleteClick: () -> Unit) {
+fun ListSwitchItem(item: StorageData, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit, onDeleteClick: () -> Unit) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -74,7 +75,14 @@ fun ListSwitchItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) 
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(text = item, modifier = Modifier.weight(1f))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(text = item.name)
+                Text(text = stringResource(R.string.title_author, item.author))
+                Text(text = item.description)
+            }
             Switch(
                 checked = isChecked,
                 onCheckedChange = onCheckedChange,
