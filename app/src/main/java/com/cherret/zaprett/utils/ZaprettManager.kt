@@ -160,9 +160,8 @@ fun getValidManifests(listsDir: File): Array<StorageData> {
     return (listsDir.listFiles()
         ?.mapNotNull { file ->
             if (!file.isFile || file.extension.lowercase() != "json") return@mapNotNull null
-
-            parseManifestFromFile(file).getOrNull().takeIf {
-                File(it!!.file).exists()
+            parseManifestFromFile(file).getOrNull()?.takeIf {
+                File(it.file).exists()
             }
         }
         ?.toTypedArray()
