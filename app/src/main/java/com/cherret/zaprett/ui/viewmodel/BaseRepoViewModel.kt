@@ -219,6 +219,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                                 item.schema,
                                 item.id,
                                 item.name,
+                                item.version,
                                 item.author,
                                 item.description,
                                 item.dependencies,
