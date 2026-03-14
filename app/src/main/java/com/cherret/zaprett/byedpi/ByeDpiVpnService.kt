@@ -199,8 +199,8 @@ class ByeDpiVpnService : VpnService() {
                 socksIp,
                 socksPort,
                 getActiveByeDPIStrategyContent(sharedPreferences),
-                prepareList(listSet),
-                prepareIpset(ipsetSet),
+                prepareList(listSet.map { it.file }.toTypedArray()),
+                prepareIpset(ipsetSet.map { it.file }.toTypedArray()),
                 sharedPreferences)
             val result = NativeBridge().jniStartProxy(args)
             if (result < 0) {

@@ -145,7 +145,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             }
         } else {
             if (ByeDpiVpnService.status == ServiceStatus.Disconnected || ByeDpiVpnService.status == ServiceStatus.Failed) {
-                if (getActiveStrategy(prefs).isNotEmpty()) {
+                if (getActiveStrategy(prefs).isSuccess) {
                     scope.launch {
                         snackbarHostState.showSnackbar(context.getString(R.string.snack_starting_service))
                     }

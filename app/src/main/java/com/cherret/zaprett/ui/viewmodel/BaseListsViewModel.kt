@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.utils.checkStoragePermission
 import com.cherret.zaprett.utils.getZaprettPath
 import com.cherret.zaprett.utils.restartService
@@ -30,11 +31,11 @@ import java.io.IOException
 
 abstract class BaseListsViewModel(application: Application) : AndroidViewModel(application) {
     val context = application
-    var allItems by mutableStateOf<List<String>>(emptyList())
+    var allItems by mutableStateOf<List<StorageData>>(emptyList())
         private set
-    var activeItems by mutableStateOf<List<String>>(emptyList())
+    var activeItems by mutableStateOf<List<StorageData>>(emptyList())
         private set
-    val checked = mutableStateMapOf<String, Boolean>()
+    val checked = mutableStateMapOf<StorageData, Boolean>()
     var isRefreshing by mutableStateOf(false)
         private set
 
@@ -44,10 +45,10 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     private var _showNoPermissionDialog = MutableStateFlow(false)
     val showNoPermissionDialog: StateFlow<Boolean> = _showNoPermissionDialog
 
-    abstract fun loadAllItems(): Array<String>
-    abstract fun loadActiveItems(): Array<String>
-    abstract fun onCheckedChange(item: String, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
-    abstract fun deleteItem(item: String, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
+    abstract fun loadAllItems(): Array<StorageData>
+    abstract fun loadActiveItems(): Array<StorageData>
+    abstract fun onCheckedChange(item: StorageData, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
+    abstract fun deleteItem(item: StorageData, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
 
     fun refresh() {
         when (checkStoragePermission(context)) {

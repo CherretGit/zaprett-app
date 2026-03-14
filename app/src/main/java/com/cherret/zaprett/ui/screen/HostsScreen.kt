@@ -170,7 +170,7 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
                         else -> {
                             items(allLists) { item ->
                                 ListSwitchItem (
-                                    item = item,
+                                    item = item.name,
                                     isChecked = checked[item] == true,
                                     onCheckedChange = { isChecked ->
                                         viewModel.onCheckedChange(item, isChecked, snackbarHostState, scope)

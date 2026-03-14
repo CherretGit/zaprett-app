@@ -77,7 +77,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     val isInstalling = mutableStateMapOf<String, Boolean>()
     val isUpdateInstalling = mutableStateMapOf<String, Boolean>()
 
-    abstract fun getInstalledLists(): Array<String>
+    abstract fun getInstalledLists(): Array<StorageData>
     abstract val repoTab: RepoTab
     val repoUrl = sharedPreferences.getString("repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json"
     private val Json = Json {
@@ -155,7 +155,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun isItemInstalled(item: RepoItemUI): Boolean {
-        return getInstalledLists().any { File(it).name == item.name }
+        return getInstalledLists().any { it.id == item.id }
     }
 
     fun install(item: RepoItemUI) {

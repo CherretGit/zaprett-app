@@ -12,9 +12,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.data.ListType
+import com.cherret.zaprett.data.RepoManifest
 import com.cherret.zaprett.data.ServiceType
+import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.data.ZaprettConfig
 import com.topjohnwu.superuser.Shell
+import io.ktor.client.plugins.cache.storage.FileStorage
+import kotlinx.io.files.FileNotFoundException
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -149,63 +153,58 @@ fun getZaprettPath(): File {
     return Environment.getExternalStorageDirectory().resolve("zaprett")
 }
 
-fun getAllLists(): Array<String> {
-    val listsDir = getZaprettPath().resolve("lists/include")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
+fun getManifestsPath(): File {
+    return getZaprettPath().resolve("manifests")
+}
+fun getValidManifests(listsDir: File): Array<StorageData> {
+    return (listsDir.listFiles()
+        ?.mapNotNull { file ->
+            if (!file.isFile || file.extension.lowercase() != "json") return@mapNotNull null
+
+            parseManifestFromFile(file).getOrNull().takeIf {
+                File(it!!.file).exists()
+            }
+        }
         ?.toTypedArray()
-        ?: emptyArray()
+        ?: emptyArray())
 }
 
-fun getAllIpsets(): Array<String> {
-    val listsDir = getZaprettPath().resolve("ipset/include")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllLists(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("lists/include")
+    return getValidManifests(listsDir)
 }
 
-fun getAllExcludeLists(): Array<String> {
-    val listsDir = getZaprettPath().resolve("lists/include")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllIpsets(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("ipset/include")
+    return getValidManifests(listsDir)
 }
 
-fun getAllExcludeIpsets(): Array<String> {
-    val listsDir = getZaprettPath().resolve("ipset/exclude/")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllExcludeLists(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("lists/exclude")
+    return getValidManifests(listsDir)
 }
 
-fun getAllNfqwsStrategies(): Array<String> {
-    val listsDir = getZaprettPath().resolve("strategies/nfqws")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllExcludeIpsets(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("ipset/exclude")
+    return getValidManifests(listsDir)
 }
 
-fun getAllNfqws2Strategies(): Array<String> {
-    val listsDir = getZaprettPath().resolve("strategies/nfqws2")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllNfqwsStrategies(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("strategies/nfqws")
+    return getValidManifests(listsDir)
 }
 
-fun getAllByeDPIStrategies(): Array<String> {
-    val listsDir = getZaprettPath().resolve("strategies/byedpi")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllNfqws2Strategies(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("strategies/nfqws2")
+    return getValidManifests(listsDir)
 }
 
-fun getAllStrategies(sharedPreferences: SharedPreferences): Array<String> {
+fun getAllByeDPIStrategies(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("strategies/byedpi")
+    return getValidManifests(listsDir)
+}
+
+fun getAllStrategies(sharedPreferences: SharedPreferences): Array<StorageData> {
     return when (getServiceType(sharedPreferences)) {
         ServiceType.nfqws -> getAllNfqwsStrategies()
         ServiceType.nfqws2 -> getAllNfqws2Strategies()
@@ -213,11 +212,11 @@ fun getAllStrategies(sharedPreferences: SharedPreferences): Array<String> {
     }
 }
 
-fun getActiveLists(sharedPreferences: SharedPreferences): Array<String> {
+fun getActiveLists(sharedPreferences: SharedPreferences): Array<StorageData> {
     if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
-        return readConfig().activeLists.toTypedArray()
+        return readConfig().activeLists.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
     } else {
-        return sharedPreferences.getStringSet("lists", emptySet())?.toTypedArray() ?: emptyArray()
+        return sharedPreferences.getStringSet("lists", emptySet())!!.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
     }
 }
 
@@ -242,55 +241,59 @@ fun setServiceType(sharedPreferences: SharedPreferences, serviceType: ServiceTyp
     }
 }
 
-fun getActiveIpsets(sharedPreferences: SharedPreferences): Array<String> {
+fun getActiveIpsets(sharedPreferences: SharedPreferences): Array<StorageData> {
     if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
-        return readConfig().activeIpsets.toTypedArray()
-    } else return sharedPreferences.getStringSet("ipsets", emptySet())?.toTypedArray() ?: emptyArray()
+        return readConfig().activeIpsets.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
+    } else return sharedPreferences.getStringSet("ipsets", emptySet())!!.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
 }
 
-fun getActiveExcludeLists(sharedPreferences: SharedPreferences): Array<String> {
+fun getActiveExcludeLists(sharedPreferences: SharedPreferences): Array<StorageData> {
     if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
-        return readConfig().activeExcludeLists.toTypedArray()
+        return readConfig().activeExcludeLists.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
     } else {
-        return sharedPreferences.getStringSet("exclude_lists", emptySet())?.toTypedArray() ?: emptyArray()
+        return sharedPreferences.getStringSet("exclude_lists", emptySet())!!.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
     }
 }
 
-fun getActiveExcludeIpsets(sharedPreferences: SharedPreferences): Array<String> {
+fun getActiveExcludeIpsets(sharedPreferences: SharedPreferences): Array<StorageData> {
     if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
-        return readConfig().activeExcludeIpsets.toTypedArray()
-    } else return sharedPreferences.getStringSet("exclude_ipsets", emptySet())?.toTypedArray() ?: emptyArray()
+        return readConfig().activeExcludeIpsets.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
+    } else return sharedPreferences.getStringSet("exclude_ipsets", emptySet())!!.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
 }
 
-fun getActiveNfqwsStrategy(): Array<String> {
-    val strategy = readConfig().strategy
-    return if (strategy.isNotBlank()) arrayOf(strategy) else emptyArray()
+fun getActiveNfqwsStrategy(): Result<StorageData> {
+    return parseManifestFromFile(File(readConfig().strategy))
 }
 
-fun getActiveNfqws2Strategy(): Array<String> {
-    val strategy = readConfig().strategyNfqws2
-    return if (strategy.isNotBlank()) arrayOf(strategy) else emptyArray()
+fun getActiveNfqws2Strategy(): Result<StorageData> {
+    return parseManifestFromFile(File(readConfig().strategyNfqws2))
 }
 
-fun getActiveByeDPIStrategy(sharedPreferences: SharedPreferences): Array<String> {
-    val path = sharedPreferences.getString("active_strategy", "")
-    if (!path.isNullOrBlank() && File(path).exists()) {
-        return arrayOf(path)
-    }
-    return emptyArray()
+fun getActiveByeDPIStrategy(sharedPreferences: SharedPreferences): Result<StorageData> {
+    val path = sharedPreferences.getString("active_strategy", "")?: ""
+//    if (!path.isNullOrBlank() && File(path).exists()) {
+//        return arrayOf(path)
+//    }
+//    return emptyArray()
+    return parseManifestFromFile(File(path))
+
 }
 
 fun getActiveByeDPIStrategyContent(sharedPreferences: SharedPreferences): List<String> {
-    val path = sharedPreferences.getString("active_strategy", "")
-    if (!path.isNullOrBlank() && File(path).exists()) {
-        return File(path).readLines()
-    }
-    return emptyList()
+    val path = sharedPreferences.getString("active_strategy", "")?: ""
+    if (path.isBlank()) return emptyList()
+    val manifest = parseManifestFromFile(File(path)).getOrNull()
+    val file = manifest?.file?.let { File(it) }
+    return if (file?.exists() == true) file.readLines()
+    else emptyList()
 }
 
-fun getActiveStrategy(sharedPreferences: SharedPreferences): Array<String> {
-    return if (getServiceType(sharedPreferences) != ServiceType.byedpi) getActiveNfqwsStrategy()
-    else getActiveByeDPIStrategy(sharedPreferences)
+fun getActiveStrategy(sharedPreferences: SharedPreferences): Result<StorageData> {
+    return when(getServiceType(sharedPreferences)) {
+        ServiceType.byedpi -> getActiveByeDPIStrategy(sharedPreferences)
+        ServiceType.nfqws -> getActiveNfqwsStrategy()
+        ServiceType.nfqws2 -> getActiveNfqws2Strategy()
+    }
 }
 
 fun enableList(path: String, sharedPreferences: SharedPreferences) {
@@ -562,5 +565,14 @@ fun getHostListMode(prefs: SharedPreferences): ListType {
         return hostlist
     } else {
         return runCatching { enumValueOf<ListType>(prefs.getString("list_type", ListType.whitelist.name) ?: ListType.whitelist.name) }.getOrDefault(ListType.whitelist)
+    }
+}
+
+fun parseManifestFromFile(file: File): Result<StorageData> {
+    return runCatching {
+        if (!file.isFile || !file.canRead()) throw IllegalArgumentException("can't find manifest file")
+        val manifest = Json.decodeFromString<StorageData>(file.readText())
+        manifest.manifestPath = file.path
+        manifest
     }
 }

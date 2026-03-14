@@ -7,6 +7,7 @@ import androidx.compose.material3.SnackbarHostState
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.data.ServiceType
+import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveByeDPIStrategy
@@ -19,6 +20,7 @@ import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getStatus
 import kotlinx.coroutines.CoroutineScope
 import java.io.File
+import kotlin.emptyArray
 
 class StrategyViewModel(application: Application): BaseListsViewModel(application) {
     private val sharedPreferences = application.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -28,14 +30,20 @@ class StrategyViewModel(application: Application): BaseListsViewModel(applicatio
             ServiceType.nfqws2 -> Nfqws2StrategyProvider()
             ServiceType.byedpi -> ByeDPIStrategyProvider(sharedPreferences)
         }
-    override fun loadAllItems(): Array<String> = strategyProvider.getAll()
-    override fun loadActiveItems(): Array<String> = strategyProvider.getActive()
+    override fun loadAllItems(): Array<StorageData> = strategyProvider.getAll()
+    // костыль, желательно переделать
+    override fun loadActiveItems(): Array<StorageData> {
+        val activeItem = strategyProvider.getActive().getOrNull()
+        return if (activeItem != null) arrayOf(activeItem)
+        else emptyArray()
+    }
 
-    override fun deleteItem(item: String, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+    override fun deleteItem(item: StorageData, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         val wasChecked = checked[item] == true
-        disableStrategy(item, sharedPreferences)
-        val success = File(item).delete()
-        if (success) refresh()
+        disableStrategy(item.manifestPath, sharedPreferences)
+        val successArtifact = File(item.file).delete()
+        val successManifest = File(item.manifestPath).delete()
+        if (successArtifact && successManifest) refresh()
         if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 if (isEnabled && wasChecked) {
@@ -51,19 +59,19 @@ class StrategyViewModel(application: Application): BaseListsViewModel(applicatio
         }
     }
 
-    override fun onCheckedChange(item: String, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+    override fun onCheckedChange(item: StorageData, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         checked[item] = isChecked
         if (isChecked) {
             checked.keys.forEach { key ->
                 checked[key] = false
-                disableStrategy(key, sharedPreferences)
+                disableStrategy(key.manifestPath, sharedPreferences)
             }
             checked[item] = true
-            enableStrategy(item, sharedPreferences)
+            enableStrategy(item.manifestPath, sharedPreferences)
         }
         else {
             checked[item] = false
-            disableStrategy(item, sharedPreferences)
+            disableStrategy(item.manifestPath, sharedPreferences)
         }
         if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
             getStatus { isEnabled ->
@@ -81,8 +89,8 @@ class StrategyViewModel(application: Application): BaseListsViewModel(applicatio
 }
 
 interface StrategyProvider {
-    fun getAll(): Array<String>
-    fun getActive(): Array<String>
+    fun getAll(): Array<StorageData>
+    fun getActive(): Result<StorageData>
 }
 
 class NfqwsStrategyProvider : StrategyProvider {

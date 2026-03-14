@@ -70,9 +70,9 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
     fun loadStrategies() {
         val strategyList = getAllStrategies(prefs)
         strategyStates.clear()
-        strategyList.forEach { name ->
+        strategyList.forEach { manifest ->
             strategyStates += StrategyCheckResult(
-                path = name,
+                path = manifest.name,
                 status = StrategyTestingStatus.Waiting,
                 progress = 0f,
                 domains = emptyList()
@@ -108,7 +108,7 @@ class StrategySelectionViewModel(application: Application) : AndroidViewModel(ap
         val result = mutableListOf<String>()
         getActiveLists(prefs).forEach { path ->
             runCatching {
-                File(path).useLines { lines ->
+                File(path.file).useLines { lines ->
                     lines.forEach { line ->
                         result += line
                     }
