@@ -82,10 +82,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (prefs.getBoolean("auto_update", BuildConfig.auto_update)) {
             getUpdate(prefs)
                 .onSuccess { updateData ->
-                    downloadUrl.value = updateData.updateInfo.downloadUrl
-                    changeLog.value = updateData.changelog
-                    newVersion.value = updateData.updateInfo.version
-                    updateAvailable.value = true
+                    if (updateData.updateInfo.versionCode > BuildConfig.VERSION_CODE) {
+                        downloadUrl.value = updateData.updateInfo.downloadUrl
+                        changeLog.value = updateData.changelog
+                        newVersion.value = updateData.updateInfo.version
+                        updateAvailable.value = true
+                    }
                 }
                 .onFailure { exception ->
                     _errorFlow.value = exception.toString()
