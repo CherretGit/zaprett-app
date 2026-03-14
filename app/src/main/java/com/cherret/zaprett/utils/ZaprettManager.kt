@@ -111,19 +111,19 @@ fun restartService(callback: (String) -> Unit) {
 
 fun getModuleVersion(callback: (String) -> Unit) {
     Shell.cmd("zaprett --version").submit { result ->
-        callback(result.out.first())
+        if (result.isSuccess) callback(result.out.first())
     }
 }
 
 fun getNfqwsVersion(callback: (String) -> Unit) {
     Shell.cmd("zaprett nfqws-version").submit { result ->
-        callback(result.out.first())
+        if (result.isSuccess) callback(result.out.first())
     }
 }
 
 fun getNfqws2Version(callback: (String) -> Unit) {
     Shell.cmd("zaprett nfqws2-version").submit { result ->
-        callback(result.out.first())
+        if (result.isSuccess) callback(result.out.first())
     }
 }
 
