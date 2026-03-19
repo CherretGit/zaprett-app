@@ -82,6 +82,7 @@ import com.cherret.zaprett.ui.viewmodel.HomeViewModel
 import com.cherret.zaprett.utils.getServiceType
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,9 +104,9 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResu
     val serviceMode = viewModel.serviceMode
     val error by viewModel.errorFlow.collectAsState()
     LaunchedEffect(Unit) {
-        viewModel.checkForUpdate()
-        viewModel.checkServiceStatus()
-        viewModel.checkModuleInfo()
+        launch { viewModel.checkForUpdate() }
+        launch { viewModel.checkServiceStatus() }
+        launch { viewModel.checkModuleInfo() }
     }
 
     LaunchedEffect(requestVpnPermission) {
