@@ -118,4 +118,10 @@
     <string name="reset_settings_title">Сброс настроек</string>
     <string name="reset_settings_message">Вы действительно хотите сбросить настройки?</string>
     <string name="error_hash_mismatch">Не совпала контрольная сумма файла, попробуйте позже</string>
+    <string name="title_generate_manifest">Генерация манифеста</string>
+    <string name="hint_manifest_id">Введите ID манифеста</string>
+    <string name="hint_manifest_name">Введите имя манифеста</string>
+    <string name="hint_manifest_version">Введите версию манифеста</string>
+    <string name="hint_manifest_author">Введите автора манифеста</string>
+    <string name="hint_manifest_description">Введите описание манифеста</string>
 </resources>

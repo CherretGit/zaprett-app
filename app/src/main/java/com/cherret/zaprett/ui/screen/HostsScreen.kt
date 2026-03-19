@@ -63,9 +63,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ListType
+import com.cherret.zaprett.ui.component.GenerateManifestDialog
 import com.cherret.zaprett.ui.component.ListSwitchItem
 import com.cherret.zaprett.ui.viewmodel.HostsViewModel
 import com.cherret.zaprett.utils.getHostListMode
+import com.cherret.zaprett.utils.getManifestsPath
+import com.cherret.zaprett.utils.getZaprettPath
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,10 +85,17 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let {
-            if (getHostListMode(prefs) == ListType.whitelist) viewModel.copySelectedFile(context, "/lists/include", it)
-            else viewModel.copySelectedFile(context, "/lists/exclude", it) }
+            val path = when (getHostListMode(prefs)) {
+                ListType.whitelist -> getZaprettPath().resolve("files/lists/include")
+                ListType.blacklist -> getZaprettPath().resolve("files/lists/exclude")
+            }
+            viewModel.prepareImport(context, path, uri)
+        }
     }
     val error by viewModel.errorFlow.collectAsState()
+    val showGenerateManifestDialog by viewModel.showGenerateManifestDialog.collectAsState()
+    val pendingName by viewModel.pendingFileName.collectAsState()
+    val pendingUri by viewModel.pendingFileUri.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -207,6 +217,17 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
                 }
             }
         )
+    }
+    if (showGenerateManifestDialog && pendingName != null && pendingUri != null) {
+        GenerateManifestDialog(
+            path = pendingName!!,
+            onConfirm = { manifest ->
+                val manifestPath = when (getHostListMode(prefs)) {
+                    ListType.whitelist -> getManifestsPath().resolve("lists/include")
+                    ListType.blacklist -> getManifestsPath().resolve("lists/exclude")
+                }
+            viewModel.import(context, manifestPath, manifest)
+        }, onDismiss = {viewModel.cancelImport() })
     }
 }
 

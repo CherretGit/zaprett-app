@@ -18,19 +18,23 @@ import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.utils.checkStoragePermission
-import com.cherret.zaprett.utils.getZaprettPath
 import com.cherret.zaprett.utils.restartService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
 abstract class BaseListsViewModel(application: Application) : AndroidViewModel(application) {
     val context = application
+    val json = Json {
+        prettyPrint = true
+        ignoreUnknownKeys = true
+    }
     var allItems by mutableStateOf<List<StorageData>>(emptyList())
         private set
     var activeItems by mutableStateOf<List<StorageData>>(emptyList())
@@ -38,12 +42,18 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     val checked = mutableStateMapOf<StorageData, Boolean>()
     var isRefreshing by mutableStateOf(false)
         private set
+    private val _pendingFileName = MutableStateFlow<String?>(null)
+    val pendingFileName: StateFlow<String?> = _pendingFileName.asStateFlow()
+    private val _pendingFileUri = MutableStateFlow<Uri?>(null)
+    val pendingFileUri: StateFlow<Uri?> = _pendingFileUri.asStateFlow()
 
     private val _errorFlow = MutableStateFlow("")
     val errorFlow = _errorFlow.asStateFlow()
 
     private var _showNoPermissionDialog = MutableStateFlow(false)
     val showNoPermissionDialog: StateFlow<Boolean> = _showNoPermissionDialog
+    private var _showGenerateManifestDialog = MutableStateFlow(false)
+    val showGenerateManifestDialog: StateFlow<Boolean> = _showGenerateManifestDialog
 
     abstract fun loadAllItems(): Array<StorageData>
     abstract fun loadActiveItems(): Array<StorageData>
@@ -69,7 +79,7 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     fun hideNoPermissionDialog() {
         _showNoPermissionDialog.value = false
     }
-    
+
     fun showRestartSnackbar(context: Context, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         scope.launch {
             val result = snackbarHostState.showSnackbar(
@@ -89,51 +99,48 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
         _errorFlow.value = ""
     }
 
+    fun prepareImport(context: Context, path: File, uri: Uri) {
+        val name = context.contentResolver.query(uri, null, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (cursor.moveToFirst() && nameIndex != -1) cursor.getString(nameIndex) else null
+        } ?: "copied_file"
+        _pendingFileName.value = path.resolve(name).absolutePath
+        _pendingFileUri.value = uri
+        _showGenerateManifestDialog.value = true
+    }
+
+    fun cancelImport() {
+        _pendingFileName.value = null
+        _pendingFileUri.value = null
+        _showGenerateManifestDialog.value = true
+    }
+
+    fun import(context: Context, manifestPath: File, manifest: StorageData) {
+        val uri = _pendingFileUri.value ?: return
+        val manifestFile = manifestPath.resolve("${manifest.id}.json")
+        manifestFile.parentFile!!.mkdirs()
+        manifestFile.writeText(json.encodeToString(manifest))
+        copySelectedFile(context, manifest.file, uri)
+        _pendingFileName.value = null
+        _pendingFileUri.value = null
+        _showGenerateManifestDialog.value = false
+        refresh()
+    }
+
     fun copySelectedFile(context: Context, path: String, uri: Uri) {
-        //if (!Environment.isExternalStorageManager()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
             if (!Environment.isExternalStorageManager()) return
         }
         else if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED) return
         val contentResolver = context.contentResolver
-        val fileName = contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (cursor.moveToFirst() && nameIndex != -1) cursor.getString(nameIndex) else "copied_file"
-        } ?: "copied_file"
-
-        val directory = getZaprettPath().resolve(path)
-        if (!directory.exists()) {
-            directory.mkdirs()
-        }
-
+        val directory = File(path)
         try {
-            val outputFile = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                if (Environment.isExternalStorageManager()) {
-                    val outputDir = getZaprettPath().resolve(path)
-                    if (!outputDir.exists()) {
-                        outputDir.mkdirs()
-                    }
-                    File(outputDir, fileName)
-                } else {
-                    val outputDir = File(context.filesDir, path)
-                    if (!outputDir.exists()) {
-                        outputDir.mkdirs()
-                    }
-                    File(outputDir, fileName)
-                }
-            } else {
-                val outputDir = File(context.filesDir, path)
-                if (!outputDir.exists()) {
-                    outputDir.mkdirs()
-                }
-                File(outputDir, fileName)
-            }
+            directory.parentFile?.mkdirs()
             contentResolver.openInputStream(uri)?.use { inputStream ->
-                FileOutputStream(outputFile).use { outputStream ->
+                FileOutputStream(directory).use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
             }
-            refresh()
         } catch (e: IOException) {
             e.printStackTrace()
         }

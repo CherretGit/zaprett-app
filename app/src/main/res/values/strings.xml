@@ -124,4 +124,10 @@
     <string name="reset_settings_title">Reset settings</string>
     <string name="reset_settings_message">Are you sure you want to reset the settings?</string>
     <string name="error_hash_mismatch">File checksum mismatch, please try again later</string>
+    <string name="title_generate_manifest">Generate manifest</string>
+    <string name="hint_manifest_id">Enter manifest ID</string>
+    <string name="hint_manifest_name">Enter manifest name</string>
+    <string name="hint_manifest_version">Enter manifest version</string>
+    <string name="hint_manifest_author">Enter manifest author</string>
+    <string name="hint_manifest_description">Enter manifest description</string>
 </resources>

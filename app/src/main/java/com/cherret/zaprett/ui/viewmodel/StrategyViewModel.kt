@@ -57,6 +57,7 @@ class StrategyViewModel(application: Application): BaseListsViewModel(applicatio
                 showRestartSnackbar(context, snackbarHostState, scope)
             }
         }
+        refresh()
     }
 
     override fun onCheckedChange(item: StorageData, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {

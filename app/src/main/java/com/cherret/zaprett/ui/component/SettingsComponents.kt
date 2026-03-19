@@ -127,7 +127,7 @@ fun SettingDropDown(title: String, selected: String, items: List<DropdownItem>) 
             .fillMaxWidth()
             .height(80.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        onClick = { expanded = true },
+        onClick = { expanded = !expanded },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
@@ -180,57 +180,5 @@ fun SettingsSection(title: String) {
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-    )
-}
-
-@Composable
-fun InfoDialog(title: String, message: String, onDismiss: () -> Unit) {
-    AlertDialog(
-        title = { Text(text = title) },
-        text = { Text(text = message) },
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.btn_continue))
-            }
-        }
-    )
-}
-
-@Composable
-fun TextDialog(title: String, message: String, initialText: String, onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
-    var inputText by remember { mutableStateOf(initialText) }
-    AlertDialog(
-        title = { Text(text = title) },
-        text = {
-            TextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                placeholder = { Text(message) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )},
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                if (inputText.isNotEmpty()) {
-                    onConfirm(inputText)
-                    onDismiss()
-                }
-                else {
-                    onDismiss()
-                }
-            }
-            ) {
-                Text(stringResource(R.string.btn_continue))
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = { onDismiss() }
-            ) {
-                Text(stringResource(R.string.btn_dismiss))
-            }
-        }
     )
 }

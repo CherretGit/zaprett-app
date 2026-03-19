@@ -42,6 +42,7 @@ class HostsViewModel(application: Application): BaseListsViewModel(application) 
                 }
             }
         }
+        refresh()
     }
 
     override fun onCheckedChange(item: StorageData, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
