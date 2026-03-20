@@ -262,6 +262,12 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
             onClick = {
                 navController.navigate("repo?source=bin") { launchSingleTop = true }
             }
+        ),
+        Setting.Action(
+            title = stringResource(R.string.lua_libs_repo),
+            onClick = {
+                navController.navigate("repo?source=lua_libs") { launchSingleTop = true }
+            }
         )
     )
 

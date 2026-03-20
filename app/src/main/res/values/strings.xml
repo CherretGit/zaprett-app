@@ -9,6 +9,7 @@
     <string name="general_section">General settings</string>
     <string name="byedpi_section">ByeDPI settings</string>
     <string name="bins_repo">Fakes repository</string>
+    <string name="lua_libs_repo">Lua libs repository</string>
     <string name="btn_continue">Continue</string>
     <string name="btn_update">Update</string>
     <string name="btn_dismiss">Dismiss</string>

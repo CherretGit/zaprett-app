@@ -63,6 +63,7 @@ import com.cherret.zaprett.ui.viewmodel.BinRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
 import com.cherret.zaprett.ui.viewmodel.HostRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.IpsetRepoViewModel
+import com.cherret.zaprett.ui.viewmodel.LuaLibsRepoViewModel
 import com.cherret.zaprett.ui.viewmodel.StrategyRepoViewModel
 import com.cherret.zaprett.utils.checkModuleInstallation
 import com.cherret.zaprett.utils.checkStoragePermission
@@ -230,6 +231,10 @@ class MainActivity : ComponentActivity() {
                         }
                         "bin" -> {
                             val viewModel: BinRepoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                            RepoScreen(navController, viewModel)
+                        }
+                        "lua_libs" -> {
+                            val viewModel: LuaLibsRepoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
                             RepoScreen(navController, viewModel)
                         }
                     }

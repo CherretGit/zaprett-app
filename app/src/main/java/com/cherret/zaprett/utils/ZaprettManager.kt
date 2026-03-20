@@ -216,6 +216,11 @@ fun getAllBin(): Array<StorageData> {
     return getValidManifests(listsDir)
 }
 
+fun getAllLibs(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("libs")
+    return getValidManifests(listsDir)
+}
+
 fun getActiveLists(sharedPreferences: SharedPreferences): Array<StorageData> {
     if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
         return readConfig().activeLists.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()

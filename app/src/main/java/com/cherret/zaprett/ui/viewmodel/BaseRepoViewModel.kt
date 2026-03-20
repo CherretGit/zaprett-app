@@ -83,6 +83,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     private val Json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
+        encodeDefaults = true
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -94,6 +95,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 when(repoTab) {
                     RepoTab.bins -> when(item.type) {
                         ItemType.bin -> true
+                        else -> false
+                    }
+                    RepoTab.lua_libs -> when(item.type) {
+                        ItemType.lua_lib -> true
                         else -> false
                     }
                     RepoTab.lists -> when (item.type) {
@@ -193,6 +198,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 if (getFileSha256(sourceFile) == item.artifact.sha256) {
                     val targetDirSuffix = when (index.type) {
                         ItemType.bin -> "bin"
+                        ItemType.lua_lib -> "libs"
                         ItemType.byedpi -> "strategies/byedpi"
                         ItemType.nfqws -> "strategies/nfqws"
                         ItemType.nfqws2 -> "strategies/nfqws2"

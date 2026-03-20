@@ -34,6 +34,7 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
+        encodeDefaults = true
     }
     var allItems by mutableStateOf<List<StorageData>>(emptyList())
         private set
