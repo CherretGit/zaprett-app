@@ -29,7 +29,7 @@ object NetworkUtils {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    fun getRepo(url: String, filter: (RepoIndexItem) -> Boolean): Flow<List<RepoItemFull>> = flow {
+    fun getRepo(url: String, filter: (RepoIndexItem) -> Boolean): Flow<Pair<List<RepoIndexItem>, List<RepoItemFull>>> = flow {
         val index = client.get(url).bodyAsText()
         val indexJson = json.decodeFromString<RepoIndex>(index)
         val filtered = indexJson.items.filter(filter)
@@ -45,26 +45,28 @@ object NetworkUtils {
                 }
             }.awaitAll()
         }
-        emit(manifest)
+        emit(indexJson.items to manifest)
     }
 
-    fun resolveDependencies(items: List<RepoItemFull>): Flow<ResolveResult> = flow {
-        val resolved = mutableSetOf<String>()
+    fun resolveDependencies(index: List<RepoIndexItem>, items: List<RepoItemFull>): Flow<ResolveResult> = flow {
+        val indexMap = index.associateBy { it.manifest }
         val depsMap = mutableMapOf<String, DependencyEntry>()
-        val manifestCache = mutableMapOf<String, RepoManifest>()
-        suspend fun collect(manifest: RepoManifest, rootName: String) {
+        val manifestCache = mutableMapOf<String, RepoItemFull>()
+        suspend fun collect(manifest: RepoManifest, rootId: String) {
             manifest.dependencies.forEach { depUrl ->
                 val dep = manifestCache.getOrPut(depUrl) {
-                    json.decodeFromString<RepoManifest>(
+                    val indexItem = indexMap[depUrl] ?: return@forEach
+                    val depManifest = json.decodeFromString<RepoManifest>(
                         client.get(depUrl).bodyAsText()
                     )
+                    RepoItemFull(indexItem, depManifest)
                 }
-                val entry = depsMap.getOrPut(dep.name) {
+                val entry = depsMap.getOrPut(dep.manifest.id) {
                     DependencyEntry(dep)
                 }
-                entry.dependencies += rootName
-                if (resolved.add(dep.name)) {
-                    collect(dep, dep.name)
+                entry.dependencies += rootId
+                if (entry.dependencies.add(rootId)) {
+                    collect(dep.manifest, rootId)
                 }
             }
         }

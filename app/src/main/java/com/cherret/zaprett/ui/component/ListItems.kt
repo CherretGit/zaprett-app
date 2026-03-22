@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.Card
@@ -28,7 +27,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
@@ -49,8 +47,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cherret.zaprett.R
-import com.cherret.zaprett.data.DependencyUI
-import com.cherret.zaprett.data.RepoItemUI
+import com.cherret.zaprett.data.RepoItemFull
 import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.data.StrategyCheckResult
 import com.cherret.zaprett.data.StrategyTestingStatus
@@ -127,17 +124,17 @@ fun ListSwitchItem(item: StorageData, isChecked: Boolean, onCheckedChange: (Bool
 
 @Composable
 fun RepoItem(
-    item: RepoItemUI,
-    dependencies: List<DependencyUI>,
+    item: RepoItemFull,
     viewModel: BaseRepoViewModel,
     isInstalling: Map<String, Boolean>,
     isUpdateInstalling: Map<String, Boolean>,
     isUpdate: Map<String, Boolean>,
     modifier: Modifier = Modifier
 ) {
+    val manifest = item.manifest
     val isInstalled = viewModel.isItemInstalled(item)
-    val installing = isInstalling[item.id] == true
-    val updating = isUpdateInstalling[item.id] == true
+    val installing = isInstalling[manifest.id] == true
+    val updating = isUpdateInstalling[manifest.id] == true
 
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
@@ -153,7 +150,7 @@ fun RepoItem(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text(text = item.name, modifier = Modifier.weight(1f))
+                Text(text = manifest.name, modifier = Modifier.weight(1f))
             }
 
             Row(
@@ -162,7 +159,7 @@ fun RepoItem(
                     .padding(start = 16.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.title_author, item.author),
+                    text = stringResource(R.string.title_author, manifest.author),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -173,7 +170,7 @@ fun RepoItem(
                     .padding(start = 16.dp)
             ) {
                 Text(
-                    text = item.description,
+                    text = manifest.description,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -184,7 +181,7 @@ fun RepoItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                if (isUpdate[item.id] == true && isInstalled) {
+                if (isUpdate[manifest.id] == true && isInstalled) {
                     FilledTonalButton(
                         onClick = { viewModel.update(item) },
                         enabled = !updating,
@@ -220,13 +217,6 @@ fun RepoItem(
                         }
                     )
                 }
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null
-                    )
-                }
-//                Text(dependencies)
             }
         }
     }

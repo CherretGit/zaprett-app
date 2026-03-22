@@ -39,24 +39,11 @@ data class RepoItemFull(
 )
 
 data class DependencyEntry (
-    val manifest: RepoManifest,
+    val manifest: RepoItemFull,
     val dependencies: MutableSet<String> = mutableSetOf()
 )
 
 data class ResolveResult(
     val roots: List<RepoItemFull>,
     val dependencies: List<DependencyEntry>
-)
-
-data class RepoItemUI(
-    val id: String,
-    val name: String,
-    val author: String,
-    val description: String,
-    val version: String
-)
-
-data class DependencyUI(
-    val name: String,
-    val version: String
 )

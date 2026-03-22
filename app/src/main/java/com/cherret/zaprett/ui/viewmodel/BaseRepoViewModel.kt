@@ -6,20 +6,16 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.cherret.zaprett.R
-import com.cherret.zaprett.data.DependencyEntry
-import com.cherret.zaprett.data.DependencyUI
 import com.cherret.zaprett.data.ItemType
 import com.cherret.zaprett.data.ListType
 import com.cherret.zaprett.data.RepoItemFull
-import com.cherret.zaprett.data.RepoItemUI
-import com.cherret.zaprett.data.RepoManifest
 import com.cherret.zaprett.data.RepoTab
+import com.cherret.zaprett.data.ResolveResult
 import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.utils.DownloadUtils.download
@@ -59,16 +55,9 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
 
     private var _showPermissionDialog = MutableStateFlow(false)
     val showPermissionDialog: StateFlow<Boolean> = _showPermissionDialog
-    private val repoItems = mutableMapOf<String, RepoItemFull>()
-    private val _dependencyItems = mutableStateListOf<DependencyEntry>()
-    val dependencyItems: List<DependencyEntry> = _dependencyItems
 
-
-    private val _items = mutableStateOf<List<RepoItemUI>>(emptyList())
-    val items: List<RepoItemUI> get() = _items.value
-
-    private var _dependencyList = MutableStateFlow<List<DependencyUI>>(emptyList())
-    val dependencyList: StateFlow<List<DependencyUI>> = _dependencyList
+    private val _items = MutableStateFlow<ResolveResult?>(null)
+    val items: StateFlow<ResolveResult?> = _items
 
     var isRefreshing = mutableStateOf(false)
         protected set
@@ -120,30 +109,18 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 }
             }
                 .onStart { isRefreshing.value = true }
-                .flatMapConcat { list ->
-                    resolveDependencies(list)
+                .flatMapConcat { (index, list) ->
+                    resolveDependencies(index, list)
                 }
                 .onEach { result ->
-                    _dependencyItems.clear()
-                    _dependencyItems.addAll(result.dependencies)
-                    _items.value = result.roots.map { item ->
-                        repoItems[item.manifest.id] = item
-                        RepoItemUI(
-                            id = item.manifest.id,
-                            name = item.manifest.name,
-                            author = item.manifest.author,
-                            description = item.manifest.description,
-                            version = item.manifest.version
-                        )
-                    }
-                    _dependencyList.value = result.dependencies.map { item ->
-                        DependencyUI(
-                            name = item.manifest.name,
-                            version = item.manifest.version
-                        )
-                    }
-                    dependencyItems
+                    _items.value = result
                     isUpdate.clear()
+                    isUpdate.putAll(
+                        getInstalledLists().associate { item ->
+                            val repoItem = result.roots.associateBy { it.manifest.id }[item.id]
+                            item.id to (repoItem?.manifest?.version != item.version)
+                        }
+                    )
                 }
                 .catch { e -> _errorFlow.value = e }
                 .onCompletion { isRefreshing.value = false }
@@ -159,17 +136,23 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
         _downloadErrorFlow.value = null
     }
 
-    fun isItemInstalled(item: RepoItemUI): Boolean {
-        return getInstalledLists().any { it.id == item.id }
+    fun isItemInstalled(item: RepoItemFull): Boolean {
+        return getInstalledLists().any { it.id == item.manifest.id }
     }
 
-    fun install(item: RepoItemUI) {
-        val item = repoItems[item.id]!!.manifest
+    fun install(item: RepoItemFull) {
+        val rootId = item.manifest.id
+        val deps = _items.value?.dependencies
+            ?.filter { it.dependencies.contains(rootId) }
+            ?.map { it.manifest } ?: return
+        val download = listOf(item) + deps
         if (checkStoragePermission(context)) {
-                isInstalling[item.id] = true
-                val downloadId = download(context, item.artifact.url)
+            download.forEach { item ->
+                isInstalling[item.manifest.id] = true
+                val downloadId = download(context, item.manifest.artifact.url)
                 downloadAndProcess(item, context, downloadId)
             }
+        }
         else _showPermissionDialog.value = true
     }
 
@@ -177,19 +160,25 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
         _showPermissionDialog.value = false
     }
 
-    fun update(item: RepoItemUI) {
-        val item = repoItems[item.id]!!.manifest
+    fun update(item: RepoItemFull) {
+        val rootId = item.manifest.id
+        val deps = _items.value?.dependencies
+            ?.filter { it.dependencies.contains(rootId) }
+            ?.map { it.manifest } ?: return
+        val download = listOf(item) + deps
         if (checkStoragePermission(context)) {
-            isUpdateInstalling[item.id] = true
-            val downloadId = download(context, item.artifact.url)
-            downloadAndProcess(item, context, downloadId)
+            download.forEach { item ->
+                isUpdateInstalling[item.manifest.id] = true
+                val downloadId = download(context, item.manifest.artifact.url)
+                downloadAndProcess(item, context, downloadId)
+            }
         }
         else _showPermissionDialog.value = true
     }
 
-    fun downloadAndProcess(item: RepoManifest, context: Context, downloadId: Long) {
-        val index = repoItems[item.id]!!.index
-        val item = repoItems[item.id]!!.manifest
+    fun downloadAndProcess(item: RepoItemFull, context: Context, downloadId: Long) {
+        val index = item.index
+        val item = item.manifest
         registerDownloadListener(context, downloadId, { uri ->
             viewModelScope.launch(Dispatchers.IO) {
                 val baseDir = getZaprettPath()
