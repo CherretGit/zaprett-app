@@ -9,7 +9,7 @@ import com.cherret.zaprett.utils.getAllLists
 import com.cherret.zaprett.utils.getHostListMode
 
 class HostRepoViewModel(application: Application): BaseRepoViewModel(application) {
-    override fun getInstalledLists(): Array<StorageData> =
+    override fun getInstalled(): Array<StorageData> =
         if (getHostListMode(sharedPreferences) == ListType.whitelist) getAllLists() else getAllExcludeLists()
     override val repoTab = RepoTab.lists
 }

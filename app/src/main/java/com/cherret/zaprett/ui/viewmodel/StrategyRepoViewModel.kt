@@ -9,7 +9,7 @@ import com.cherret.zaprett.utils.getAllNfqwsStrategies
 import com.cherret.zaprett.utils.getServiceType
 
 class StrategyRepoViewModel(application: Application): BaseRepoViewModel(application) {
-    override fun getInstalledLists(): Array<StorageData> =
+    override fun getInstalled(): Array<StorageData> =
         if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
             getAllNfqwsStrategies()
         } else {

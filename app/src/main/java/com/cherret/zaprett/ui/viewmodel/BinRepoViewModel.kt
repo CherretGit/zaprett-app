@@ -6,6 +6,6 @@ import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.utils.getAllBin
 
 class BinRepoViewModel(application: Application): BaseRepoViewModel(application) {
-    override fun getInstalledLists(): Array<StorageData> = getAllBin()
+    override fun getInstalled(): Array<StorageData> = getAllBin()
     override val repoTab = RepoTab.bins
 }

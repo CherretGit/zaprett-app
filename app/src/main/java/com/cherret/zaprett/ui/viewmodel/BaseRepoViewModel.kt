@@ -66,7 +66,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     val isInstalling = mutableStateMapOf<String, Boolean>()
     val isUpdateInstalling = mutableStateMapOf<String, Boolean>()
 
-    abstract fun getInstalledLists(): Array<StorageData>
+    abstract fun getInstalled(): Array<StorageData>
     abstract val repoTab: RepoTab
     val repoUrl = sharedPreferences.getString("repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json"
     private val Json = Json {
@@ -116,7 +116,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     _items.value = result
                     isUpdate.clear()
                     isUpdate.putAll(
-                        getInstalledLists().associate { item ->
+                        getInstalled().associate { item ->
                             val repoItem = result.roots.associateBy { it.manifest.id }[item.id]
                             item.id to (repoItem?.manifest?.version != item.version)
                         }
@@ -137,7 +137,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun isItemInstalled(item: RepoItemFull): Boolean {
-        return getInstalledLists().any { it.id == item.manifest.id }
+        return getInstalled().any { it.id == item.manifest.id }
     }
 
     fun install(item: RepoItemFull) {
