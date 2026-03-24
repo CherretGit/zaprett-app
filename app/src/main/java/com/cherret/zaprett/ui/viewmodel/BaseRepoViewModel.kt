@@ -24,6 +24,15 @@ import com.cherret.zaprett.utils.DownloadUtils.registerDownloadListener
 import com.cherret.zaprett.utils.NetworkUtils.getRepo
 import com.cherret.zaprett.utils.NetworkUtils.resolveDependencies
 import com.cherret.zaprett.utils.checkStoragePermission
+import com.cherret.zaprett.utils.getAllBin
+import com.cherret.zaprett.utils.getAllByeDPIStrategies
+import com.cherret.zaprett.utils.getAllExcludeIpsets
+import com.cherret.zaprett.utils.getAllExcludeLists
+import com.cherret.zaprett.utils.getAllIpsets
+import com.cherret.zaprett.utils.getAllLibs
+import com.cherret.zaprett.utils.getAllLists
+import com.cherret.zaprett.utils.getAllNfqws2Strategies
+import com.cherret.zaprett.utils.getAllNfqwsStrategies
 import com.cherret.zaprett.utils.getHostListMode
 import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getZaprettPath
@@ -140,12 +149,28 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
         return getInstalled().any { it.id == item.manifest.id }
     }
 
+    fun isDependencyInstalled(item: RepoItemFull): Boolean {
+        val installed = when(item.index.type) {
+            ItemType.bin -> getAllBin()
+            ItemType.lua_lib -> getAllLibs()
+            ItemType.byedpi -> getAllByeDPIStrategies()
+            ItemType.nfqws -> getAllNfqwsStrategies()
+            ItemType.nfqws2 -> getAllNfqws2Strategies()
+            ItemType.list -> getAllLists()
+            ItemType.list_exclude -> getAllExcludeLists()
+            ItemType.ipset -> getAllIpsets()
+            ItemType.ipset_exclude -> getAllExcludeIpsets()
+        }
+        return installed.any { it.id == item.manifest.id }
+    }
+
     fun install(item: RepoItemFull) {
         val rootId = item.manifest.id
         val deps = _items.value?.dependencies
             ?.filter { rootId in it.dependencies }
             ?.map { it.manifest }
             .orEmpty()
+            .filter { !isDependencyInstalled(it) }
         val download = listOf(item) + deps
         if (checkStoragePermission(context)) {
             download.forEach { item ->
@@ -164,8 +189,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     fun update(item: RepoItemFull) {
         val rootId = item.manifest.id
         val deps = _items.value?.dependencies
-            ?.filter { it.dependencies.contains(rootId) }
-            ?.map { it.manifest } ?: return
+            ?.filter { rootId in it.dependencies }
+            ?.map { it.manifest }
+            .orEmpty()
+            .filter { !isDependencyInstalled(it) }
         val download = listOf(item) + deps
         if (checkStoragePermission(context)) {
             download.forEach { item ->
