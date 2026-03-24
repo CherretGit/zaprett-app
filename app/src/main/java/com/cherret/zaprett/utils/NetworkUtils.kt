@@ -53,26 +53,26 @@ object NetworkUtils {
         val depsMap = mutableMapOf<String, DependencyEntry>()
         val manifestCache = mutableMapOf<String, RepoItemFull>()
         suspend fun collect(manifest: RepoManifest, rootId: String) {
-            manifest.dependencies.forEach { depUrl ->
-                val dep = manifestCache.getOrPut(depUrl) {
-                    val indexItem = indexMap[depUrl] ?: return@forEach
-                    val depManifest = json.decodeFromString<RepoManifest>(
-                        client.get(depUrl).bodyAsText()
-                    )
-                    RepoItemFull(indexItem, depManifest)
+            manifest.dependencies
+                .mapNotNull { depUrl ->
+                    indexMap[depUrl]?.let { indexItem ->
+                        depUrl to indexItem
+                    }
                 }
-                val entry = depsMap.getOrPut(dep.manifest.id) {
-                    DependencyEntry(dep)
+                .forEach { (depUrl, indexItem) ->
+                    val dep = manifestCache.getOrPut(depUrl) {
+                        val depManifest = json.decodeFromString<RepoManifest>(
+                            client.get(depUrl).bodyAsText()
+                        )
+                        RepoItemFull(indexItem, depManifest)
+                    }
+                    val entry = depsMap.getOrPut(dep.manifest.id) { DependencyEntry(dep) }
+                    entry.dependencies.add(rootId)
+                        .takeIf { dependency -> dependency }
+                        ?.let { collect(dep.manifest, rootId) }
                 }
-                entry.dependencies += rootId
-                if (entry.dependencies.add(rootId)) {
-                    collect(dep.manifest, rootId)
-                }
-            }
         }
-        items.forEach { item ->
-            collect(item.manifest, item.index.id)
-        }
+        items.forEach { collect(it.manifest, it.index.id) }
         emit(
             ResolveResult(
                 roots = items,

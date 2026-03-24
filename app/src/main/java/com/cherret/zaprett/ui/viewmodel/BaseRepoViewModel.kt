@@ -143,8 +143,9 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     fun install(item: RepoItemFull) {
         val rootId = item.manifest.id
         val deps = _items.value?.dependencies
-            ?.filter { it.dependencies.contains(rootId) }
-            ?.map { it.manifest } ?: return
+            ?.filter { rootId in it.dependencies }
+            ?.map { it.manifest }
+            .orEmpty()
         val download = listOf(item) + deps
         if (checkStoragePermission(context)) {
             download.forEach { item ->
