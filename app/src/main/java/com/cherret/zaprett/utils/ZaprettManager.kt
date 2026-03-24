@@ -1,6 +1,7 @@
 package com.cherret.zaprett.utils
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
@@ -11,7 +12,9 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.cherret.zaprett.data.AppListType
+import com.cherret.zaprett.data.ItemType
 import com.cherret.zaprett.data.ListType
+import com.cherret.zaprett.data.RepoItemFull
 import com.cherret.zaprett.data.RepoManifest
 import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.StorageData
@@ -21,6 +24,7 @@ import io.ktor.client.plugins.cache.storage.FileStorage
 import kotlinx.io.files.FileNotFoundException
 import kotlinx.serialization.json.Json
 import java.io.File
+import androidx.core.net.toUri
 
 private val json = Json {
     prettyPrint = true
@@ -584,4 +588,51 @@ fun parseManifestFromFile(file: File): Result<StorageData> {
         manifest.manifestPath = file.path
         manifest
     }
+}
+
+fun isDependencyInstalled(item: RepoItemFull): Boolean {
+    return matchTypeToManifests(item).any { it.id == item.manifest.id }
+}
+
+fun findManifestByData(item: RepoItemFull): String {
+    val installed = matchTypeToManifests(item)
+    return installed.first {
+        it.id == item.manifest.id
+    }.manifestPath
+}
+
+fun matchTypeToManifests(item: RepoItemFull): Array<StorageData> {
+    return when(item.index.type) {
+        ItemType.bin -> getAllBin()
+        ItemType.lua_lib -> getAllLibs()
+        ItemType.byedpi -> getAllByeDPIStrategies()
+        ItemType.nfqws -> getAllNfqwsStrategies()
+        ItemType.nfqws2 -> getAllNfqws2Strategies()
+        ItemType.list -> getAllLists()
+        ItemType.list_exclude -> getAllExcludeLists()
+        ItemType.ipset -> getAllIpsets()
+        ItemType.ipset_exclude -> getAllExcludeIpsets()
+    }
+}
+
+fun getManifestExpectedPath(item: RepoItemFull, baseDir: File): String {
+    val targetDirSuffix = when (item.index.type) {
+        ItemType.bin -> "bin"
+        ItemType.lua_lib -> "libs"
+        ItemType.byedpi -> "strategies/byedpi"
+        ItemType.nfqws -> "strategies/nfqws"
+        ItemType.nfqws2 -> "strategies/nfqws2"
+        ItemType.list -> "lists/include"
+        ItemType.list_exclude -> "lists/exclude"
+        ItemType.ipset -> "ipset/include"
+        ItemType.ipset_exclude -> "ipset/exclude"
+    }
+    val uriPath = item.manifest.artifact.url.toUri().path ?: ""
+    val lastSegment = uriPath.substringAfterLast('/')
+    val cleanedFileName = lastSegment.replace(Regex("""-\d+(?=\.|$)"""), "")
+    val manifestFileName = "${cleanedFileName.substringBeforeLast(".")}.json"
+    return baseDir.resolve("manifests")
+        .resolve(targetDirSuffix)
+        .resolve(manifestFileName)
+        .path
 }

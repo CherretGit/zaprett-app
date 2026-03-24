@@ -34,8 +34,10 @@ import com.cherret.zaprett.utils.getAllLists
 import com.cherret.zaprett.utils.getAllNfqws2Strategies
 import com.cherret.zaprett.utils.getAllNfqwsStrategies
 import com.cherret.zaprett.utils.getHostListMode
+import com.cherret.zaprett.utils.getManifestExpectedPath
 import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getZaprettPath
+import com.cherret.zaprett.utils.isDependencyInstalled
 import com.cherret.zaprett.utils.restartService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -149,21 +151,6 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
         return getInstalled().any { it.id == item.manifest.id }
     }
 
-    fun isDependencyInstalled(item: RepoItemFull): Boolean {
-        val installed = when(item.index.type) {
-            ItemType.bin -> getAllBin()
-            ItemType.lua_lib -> getAllLibs()
-            ItemType.byedpi -> getAllByeDPIStrategies()
-            ItemType.nfqws -> getAllNfqwsStrategies()
-            ItemType.nfqws2 -> getAllNfqws2Strategies()
-            ItemType.list -> getAllLists()
-            ItemType.list_exclude -> getAllExcludeLists()
-            ItemType.ipset -> getAllIpsets()
-            ItemType.ipset_exclude -> getAllExcludeIpsets()
-        }
-        return installed.any { it.id == item.manifest.id }
-    }
-
     fun install(item: RepoItemFull) {
         val rootId = item.manifest.id
         val deps = _items.value?.dependencies
@@ -177,6 +164,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                 isInstalling[item.manifest.id] = true
                 val downloadId = download(context, item.manifest.artifact.url)
                 downloadAndProcess(item, context, downloadId)
+
             }
         }
         else _showPermissionDialog.value = true
@@ -237,6 +225,23 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
 
                     val manifestFile = baseDir.resolve("manifests").resolve(targetDirSuffix).resolve("${targetFile.name.substringBeforeLast(".")}.json")
                     manifestFile.parentFile!!.mkdirs()
+
+                    val allResolvedDeps = _items.value?.dependencies?.map { it.manifest } ?: emptyList()
+                    val resolvedDependenciesPaths = item.dependencies.mapNotNull { depId ->
+                        val depRepoItem = allResolvedDeps.find { it.manifest.id == depId }
+
+                        if (depRepoItem != null) {
+                            getManifestExpectedPath(depRepoItem, baseDir)
+                        } else {
+                            runCatching {
+                                val installedStorageData = getAllBin() + getAllLibs() + getAllByeDPIStrategies() +
+                                        getAllNfqwsStrategies() + getAllNfqws2Strategies() + getAllLists() +
+                                        getAllExcludeLists() + getAllIpsets() + getAllExcludeIpsets()
+                                installedStorageData.firstOrNull { it.id == depId }?.manifestPath
+                            }.getOrNull()
+                        }
+                    }
+
                     manifestFile.writeText(
                         Json.encodeToString(
                             StorageData(
@@ -246,12 +251,11 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                                 item.version,
                                 item.author,
                                 item.description,
-                                item.dependencies,
+                                dependencies = resolvedDependenciesPaths,
                                 file = targetFile.path
                             )
                         )
                     )
-
                     isInstalling[item.id] = false
                     isUpdateInstalling[item.id] = false
                     isUpdate[item.id] = false
