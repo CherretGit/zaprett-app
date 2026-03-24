@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -34,6 +35,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +61,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ListSwitchItem(item: StorageData, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit, onDeleteClick: () -> Unit) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -108,7 +111,7 @@ fun ListSwitchItem(item: StorageData, isChecked: Boolean, onCheckedChange: (Bool
             horizontalArrangement = Arrangement.End
         ) {
             FilledTonalButton(
-                onClick = onDeleteClick,
+                onClick = { showDeleteDialog = true },
                 modifier = Modifier.padding(horizontal = 5.dp)
             ) {
                 Icon(
@@ -119,6 +122,23 @@ fun ListSwitchItem(item: StorageData, isChecked: Boolean, onCheckedChange: (Bool
                 Text(stringResource(R.string.btn_remove_host))
             }
         }
+    }
+    if (showDeleteDialog) {
+        AlertDialog(
+            title = { Text(stringResource(R.string.title_sure)) },
+            text = { Text(stringResource(R.string.description_delete_item)) },
+            onDismissRequest = { showDeleteDialog = false },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false} ) {
+                    Text(stringResource(R.string.btn_dismiss))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onDeleteClick() }) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
     }
 }
 

@@ -131,4 +131,6 @@
     <string name="hint_manifest_version">Enter manifest version</string>
     <string name="hint_manifest_author">Enter manifest author</string>
     <string name="hint_manifest_description">Enter manifest description</string>
+    <string name="title_sure">Are you sure?</string>
+    <string name="description_delete_item">Are you sure you want to delete this item?</string>
 </resources>

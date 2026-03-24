@@ -125,4 +125,6 @@
     <string name="hint_manifest_version">Введите версию манифеста</string>
     <string name="hint_manifest_author">Введите автора манифеста</string>
     <string name="hint_manifest_description">Введите описание манифеста</string>
+    <string name="title_sure">Вы уверены?</string>
+    <string name="description_delete_item">Вы уверены что хотите удалить данный объект?</string>
 </resources>
