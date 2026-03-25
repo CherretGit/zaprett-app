@@ -554,14 +554,14 @@ private fun AboutDialog(navController: NavController, onDismiss: () -> Unit) {
                     }
                     IconButton(onClick = {
                         val intent = Intent(Intent.ACTION_VIEW,
-                            "https://matrix.to/#/#zaprett-group:matrix.cherret.ru".toUri())
+                            "https://matrix.to/#/#zaprett-space:matrix.cherret.ru".toUri())
                         context.startActivity(intent)
                     }) {
                         Icon(painterResource(R.drawable.matrix), "Matrix")
                     }
                     IconButton(onClick = {
                         val intent = Intent(Intent.ACTION_VIEW,
-                            "https://pay.cloudtips.ru/p/672192fd".toUri())
+                            "https://www.donationalerts.com/r/zaprett_app".toUri())
                         context.startActivity(intent)
                     }) {
                         Icon(Icons.Default.AttachMoney, "Donate")
