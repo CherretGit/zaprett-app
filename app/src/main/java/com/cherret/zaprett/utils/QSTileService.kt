@@ -2,6 +2,7 @@ package com.cherret.zaprett.utils
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.VpnService
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.core.content.ContextCompat
@@ -37,7 +38,12 @@ class QSTileService: TileService() {
                 startService {}
             }
             else {
-                ContextCompat.startForegroundService(applicationContext, Intent(applicationContext, ByeDpiVpnService::class.java).apply { action = "START_VPN" })
+                val prepareIntent = VpnService.prepare(applicationContext)
+                if (prepareIntent != null) {
+                    startActivityAndCollapse(prepareIntent)
+                } else {
+                    ContextCompat.startForegroundService(applicationContext, Intent(applicationContext, ByeDpiVpnService::class.java).apply { action = "START_VPN" })
+                }
             }
         }
         else {
