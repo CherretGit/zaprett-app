@@ -16,8 +16,8 @@ android {
         applicationId = "com.cherret.zaprett"
         minSdk = 28
         targetSdk = 35
-        versionCode = 27
-        versionName = "2.15"
+        versionCode = 28
+        versionName = "3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
