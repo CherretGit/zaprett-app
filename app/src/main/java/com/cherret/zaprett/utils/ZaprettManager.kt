@@ -594,6 +594,10 @@ fun isDependencyInstalled(item: RepoItemFull): Boolean {
     return matchTypeToManifests(item).any { it.id == item.manifest.id }
 }
 
+fun checkManifestVersion(item: RepoItemFull): Boolean {
+    return matchTypeToManifests(item).firstOrNull { it.id == item.manifest.id}?.version != item.manifest.version
+}
+
 fun findManifestByData(item: RepoItemFull): String {
     val installed = matchTypeToManifests(item)
     return installed.first {

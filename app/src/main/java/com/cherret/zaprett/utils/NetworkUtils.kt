@@ -72,7 +72,7 @@ object NetworkUtils {
                         ?.let { collect(dep.manifest, rootId) }
                 }
         }
-        items.forEach { collect(it.manifest, it.index.id) }
+        items.forEach { collect(it.manifest, it.manifest.id) }
         emit(
             ResolveResult(
                 roots = items,

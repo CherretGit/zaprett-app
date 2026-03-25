@@ -23,7 +23,9 @@ import com.cherret.zaprett.utils.DownloadUtils.getFileSha256
 import com.cherret.zaprett.utils.DownloadUtils.registerDownloadListener
 import com.cherret.zaprett.utils.NetworkUtils.getRepo
 import com.cherret.zaprett.utils.NetworkUtils.resolveDependencies
+import com.cherret.zaprett.utils.checkManifestVersion
 import com.cherret.zaprett.utils.checkStoragePermission
+import com.cherret.zaprett.utils.findManifestByData
 import com.cherret.zaprett.utils.getAllBin
 import com.cherret.zaprett.utils.getAllByeDPIStrategies
 import com.cherret.zaprett.utils.getAllExcludeIpsets
@@ -151,19 +153,33 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
         return getInstalled().any { it.id == item.manifest.id }
     }
 
+    private fun resolveDependencyPaths(allDeps: List<RepoItemFull>): Map<String, String> {
+        val baseDir = getZaprettPath()
+        return allDeps.associate { dep ->
+            val path = if (isDependencyInstalled(dep)) {
+                findManifestByData(dep)
+            } else {
+                getManifestExpectedPath(dep, baseDir)
+            }
+            dep.manifest.id to path
+        }
+    }
+
     fun install(item: RepoItemFull) {
         val rootId = item.manifest.id
         val deps = _items.value?.dependencies
             ?.filter { rootId in it.dependencies }
             ?.map { it.manifest }
             .orEmpty()
+        val dependencyPaths = resolveDependencyPaths(deps)
+        val depsToDownload = deps
             .filter { !isDependencyInstalled(it) }
-        val download = listOf(item) + deps
+        val download = depsToDownload + item
         if (checkStoragePermission(context)) {
             download.forEach { item ->
                 isInstalling[item.manifest.id] = true
                 val downloadId = download(context, item.manifest.artifact.url)
-                downloadAndProcess(item, context, downloadId)
+                downloadAndProcess(item, context, downloadId, dependencyPaths)
 
             }
         }
@@ -180,19 +196,21 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
             ?.filter { rootId in it.dependencies }
             ?.map { it.manifest }
             .orEmpty()
-            .filter { !isDependencyInstalled(it) }
-        val download = listOf(item) + deps
+        val dependencyPaths = resolveDependencyPaths(deps)
+        val depsToDownload = deps
+            .filter { !isDependencyInstalled(it) || checkManifestVersion(it) }
+        val download = depsToDownload + item
         if (checkStoragePermission(context)) {
             download.forEach { item ->
                 isUpdateInstalling[item.manifest.id] = true
                 val downloadId = download(context, item.manifest.artifact.url)
-                downloadAndProcess(item, context, downloadId)
+                downloadAndProcess(item, context, downloadId, dependencyPaths)
             }
         }
         else _showPermissionDialog.value = true
     }
 
-    fun downloadAndProcess(item: RepoItemFull, context: Context, downloadId: Long) {
+    fun downloadAndProcess(item: RepoItemFull, context: Context, downloadId: Long, dependencyPaths: Map<String, String> = emptyMap()) {
         val index = item.index
         val item = item.manifest
         registerDownloadListener(context, downloadId, { uri ->
@@ -226,20 +244,10 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                     val manifestFile = baseDir.resolve("manifests").resolve(targetDirSuffix).resolve("${targetFile.name.substringBeforeLast(".")}.json")
                     manifestFile.parentFile!!.mkdirs()
 
-                    val allResolvedDeps = _items.value?.dependencies?.map { it.manifest } ?: emptyList()
-                    val resolvedDependenciesPaths = item.dependencies.mapNotNull { depId ->
-                        val depRepoItem = allResolvedDeps.find { it.manifest.id == depId }
-
-                        if (depRepoItem != null) {
-                            getManifestExpectedPath(depRepoItem, baseDir)
-                        } else {
-                            runCatching {
-                                val installedStorageData = getAllBin() + getAllLibs() + getAllByeDPIStrategies() +
-                                        getAllNfqwsStrategies() + getAllNfqws2Strategies() + getAllLists() +
-                                        getAllExcludeLists() + getAllIpsets() + getAllExcludeIpsets()
-                                installedStorageData.firstOrNull { it.id == depId }?.manifestPath
-                            }.getOrNull()
-                        }
+                    val resolvedDependencies = item.dependencies.mapNotNull { depUrl ->
+                        val depItem = _items.value?.roots?.find { it.index.manifest == depUrl }
+                            ?: _items.value?.dependencies?.map { it.manifest }?.find { it.index.manifest == depUrl }
+                        depItem?.let { dependencyPaths[it.manifest.id] }
                     }
 
                     manifestFile.writeText(
@@ -251,7 +259,7 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
                                 item.version,
                                 item.author,
                                 item.description,
-                                dependencies = resolvedDependenciesPaths,
+                                dependencies = resolvedDependencies,
                                 file = targetFile.path
                             )
                         )
@@ -276,18 +284,5 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
             refresh()
             _downloadErrorFlow.value = it
         })
-    }
-
-    fun showRestartSnackbar(snackbarHostState: SnackbarHostState) {
-        viewModelScope.launch {
-            val result = snackbarHostState.showSnackbar(
-                context.getString(R.string.pls_restart_snack),
-                actionLabel = context.getString(R.string.btn_restart_service)
-            )
-            if (result == SnackbarResult.ActionPerformed) {
-                restartService {}
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_reload))
-            }
-        }
     }
 }

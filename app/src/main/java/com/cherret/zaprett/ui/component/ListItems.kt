@@ -134,7 +134,10 @@ fun ListSwitchItem(item: StorageData, isChecked: Boolean, onCheckedChange: (Bool
                 }
             },
             confirmButton = {
-                TextButton(onClick = { onDeleteClick() }) {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    onDeleteClick()
+                }) {
                     Text(stringResource(R.string.btn_continue))
                 }
             }
