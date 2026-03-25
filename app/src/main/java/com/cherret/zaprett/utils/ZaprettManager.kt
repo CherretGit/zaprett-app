@@ -1,7 +1,6 @@
 package com.cherret.zaprett.utils
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
@@ -11,20 +10,17 @@ import android.os.Environment
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import com.cherret.zaprett.data.AppListType
 import com.cherret.zaprett.data.ItemType
 import com.cherret.zaprett.data.ListType
 import com.cherret.zaprett.data.RepoItemFull
-import com.cherret.zaprett.data.RepoManifest
 import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.data.ZaprettConfig
 import com.topjohnwu.superuser.Shell
-import io.ktor.client.plugins.cache.storage.FileStorage
-import kotlinx.io.files.FileNotFoundException
 import kotlinx.serialization.json.Json
 import java.io.File
-import androidx.core.net.toUri
 
 private val json = Json {
     prettyPrint = true
