@@ -10,7 +10,13 @@ import android.os.Environment
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import com.cherret.zaprett.data.AppListType
+import com.cherret.zaprett.data.ItemType
+import com.cherret.zaprett.data.ListType
+import com.cherret.zaprett.data.RepoItemFull
+import com.cherret.zaprett.data.ServiceType
+import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.data.ZaprettConfig
 import com.topjohnwu.superuser.Shell
 import kotlinx.serialization.json.Json
@@ -104,23 +110,29 @@ fun restartService(callback: (String) -> Unit) {
 }
 
 fun getModuleVersion(callback: (String) -> Unit) {
-    Shell.cmd("zaprett module-version").submit { result ->
-        if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
+    Shell.cmd("zaprett --version").submit { result ->
+        if (result.isSuccess) callback(result.out.first())
     }
 }
 
-fun getBinVersion(callback: (String) -> Unit) {
-    Shell.cmd("zaprett binary-version").submit { result ->
-        if (result.out.isNotEmpty()) callback(result.out.first()) else "undefined"
+fun getNfqwsVersion(callback: (String) -> Unit) {
+    Shell.cmd("zaprett nfqws-version").submit { result ->
+        if (result.isSuccess) callback(result.out.first())
+    }
+}
+
+fun getNfqws2Version(callback: (String) -> Unit) {
+    Shell.cmd("zaprett nfqws2-version").submit { result ->
+        if (result.isSuccess) callback(result.out.first())
     }
 }
 
 fun getConfigFile(): File {
-    return File(Environment.getExternalStorageDirectory(), "zaprett/config.json")
+    return getZaprettPath().resolve("config.json")
 }
 
 fun setStartOnBoot(prefs: SharedPreferences, callback: (Boolean) -> Unit) {
-    if (prefs.getBoolean("use_module", false)) {
+    if (getServiceType(prefs) != ServiceType.byedpi) {
         Shell.cmd("zaprett set-autostart").submit { result ->
             if (result.out.isNotEmpty() && result.out.toString().contains("true")) callback(true) else callback(false)
         }
@@ -128,7 +140,7 @@ fun setStartOnBoot(prefs: SharedPreferences, callback: (Boolean) -> Unit) {
 }
 
 fun getStartOnBoot(prefs: SharedPreferences, callback: (Boolean) -> Unit) {
-    if (prefs.getBoolean("use_module", false)) {
+    if (getServiceType(prefs) != ServiceType.byedpi) {
         Shell.cmd("zaprett get-autostart").submit { result ->
             if (result.out.isNotEmpty() && result.out.toString().contains("true")) callback(true) else callback(false)
         }
@@ -137,121 +149,166 @@ fun getStartOnBoot(prefs: SharedPreferences, callback: (Boolean) -> Unit) {
     }
 }
 
-fun getZaprettPath(): String {
-    return Environment.getExternalStorageDirectory().path + "/zaprett"
+fun getZaprettPath(): File {
+    return Environment.getExternalStorageDirectory().resolve("zaprett")
 }
 
-fun getAllLists(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/lists/include")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
+fun getManifestsPath(): File {
+    return getZaprettPath().resolve("manifests")
+}
+fun getValidManifests(listsDir: File): Array<StorageData> {
+    return (listsDir.listFiles()
+        ?.mapNotNull { file ->
+            if (!file.isFile || file.extension.lowercase() != "json") return@mapNotNull null
+            parseManifestFromFile(file).getOrNull()?.takeIf {
+                File(it.file).exists()
+            }
+        }
         ?.toTypedArray()
-        ?: emptyArray()
+        ?: emptyArray())
 }
 
-fun getAllIpsets(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/ipset/include")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllLists(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("lists/include")
+    return getValidManifests(listsDir)
 }
 
-fun getAllExcludeLists(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/lists/exclude/")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllIpsets(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("ipset/include")
+    return getValidManifests(listsDir)
 }
 
-fun getAllExcludeIpsets(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/ipset/exclude/")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllExcludeLists(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("lists/exclude")
+    return getValidManifests(listsDir)
 }
 
-fun getAllNfqwsStrategies(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/strategies/nfqws")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllExcludeIpsets(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("ipset/exclude")
+    return getValidManifests(listsDir)
 }
 
-fun getAllByeDPIStrategies(): Array<String> {
-    val listsDir = File("${getZaprettPath()}/strategies/byedpi")
-    return listsDir.listFiles { file -> file.isFile && file.extension.lowercase() == "txt" }
-        ?.map { it.absolutePath }
-        ?.toTypedArray()
-        ?: emptyArray()
+fun getAllNfqwsStrategies(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("strategies/nfqws")
+    return getValidManifests(listsDir)
 }
 
-fun getAllStrategies(sharedPreferences: SharedPreferences): Array<String> {
-    return if (sharedPreferences.getBoolean("use_module", false)) getAllNfqwsStrategies()
-    else getAllByeDPIStrategies()
+fun getAllNfqws2Strategies(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("strategies/nfqws2")
+    return getValidManifests(listsDir)
 }
 
-fun getActiveLists(sharedPreferences: SharedPreferences): Array<String> {
-    if (sharedPreferences.getBoolean("use_module", false)) {
-        return readConfig().activeLists.toTypedArray()
+fun getAllByeDPIStrategies(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("strategies/byedpi")
+    return getValidManifests(listsDir)
+}
+
+fun getAllStrategies(sharedPreferences: SharedPreferences): Array<StorageData> {
+    return when (getServiceType(sharedPreferences)) {
+        ServiceType.nfqws -> getAllNfqwsStrategies()
+        ServiceType.nfqws2 -> getAllNfqws2Strategies()
+        ServiceType.byedpi -> getAllByeDPIStrategies()
+    }
+}
+
+fun getAllBin(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("bin")
+    return getValidManifests(listsDir)
+}
+
+fun getAllLibs(): Array<StorageData> {
+    val listsDir = getManifestsPath().resolve("libs")
+    return getValidManifests(listsDir)
+}
+
+fun getActiveLists(sharedPreferences: SharedPreferences): Array<StorageData> {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
+        return readConfig().activeLists.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
     } else {
-        return sharedPreferences.getStringSet("lists", emptySet())?.toTypedArray() ?: emptyArray()
+        return sharedPreferences.getStringSet("lists", emptySet())!!.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
     }
 }
 
-fun getActiveIpsets(sharedPreferences: SharedPreferences): Array<String> {
-    if (sharedPreferences.getBoolean("use_module", false)) {
-        return readConfig().activeIpsets.toTypedArray()
-    } else return sharedPreferences.getStringSet("ipsets", emptySet())?.toTypedArray() ?: emptyArray()
+fun getServiceType(sharedPreferences: SharedPreferences): ServiceType {
+    val serviceType = runCatching { enumValueOf<ServiceType>(sharedPreferences.getString("service_type", ServiceType.byedpi.name) ?: ServiceType.byedpi.name) }.getOrDefault(ServiceType.byedpi)
+    return if ( serviceType != ServiceType.byedpi) {
+        readConfig().serviceType
+    }
+    else {
+        serviceType
+    }
 }
 
-fun getActiveExcludeLists(sharedPreferences: SharedPreferences): Array<String> {
-    if (sharedPreferences.getBoolean("use_module", false)) {
-        return readConfig().activeExcludeLists.toTypedArray()
+fun setServiceType(sharedPreferences: SharedPreferences, serviceType: ServiceType) {
+    if (serviceType != ServiceType.byedpi) {
+        val config = readConfig()
+        val newConfig = config.copy(serviceType = serviceType)
+        writeConfig(newConfig)
+    }
+    sharedPreferences.edit {
+        putString("service_type", serviceType.name)
+    }
+}
+
+fun getActiveIpsets(sharedPreferences: SharedPreferences): Array<StorageData> {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
+        return readConfig().activeIpsets.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
+    } else return sharedPreferences.getStringSet("ipsets", emptySet())!!.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
+}
+
+fun getActiveExcludeLists(sharedPreferences: SharedPreferences): Array<StorageData> {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
+        return readConfig().activeExcludeLists.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
     } else {
-        return sharedPreferences.getStringSet("exclude_lists", emptySet())?.toTypedArray() ?: emptyArray()
+        return sharedPreferences.getStringSet("exclude_lists", emptySet())!!.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
     }
 }
 
-fun getActiveExcludeIpsets(sharedPreferences: SharedPreferences): Array<String> {
-    if (sharedPreferences.getBoolean("use_module", false)) {
-        return readConfig().activeExcludeIpsets.toTypedArray()
-    } else return sharedPreferences.getStringSet("exclude_ipsets", emptySet())?.toTypedArray() ?: emptyArray()
+fun getActiveExcludeIpsets(sharedPreferences: SharedPreferences): Array<StorageData> {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
+        return readConfig().activeExcludeIpsets.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
+    } else return sharedPreferences.getStringSet("exclude_ipsets", emptySet())!!.mapNotNull { parseManifestFromFile(File(it)).getOrNull() }.toTypedArray()
 }
 
-fun getActiveNfqwsStrategy(): Array<String> {
-    val strategy = readConfig().strategy
-    return if (strategy.isNotBlank()) arrayOf(strategy) else emptyArray()
+fun getActiveNfqwsStrategy(): Result<StorageData> {
+    return parseManifestFromFile(File(readConfig().strategy))
 }
 
-fun getActiveByeDPIStrategy(sharedPreferences: SharedPreferences): Array<String> {
-    val path = sharedPreferences.getString("active_strategy", "")
-    if (!path.isNullOrBlank() && File(path).exists()) {
-        return arrayOf(path)
-    }
-    return emptyArray()
+fun getActiveNfqws2Strategy(): Result<StorageData> {
+    return parseManifestFromFile(File(readConfig().strategyNfqws2))
+}
+
+fun getActiveByeDPIStrategy(sharedPreferences: SharedPreferences): Result<StorageData> {
+    val path = sharedPreferences.getString("active_strategy", "")?: ""
+//    if (!path.isNullOrBlank() && File(path).exists()) {
+//        return arrayOf(path)
+//    }
+//    return emptyArray()
+    return parseManifestFromFile(File(path))
+
 }
 
 fun getActiveByeDPIStrategyContent(sharedPreferences: SharedPreferences): List<String> {
-    val path = sharedPreferences.getString("active_strategy", "")
-    if (!path.isNullOrBlank() && File(path).exists()) {
-        return File(path).readLines()
-    }
-    return emptyList()
+    val path = sharedPreferences.getString("active_strategy", "")?: ""
+    if (path.isBlank()) return emptyList()
+    val manifest = parseManifestFromFile(File(path)).getOrNull()
+    val file = manifest?.file?.let { File(it) }
+    return if (file?.exists() == true) file.readLines()
+    else emptyList()
 }
 
-fun getActiveStrategy(sharedPreferences: SharedPreferences): Array<String> {
-    return if (sharedPreferences.getBoolean("use_module", false)) getActiveNfqwsStrategy()
-    else getActiveByeDPIStrategy(sharedPreferences)
+fun getActiveStrategy(sharedPreferences: SharedPreferences): Result<StorageData> {
+    return when(getServiceType(sharedPreferences)) {
+        ServiceType.byedpi -> getActiveByeDPIStrategy(sharedPreferences)
+        ServiceType.nfqws -> getActiveNfqwsStrategy()
+        ServiceType.nfqws2 -> getActiveNfqws2Strategy()
+    }
 }
 
 fun enableList(path: String, sharedPreferences: SharedPreferences) {
-    if (sharedPreferences.getBoolean("use_module", false)) {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
         val config = readConfig()
-        val isWhitelist = getHostListMode(sharedPreferences) == "whitelist"
+        val isWhitelist = getHostListMode(sharedPreferences) == ListType.whitelist
         val currentLists = if (isWhitelist) config.activeLists else config.activeExcludeLists
         if (path !in currentLists) {
             val updatedLists = currentLists + path
@@ -263,7 +320,7 @@ fun enableList(path: String, sharedPreferences: SharedPreferences) {
             writeConfig(newConfig)
         }
     } else {
-        val key = if (getHostListMode(sharedPreferences) == "whitelist") "lists" else "exclude_lists"
+        val key = if (getHostListMode(sharedPreferences) == ListType.whitelist) "lists" else "exclude_lists"
         val currentSet = sharedPreferences.getStringSet(key, emptySet())?.toMutableSet() ?: mutableSetOf()
         if (path !in currentSet) {
             currentSet.add(path)
@@ -273,9 +330,9 @@ fun enableList(path: String, sharedPreferences: SharedPreferences) {
 }
 
 fun enableIpset(path: String, sharedPreferences: SharedPreferences) {
-    if (sharedPreferences.getBoolean("use_module", false)) {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
         val config = readConfig()
-        val isWhitelist = getHostListMode(sharedPreferences) == "whitelist"
+        val isWhitelist = getHostListMode(sharedPreferences) == ListType.whitelist
         val currentIpsets = if (isWhitelist) config.activeIpsets else config.activeExcludeIpsets
         if (path !in currentIpsets) {
             val updatedIpsets = currentIpsets + path
@@ -287,7 +344,7 @@ fun enableIpset(path: String, sharedPreferences: SharedPreferences) {
             writeConfig(newConfig)
         }
     } else {
-        val key = if (getHostListMode(sharedPreferences) == "whitelist") "ipsets" else "exclude_ipsets"
+        val key = if (getHostListMode(sharedPreferences) == ListType.whitelist) "ipsets" else "exclude_ipsets"
         val currentSet = sharedPreferences.getStringSet(key, emptySet())?.toMutableSet() ?: mutableSetOf()
         if (path !in currentSet) {
             currentSet.add(path)
@@ -297,20 +354,29 @@ fun enableIpset(path: String, sharedPreferences: SharedPreferences) {
 }
 
 fun enableStrategy(path: String, sharedPreferences: SharedPreferences) {
-    if (sharedPreferences.getBoolean("use_module", false)) {
-        val config = readConfig()
-        if (config.strategy != path) {
-            writeConfig(config.copy(strategy = path))
+    when(getServiceType(sharedPreferences)) {
+        ServiceType.nfqws -> {
+            val config = readConfig()
+            if (config.strategy != path) {
+                writeConfig(config.copy(strategy = path))
+            }
         }
-    } else {
-        sharedPreferences.edit { putString("active_strategy", path) }
+        ServiceType.nfqws2 -> {
+            val config = readConfig()
+            if (config.strategyNfqws2 != path) {
+                writeConfig(config.copy(strategyNfqws2 = path))
+            }
+        }
+        ServiceType.byedpi -> {
+            sharedPreferences.edit { putString("active_strategy", path)}
+        }
     }
 }
 
 fun disableList(path: String, sharedPreferences: SharedPreferences) {
-    if (sharedPreferences.getBoolean("use_module", false)) {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
         val config = readConfig()
-        val isWhitelist = getHostListMode(sharedPreferences) == "whitelist"
+        val isWhitelist = getHostListMode(sharedPreferences) == ListType.whitelist
         val currentLists = if (isWhitelist) config.activeLists else config.activeExcludeLists
         if (path in currentLists) {
             val updatedLists = currentLists.filter { it != path }
@@ -322,7 +388,7 @@ fun disableList(path: String, sharedPreferences: SharedPreferences) {
             writeConfig(newConfig)
         }
     } else {
-        val key = if (getHostListMode(sharedPreferences) == "whitelist") "lists" else "exclude_lists"
+        val key = if (getHostListMode(sharedPreferences) == ListType.whitelist) "lists" else "exclude_lists"
         val currentSet = sharedPreferences.getStringSet(key, emptySet())?.toMutableSet() ?: mutableSetOf()
         if (path in currentSet) {
             currentSet.remove(path)
@@ -335,9 +401,9 @@ fun disableList(path: String, sharedPreferences: SharedPreferences) {
 }
 
 fun disableIpset(path: String, sharedPreferences: SharedPreferences) {
-    if (sharedPreferences.getBoolean("use_module", false)) {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
         val config = readConfig()
-        val isWhitelist = getHostListMode(sharedPreferences) == "whitelist"
+        val isWhitelist = getHostListMode(sharedPreferences) == ListType.whitelist
         val currentIpsets = if (isWhitelist) config.activeIpsets else config.activeExcludeIpsets
         if (path in currentIpsets) {
             val updatedIpsets = currentIpsets.filter { it != path }
@@ -349,7 +415,7 @@ fun disableIpset(path: String, sharedPreferences: SharedPreferences) {
             writeConfig(newConfig)
         }
     } else {
-        val key = if (getHostListMode(sharedPreferences) == "whitelist") "ipsets" else "exclude_ipsets"
+        val key = if (getHostListMode(sharedPreferences) == ListType.whitelist) "ipsets" else "exclude_ipsets"
         val currentSet = sharedPreferences.getStringSet(key, emptySet())?.toMutableSet() ?: mutableSetOf()
         if (path in currentSet) {
             currentSet.remove(path)
@@ -362,18 +428,27 @@ fun disableIpset(path: String, sharedPreferences: SharedPreferences) {
 }
 
 fun disableStrategy(path: String, sharedPreferences: SharedPreferences) {
-    if (sharedPreferences.getBoolean("use_module", false)) {
-        val config = readConfig()
-        if (config.strategy == path) {
-            writeConfig(config.copy(strategy = ""))
+    when(getServiceType(sharedPreferences)) {
+        ServiceType.nfqws -> {
+            val config = readConfig()
+            if (config.strategy == path) {
+                writeConfig(config.copy(strategy = ""))
+            }
         }
-    } else {
-        sharedPreferences.edit { remove("active_strategy") }
+        ServiceType.nfqws2 -> {
+            val config = readConfig()
+            if (config.strategyNfqws2 == path) {
+                writeConfig(config.copy(strategyNfqws2 = ""))
+            }
+        }
+        ServiceType.byedpi -> {
+            sharedPreferences.edit { remove("active_strategy") }
+        }
     }
 }
 
 fun addPackageToList(listType: AppListType, packageName: String, prefs: SharedPreferences, context: Context) {
-    if (prefs.getBoolean("use_module", false)) {
+    if (getServiceType(prefs) != ServiceType.byedpi) {
         val config = readConfig()
         if (listType == AppListType.Whitelist) {
             if (packageName !in config.whitelist) {
@@ -400,7 +475,7 @@ fun addPackageToList(listType: AppListType, packageName: String, prefs: SharedPr
 }
 
 fun removePackageFromList(listType: AppListType, packageName: String, prefs: SharedPreferences, context: Context) {
-    if (prefs.getBoolean("use_module", false)) {
+    if (getServiceType(prefs) != ServiceType.byedpi) {
         val config = readConfig()
         if (listType == AppListType.Whitelist) {
             if (packageName in config.whitelist) {
@@ -427,7 +502,7 @@ fun removePackageFromList(listType: AppListType, packageName: String, prefs: Sha
 }
 
 fun isInList(listType: AppListType, packageName: String, prefs: SharedPreferences, context: Context): Boolean {
-    if (prefs.getBoolean("use_module", false)) {
+    if (getServiceType(prefs) != ServiceType.byedpi) {
         val config = readConfig()
         return if (listType == AppListType.Whitelist) {
             packageName in config.whitelist
@@ -447,7 +522,7 @@ fun isInList(listType: AppListType, packageName: String, prefs: SharedPreference
 }
 
 fun getAppList(listType: AppListType, sharedPreferences: SharedPreferences, context: Context): Set<String> {
-    if (sharedPreferences.getBoolean("use_module", false)) {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
         val config = readConfig()
         return if (listType == AppListType.Whitelist) {
             config.whitelist.toSet()
@@ -463,7 +538,7 @@ fun getAppList(listType: AppListType, sharedPreferences: SharedPreferences, cont
 }
 
 fun getAppsListMode(prefs: SharedPreferences): String {
-    if (prefs.getBoolean("use_module", false)) {
+    if (getServiceType(prefs) != ServiceType.byedpi) {
         val applist = readConfig().appList
         Log.d("App list", "Equals to $applist")
         return if (applist == "whitelist" || applist == "blacklist" || applist == "none") applist
@@ -474,7 +549,7 @@ fun getAppsListMode(prefs: SharedPreferences): String {
 }
 
 fun setAppsListMode(prefs: SharedPreferences, mode: String) {
-    if (prefs.getBoolean("use_module", false)) {
+    if (getServiceType(prefs) != ServiceType.byedpi) {
         val config = readConfig()
         writeConfig(config.copy(appList = mode))
     } else {
@@ -483,22 +558,81 @@ fun setAppsListMode(prefs: SharedPreferences, mode: String) {
     Log.d("App List", "Changed to $mode")
 }
 
-fun setHostListMode(prefs: SharedPreferences, mode: String) {
-    if (prefs.getBoolean("use_module", false)) {
+fun setHostListMode(prefs: SharedPreferences, mode: ListType) {
+    if (getServiceType(prefs) != ServiceType.byedpi) {
         val config = readConfig()
         writeConfig(config.copy(listType = mode))
     } else {
-        prefs.edit { putString("list_type", mode) }
+        prefs.edit { putString("list_type", mode.name) }
     }
     Log.d("App List", "Changed to $mode")
 }
 
-fun getHostListMode(prefs: SharedPreferences): String {
-    if (prefs.getBoolean("use_module", false)) {
+fun getHostListMode(prefs: SharedPreferences): ListType {
+    if (getServiceType(prefs) != ServiceType.byedpi) {
         val hostlist = readConfig().listType
-        return if (hostlist == "whitelist" || hostlist == "blacklist") hostlist
-        else "whitelist"
+        return hostlist
     } else {
-        return prefs.getString("list_type", "whitelist")!!
+        return runCatching { enumValueOf<ListType>(prefs.getString("list_type", ListType.whitelist.name) ?: ListType.whitelist.name) }.getOrDefault(ListType.whitelist)
     }
+}
+
+fun parseManifestFromFile(file: File): Result<StorageData> {
+    return runCatching {
+        if (!file.isFile || !file.canRead()) throw IllegalArgumentException("can't find manifest file")
+        val manifest = Json.decodeFromString<StorageData>(file.readText())
+        manifest.manifestPath = file.path
+        manifest
+    }
+}
+
+fun isDependencyInstalled(item: RepoItemFull): Boolean {
+    return matchTypeToManifests(item).any { it.id == item.manifest.id }
+}
+
+fun checkManifestVersion(item: RepoItemFull): Boolean {
+    return matchTypeToManifests(item).firstOrNull { it.id == item.manifest.id}?.version != item.manifest.version
+}
+
+fun findManifestByData(item: RepoItemFull): String {
+    val installed = matchTypeToManifests(item)
+    return installed.first {
+        it.id == item.manifest.id
+    }.manifestPath
+}
+
+fun matchTypeToManifests(item: RepoItemFull): Array<StorageData> {
+    return when(item.index.type) {
+        ItemType.bin -> getAllBin()
+        ItemType.lua_lib -> getAllLibs()
+        ItemType.byedpi -> getAllByeDPIStrategies()
+        ItemType.nfqws -> getAllNfqwsStrategies()
+        ItemType.nfqws2 -> getAllNfqws2Strategies()
+        ItemType.list -> getAllLists()
+        ItemType.list_exclude -> getAllExcludeLists()
+        ItemType.ipset -> getAllIpsets()
+        ItemType.ipset_exclude -> getAllExcludeIpsets()
+    }
+}
+
+fun getManifestExpectedPath(item: RepoItemFull, baseDir: File): String {
+    val targetDirSuffix = when (item.index.type) {
+        ItemType.bin -> "bin"
+        ItemType.lua_lib -> "libs"
+        ItemType.byedpi -> "strategies/byedpi"
+        ItemType.nfqws -> "strategies/nfqws"
+        ItemType.nfqws2 -> "strategies/nfqws2"
+        ItemType.list -> "lists/include"
+        ItemType.list_exclude -> "lists/exclude"
+        ItemType.ipset -> "ipset/include"
+        ItemType.ipset_exclude -> "ipset/exclude"
+    }
+    val uriPath = item.manifest.artifact.url.toUri().path ?: ""
+    val lastSegment = uriPath.substringAfterLast('/')
+    val cleanedFileName = lastSegment.replace(Regex("""-\d+(?=\.|$)"""), "")
+    val manifestFileName = "${cleanedFileName.substringBeforeLast(".")}.json"
+    return baseDir.resolve("manifests")
+        .resolve(targetDirSuffix)
+        .resolve(manifestFileName)
+        .path
 }

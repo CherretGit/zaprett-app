@@ -75,8 +75,11 @@ import coil3.compose.AsyncImage
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.AppListType
+import com.cherret.zaprett.data.DropdownItem
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.Setting
 import com.cherret.zaprett.ui.component.InfoDialog
+import com.cherret.zaprett.ui.component.SettingDropDown
 import com.cherret.zaprett.ui.component.SettingsActionItem
 import com.cherret.zaprett.ui.component.SettingsItem
 import com.cherret.zaprett.ui.component.SettingsSection
@@ -91,7 +94,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     val context = LocalContext.current
     val sharedPreferences = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val editor = remember { sharedPreferences.edit() }
-    val useModule = viewModel.useModule.collectAsState()
+    val serviceType = viewModel.serviceType.collectAsState()
     val updateOnBoot = remember { mutableStateOf(sharedPreferences.getBoolean("update_on_boot", true)) }
     val autoRestart = viewModel.autoRestart.collectAsState()
     val autoUpdate = remember { mutableStateOf(sharedPreferences.getBoolean("auto_update", BuildConfig.auto_update)) }
@@ -100,9 +103,7 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
     val openNoRootDialog = remember { mutableStateOf(false) }
     val openNoModuleDialog = remember { mutableStateOf(false) }
     val showAboutDialog = remember { mutableStateOf(false) }
-    val showHostsRepoUrlDialog = remember { mutableStateOf(false) }
-    val showIpsetRepoUrlDialog = remember { mutableStateOf(false) }
-    val showStrategyRepoUrlDialog = remember { mutableStateOf(false) }
+    val showRepoUrlDialog = remember { mutableStateOf(false) }
     val showIPDialog = remember { mutableStateOf(false) }
     val showPortDialog = remember { mutableStateOf(false) }
     val showDNSDialog = remember { mutableStateOf(false) }
@@ -115,16 +116,44 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
 
     val settingsList = listOf(
         Setting.Section(stringResource(R.string.general_section)),
-        Setting.Toggle(
+        Setting.Dropdown(
             title = stringResource(R.string.btn_use_root),
-            checked = useModule.value,
-            onToggle = { isChecked ->
-                viewModel.useModule(
-                    context = context,
-                    checked = isChecked,
-                    openNoRootDialog = openNoRootDialog,
-                    openNoModuleDialog = openNoModuleDialog)
-            }
+            selected = serviceType.value.name,
+            items = listOf(
+                DropdownItem(
+                    title = stringResource(R.string.service_mode_ciadpi),
+                    onClick = {
+                        viewModel.changeServiceType(
+                            context = context,
+                            serviceType = ServiceType.byedpi,
+                            openNoRootDialog = openNoRootDialog,
+                            openNoModuleDialog = openNoRootDialog
+                        )
+                    }
+                ),
+                DropdownItem(
+                    title = stringResource(R.string.service_mode_nfqws),
+                    onClick = {
+                        viewModel.changeServiceType(
+                            context = context,
+                            serviceType = ServiceType.nfqws,
+                            openNoRootDialog = openNoRootDialog,
+                            openNoModuleDialog = openNoRootDialog
+                        )
+                    }
+                ),
+                DropdownItem(
+                    title = stringResource(R.string.service_mode_nfqws2),
+                    onClick = {
+                        viewModel.changeServiceType(
+                            context = context,
+                            serviceType = ServiceType.nfqws2,
+                            openNoRootDialog = openNoRootDialog,
+                            openNoModuleDialog = openNoRootDialog
+                        )
+                    }
+                )
+            )
         ),
         Setting.Toggle(
             title = stringResource(R.string.btn_update_on_boot),
@@ -151,24 +180,10 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
             }
         ),
         Setting.Action(
-            title = stringResource(R.string.btn_repository_url_lists),
+            title = stringResource(R.string.btn_repository_url),
             onClick = {
-                textDialogValue.value = sharedPreferences.getString("hosts_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/hosts.json"
-                showHostsRepoUrlDialog.value = true
-            }
-        ),
-        Setting.Action(
-            title = stringResource(R.string.ipset_repo_url),
-            onClick = {
-                textDialogValue.value = sharedPreferences.getString("ipset_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/ipsets.json"
-                showIpsetRepoUrlDialog.value = true
-            }
-        ),
-        Setting.Action(
-            title = stringResource(R.string.btn_repository_url_strategies),
-            onClick = {
-                textDialogValue.value = sharedPreferences.getString("strategy_repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/strategies.json"
-                showStrategyRepoUrlDialog.value = true
+                textDialogValue.value = sharedPreferences.getString("repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json"
+                showRepoUrlDialog.value = true
             }
         ),
         Setting.Section(title = stringResource(R.string.shared_section)),
@@ -241,6 +256,18 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
             onToggle = {
                 viewModel.handleAutoRestart(context)
             }
+        ),
+        Setting.Action(
+            title = stringResource(R.string.bins_repo),
+            onClick = {
+                navController.navigate("repo?source=bin") { launchSingleTop = true }
+            }
+        ),
+        Setting.Action(
+            title = stringResource(R.string.lua_libs_repo),
+            onClick = {
+                navController.navigate("repo?source=lua_libs") { launchSingleTop = true }
+            }
         )
     )
 
@@ -264,21 +291,10 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
         AboutDialog(navController, onDismiss = { showAboutDialog.value = false })
     }
 
-    if (showHostsRepoUrlDialog.value) {
-        TextDialog(stringResource(R.string.btn_repository_url_lists), stringResource(R.string.hint_enter_repository_url_lists), textDialogValue.value, onConfirm = {
-            editor.putString("hosts_repo_url", it).apply()
-        }, onDismiss = { showHostsRepoUrlDialog.value = false })
-    }
-    if (showIpsetRepoUrlDialog.value) {
-        TextDialog(stringResource(R.string.btn_repository_url_ipsets), stringResource(R.string.hint_enter_repository_url_ipsets), textDialogValue.value, onConfirm = {
-            editor.putString("ipsets_repo_url", it).apply()
-        }, onDismiss = { showIpsetRepoUrlDialog.value = false })
-    }
-
-    if (showStrategyRepoUrlDialog.value) {
-        TextDialog(stringResource(R.string.btn_repository_url_strategies), stringResource(R.string.hint_enter_repository_url_strategies), textDialogValue.value, onConfirm = {
-            editor.putString("strategies_repo_url", it).apply()
-        }, onDismiss = { showStrategyRepoUrlDialog.value = false })
+    if (showRepoUrlDialog.value) {
+        TextDialog(stringResource(R.string.btn_repository_url), stringResource(R.string.hint_enter_repository_url), textDialogValue.value, onConfirm = {
+            editor.putString("repo_url", it).apply()
+        }, onDismiss = { showRepoUrlDialog.value = false })
     }
 
     if (showIPDialog.value) {
@@ -394,6 +410,13 @@ fun SettingsScreen(navController: NavController, viewModel : SettingsViewModel =
                             SettingsActionItem(
                                 title = setting.title,
                                 setting.onClick
+                            )
+                        }
+                        is Setting.Dropdown -> {
+                            SettingDropDown(
+                                title = setting.title,
+                                selected = setting.selected,
+                                items = setting.items
                             )
                         }
                         is Setting.Section -> {
@@ -531,14 +554,14 @@ private fun AboutDialog(navController: NavController, onDismiss: () -> Unit) {
                     }
                     IconButton(onClick = {
                         val intent = Intent(Intent.ACTION_VIEW,
-                            "https://matrix.to/#/#zaprett-group:matrix.cherret.ru".toUri())
+                            "https://matrix.to/#/#zaprett-space:matrix.cherret.ru".toUri())
                         context.startActivity(intent)
                     }) {
                         Icon(painterResource(R.drawable.matrix), "Matrix")
                     }
                     IconButton(onClick = {
                         val intent = Intent(Intent.ACTION_VIEW,
-                            "https://pay.cloudtips.ru/p/672192fd".toUri())
+                            "https://www.donationalerts.com/r/zaprett_app".toUri())
                         context.startActivity(intent)
                     }) {
                         Icon(Icons.Default.AttachMoney, "Donate")

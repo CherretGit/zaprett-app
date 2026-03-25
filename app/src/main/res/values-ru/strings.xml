@@ -8,13 +8,15 @@
     <string name="title_debug">Отладка</string>
     <string name="general_section">Основные настройки</string>
     <string name="byedpi_section">Настройки ByeDPI</string>
+    <string name="bins_repo">Репозиторий фейков</string>
+    <string name="lua_libs_repo">Репозиторий Lua библиотек</string>
     <string name="btn_continue">Продолжить</string>
     <string name="btn_update">Обновить</string>
     <string name="btn_dismiss">Отмена</string>
     <string name="text_welcome">Добро пожаловать в zaprett! Это приложение предназначено для обхода цензуры и иных блокировок. Для полноценной работоспособности необходимо установить Magisk модуль.</string>
-    <string name="btn_use_root">Использовать модуль</string>
+    <string name="btn_use_root">Тип сервиса</string>
     <string name="error_root_title">Root не получен</string>
-    <string name="error_root_message">Не получилось получить root доступ. Дайте права root для использования модуля Magisk</string>
+    <string name="error_root_message">Не получилось получить root доступ. Выдайте права root для использования модуля Magisk</string>
     <string name="error_no_module_title">Модуль не установлен</string>
     <string name="error_no_module_message">Magisk модуль zaprett не найден. Пожалуйста, установите его</string>
     <string name="snack_reload">Перезагружаем zaprett…</string>
@@ -45,10 +47,8 @@
     <string name="btn_autorestart">Периодически перезапускать сервис</string>
     <string name="btn_autoupdate">Автообновление</string>
     <string name="btn_send_firebase_analytics">Отправлять аналитику Firebase</string>
-    <string name="btn_repository_url_lists">URL репозитория хостов</string>
-    <string name="hint_enter_repository_url_lists">Введите URL репозитория хостов</string>
-    <string name="btn_repository_url_strategies">URL репозитория стратегий</string>
-    <string name="hint_enter_repository_url_strategies">Введите URL репозитория стратегий</string>
+    <string name="btn_repository_url">URL репозитория</string>
+    <string name="hint_enter_repository_url">Введите URL репозитория</string>
     <string name="btn_update_repository_url">URL репозитория обновлений</string>
     <string name="hint_enter_update_repository_url">Введите URL репозитория обновлений</string>
     <string name="btn_ipv6">IPv6</string>
@@ -74,6 +74,7 @@
     <string name="qs_stopping">Остановка…</string>
     <string name="module_version">Версия модуля</string>
     <string name="nfqws_version">Версия nfqws</string>
+    <string name="nfqws2_version">Версия nfqws2</string>
     <string name="ciadpi_version">Версия ciadpi</string>
     <string name="unknown_text">неизвестно</string>
     <string name="service_mode">Режим работы</string>
@@ -99,10 +100,7 @@
     <string name="btn_copy_log">Скопировать лог</string>
     <string name="log_copied">Лог скопирован</string>
     <string name="download_error">Произошла ошибка скачивания, пожалуйста, сообщите о ней разработчикам</string>
-    <string name="ipset_repo_url">URL репозитория ipset</string>
     <string name="title_selection">Подбор стратегии</string>
-    <string name="btn_repository_url_ipsets">URL репозитория ipset</string>
-    <string name="hint_enter_repository_url_ipsets">Введите URL репозитория ipset</string>
     <string name="strategy_status_waiting">ожидание...</string>
     <string name="strategy_status_testing">проверка...</string>
     <string name="strategy_status_tested">проверка завершена</string>
@@ -120,4 +118,13 @@
     <string name="no_storage_permission_message">Нет разрешения на доступ к файлам</string>
     <string name="reset_settings_title">Сброс настроек</string>
     <string name="reset_settings_message">Вы действительно хотите сбросить настройки?</string>
+    <string name="error_hash_mismatch">Не совпала контрольная сумма файла, попробуйте позже</string>
+    <string name="title_generate_manifest">Генерация манифеста</string>
+    <string name="hint_manifest_id">Введите ID манифеста</string>
+    <string name="hint_manifest_name">Введите имя манифеста</string>
+    <string name="hint_manifest_version">Введите версию манифеста</string>
+    <string name="hint_manifest_author">Введите автора манифеста</string>
+    <string name="hint_manifest_description">Введите описание манифеста</string>
+    <string name="title_sure">Вы уверены?</string>
+    <string name="description_delete_item">Вы уверены что хотите удалить данный объект?</string>
 </resources>

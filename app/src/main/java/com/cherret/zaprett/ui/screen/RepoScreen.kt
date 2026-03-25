@@ -51,7 +51,8 @@ import java.io.IOException
 @Composable
 fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
     val context = LocalContext.current
-    val hostLists = viewModel.hostLists.value
+    val items by viewModel.items.collectAsState()
+    val repoList = items?.roots ?: emptyList()
     val isUpdate = viewModel.isUpdate
     val isInstalling = viewModel.isInstalling
     val isUpdateInstalling = viewModel.isUpdateInstalling
@@ -184,7 +185,7 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
                     contentPadding = paddingValues,
                     modifier = Modifier.navigationBarsPadding().fillMaxSize()
                 ) {
-                    if (hostLists.isEmpty()) {
+                    if (repoList.isEmpty()) {
                         item {
                             Box(
                                 modifier = Modifier.fillParentMaxSize(),
@@ -197,7 +198,7 @@ fun RepoScreen(navController: NavController, viewModel: BaseRepoViewModel) {
                             }
                         }
                     } else {
-                        items(hostLists) { item ->
+                        items(repoList) { item ->
                             RepoItem(
                                 item = item,
                                 viewModel = viewModel,

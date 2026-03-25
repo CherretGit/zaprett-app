@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.cherret.zaprett.MainActivity
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.ListType
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.utils.disableList
 import com.cherret.zaprett.utils.getActiveByeDPIStrategyContent
@@ -191,15 +192,15 @@ class ByeDpiVpnService : VpnService() {
     private fun startByeDpi() {
         val socksIp = sharedPreferences.getString("ip", "127.0.0.1")?: "127.0.0.1"
         val socksPort = sharedPreferences.getString("port", "1080")?: "1080"
-        val listSet = if (getHostListMode(sharedPreferences) == "whitelist") getActiveLists(sharedPreferences) else getActiveExcludeLists(sharedPreferences)
-        val ipsetSet = if (getHostListMode(sharedPreferences) == "whitelist") getActiveIpsets(sharedPreferences) else getActiveExcludeIpsets(sharedPreferences)
+        val listSet = if (getHostListMode(sharedPreferences) == ListType.whitelist) getActiveLists(sharedPreferences) else getActiveExcludeLists(sharedPreferences)
+        val ipsetSet = if (getHostListMode(sharedPreferences) == ListType.whitelist) getActiveIpsets(sharedPreferences) else getActiveExcludeIpsets(sharedPreferences)
         CoroutineScope(Dispatchers.IO).launch {
             val args = parseArgs(
                 socksIp,
                 socksPort,
                 getActiveByeDPIStrategyContent(sharedPreferences),
-                prepareList(listSet),
-                prepareIpset(ipsetSet),
+                prepareList(listSet.map { it.file }.toTypedArray()),
+                prepareIpset(ipsetSet.map { it.file }.toTypedArray()),
                 sharedPreferences)
             val result = NativeBridge().jniStartProxy(args)
             if (result < 0) {
@@ -266,7 +267,7 @@ class ByeDpiVpnService : VpnService() {
         val parsedArgs = rawArgs
             .flatMap { args -> regex.findAll(args).map { it.value } }
             .flatMap { arg ->
-                if (getHostListMode(sharedPreferences) == "whitelist") {
+                if (getHostListMode(sharedPreferences) == ListType.whitelist) {
                     when {
                         arg == "\$hostlist" && list.isNotEmpty() -> listOf("--hosts", list)
                         arg == "\$hostlist" && list.isEmpty() -> emptyList()

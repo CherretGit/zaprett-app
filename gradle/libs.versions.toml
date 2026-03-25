@@ -14,6 +14,7 @@ navigation = "2.9.6"
 compose-icons = "1.7.8"
 libsu = "6.0.0"
 okhttp = "5.3.2"
+ktor = "3.4.0"
 serialization = "1.9.0"
 firebase-bom = "34.6.0"
 fragment-compose = "1.8.9"
@@ -41,6 +42,7 @@ compose-material3-adaptive-nav = { group = "androidx.compose.material3", name = 
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 compose-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "compose-icons" }
 libsu-core = { group = "com.github.topjohnwu.libsu", name = "core", version.ref = "libsu" }
+ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor"}
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }

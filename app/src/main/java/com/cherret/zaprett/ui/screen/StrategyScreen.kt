@@ -56,8 +56,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.ServiceType
+import com.cherret.zaprett.ui.component.GenerateManifestDialog
 import com.cherret.zaprett.ui.component.ListSwitchItem
 import com.cherret.zaprett.ui.viewmodel.StrategyViewModel
+import com.cherret.zaprett.utils.getManifestsPath
+import com.cherret.zaprett.utils.getServiceType
+import com.cherret.zaprett.utils.getZaprettPath
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,13 +78,19 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uri?.let { viewModel.copySelectedFile(
-            context,
-            if (sharedPreferences.getBoolean("use_module", false)) "/strategies/nfqws" else "/strategies/byedpi",
-            it
-        ) }
+        uri?.let {
+            val path = when (getServiceType(sharedPreferences)) {
+                ServiceType.byedpi -> getZaprettPath().resolve("files/strategies/byedpi")
+                ServiceType.nfqws -> getZaprettPath().resolve("files/strategies/nfqws")
+                ServiceType.nfqws2 -> getZaprettPath().resolve("files/strategies/nfqws2")
+            }
+            viewModel.prepareImport(context, path, uri)
+        }
     }
     val error by viewModel.errorFlow.collectAsState()
+    val showGenerateManifestDialog by viewModel.showGenerateManifestDialog.collectAsState()
+    val pendingName by viewModel.pendingFileName.collectAsState()
+    val pendingUri by viewModel.pendingFileUri.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -198,6 +209,18 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
                 }
             }
         )
+    }
+    if (showGenerateManifestDialog && pendingName != null && pendingUri != null) {
+        GenerateManifestDialog(
+            path = pendingName!!,
+            onConfirm = { manifest ->
+                val manifestPath = when (getServiceType(sharedPreferences)) {
+                    ServiceType.byedpi -> getManifestsPath().resolve("strategies/byedpi")
+                    ServiceType.nfqws -> getManifestsPath().resolve("strategies/nfqws")
+                    ServiceType.nfqws2 -> getManifestsPath().resolve("strategies/nfqws2")
+                }
+                viewModel.import(context, manifestPath, manifest)
+            }, onDismiss = {viewModel.cancelImport() })
     }
 }
 

@@ -29,8 +29,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Api
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Dangerous
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
@@ -74,9 +75,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cherret.zaprett.BuildConfig
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ServiceStatusUI
+import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.ui.viewmodel.HomeViewModel
+import com.cherret.zaprett.utils.getServiceType
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,15 +95,16 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResu
     val newVersion = viewModel.newVersion
     val updateAvailable = viewModel.updateAvailable
     val showUpdateDialog = viewModel.showUpdateDialog.value
-    val moduleVer = viewModel.moduleVer;
-    val nfqwsVer = viewModel.nfqwsVer;
-    val byedpiVer = viewModel.byedpiVer;
+    val moduleVer = viewModel.moduleVer
+    val nfqwsVer = viewModel.nfqwsVer
+    val nfqws2Ver = viewModel.nfqws2Ver
+    val byedpiVer = viewModel.byedpiVer
     val serviceMode = viewModel.serviceMode
     val error by viewModel.errorFlow.collectAsState()
     LaunchedEffect(Unit) {
-        viewModel.checkForUpdate()
-        viewModel.checkServiceStatus()
-        viewModel.checkModuleInfo()
+        launch { viewModel.checkForUpdate() }
+        launch { viewModel.checkServiceStatus() }
+        launch { viewModel.checkModuleInfo() }
     }
 
     LaunchedEffect(requestVpnPermission) {
@@ -174,7 +179,7 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), vpnLauncher: ActivityResu
                     snackbarHostState,
                     scope
                 )
-                ModuleInfoCard(moduleVer, nfqwsVer, byedpiVer, serviceMode)
+                ModuleInfoCard(moduleVer, nfqwsVer, nfqws2Ver, byedpiVer, serviceMode)
             }
         }
     )
@@ -277,7 +282,7 @@ private fun ServiceControlButtons(viewModel: HomeViewModel, sharedPreferences: S
         )
         Text(stringResource(R.string.btn_stop_service))
     }
-    if (sharedPreferences.getBoolean("use_module", false)) {
+    if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
         FilledTonalButton(
             onClick = { viewModel.onBtnRestart(snackbarHostState, scope) },
             modifier = Modifier
@@ -298,6 +303,7 @@ private fun ServiceControlButtons(viewModel: HomeViewModel, sharedPreferences: S
 private fun ModuleInfoCard(
     moduleVer: MutableState<String>,
     nfqwsVer: MutableState<String>,
+    nfqws2Ver: MutableState<String>,
     byedpiVer: MutableState<String>,
     serviceMode: MutableState<Int>
 ) {
@@ -312,7 +318,9 @@ private fun ModuleInfoCard(
         HorizontalDivider()
         ModuleInfoItem(Icons.Default.Extension, stringResource(R.string.module_version), moduleVer.value)
         HorizontalDivider()
-        ModuleInfoItem(Icons.Default.Dangerous, stringResource(R.string.nfqws_version), nfqwsVer.value)
+        ModuleInfoItem(Icons.Default.Cancel, stringResource(R.string.nfqws_version), nfqwsVer.value)
+        HorizontalDivider()
+        ModuleInfoItem(Icons.Default.Api, stringResource(R.string.nfqws2_version), nfqws2Ver.value)
         HorizontalDivider()
         ModuleInfoItem(Icons.Default.WavingHand, stringResource(R.string.ciadpi_version), byedpiVer.value)
     }

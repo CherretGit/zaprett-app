@@ -4,26 +4,43 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.cherret.zaprett.utils.RepoItemInfo
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.ItemType
+import com.cherret.zaprett.data.ListType
+import com.cherret.zaprett.data.RepoItemFull
+import com.cherret.zaprett.data.RepoTab
+import com.cherret.zaprett.data.ResolveResult
+import com.cherret.zaprett.data.ServiceType
+import com.cherret.zaprett.data.StorageData
+import com.cherret.zaprett.utils.DownloadUtils.download
+import com.cherret.zaprett.utils.DownloadUtils.getFileSha256
+import com.cherret.zaprett.utils.DownloadUtils.registerDownloadListener
+import com.cherret.zaprett.utils.NetworkUtils.getRepo
+import com.cherret.zaprett.utils.NetworkUtils.resolveDependencies
+import com.cherret.zaprett.utils.checkManifestVersion
 import com.cherret.zaprett.utils.checkStoragePermission
-import com.cherret.zaprett.utils.download
-import com.cherret.zaprett.utils.getFileSha256
+import com.cherret.zaprett.utils.findManifestByData
 import com.cherret.zaprett.utils.getHostListMode
+import com.cherret.zaprett.utils.getManifestExpectedPath
+import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getZaprettPath
-import com.cherret.zaprett.utils.registerDownloadListener
-import com.cherret.zaprett.utils.restartService
+import com.cherret.zaprett.utils.isDependencyInstalled
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import java.io.File
 
 abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(application) {
@@ -40,8 +57,8 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     private var _showPermissionDialog = MutableStateFlow(false)
     val showPermissionDialog: StateFlow<Boolean> = _showPermissionDialog
 
-    var hostLists = mutableStateOf<List<RepoItemInfo>>(emptyList())
-        protected set
+    private val _items = MutableStateFlow<ResolveResult?>(null)
+    val items: StateFlow<ResolveResult?> = _items
 
     var isRefreshing = mutableStateOf(false)
         protected set
@@ -50,39 +67,65 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
     val isInstalling = mutableStateMapOf<String, Boolean>()
     val isUpdateInstalling = mutableStateMapOf<String, Boolean>()
 
-    abstract fun getInstalledLists(): Array<String>
-    abstract fun getRepoList(callback: (Result<List<RepoItemInfo>>) -> Unit)
+    abstract fun getInstalled(): Array<StorageData>
+    abstract val repoTab: RepoTab
+    val repoUrl = sharedPreferences.getString("repo_url", "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json") ?: "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json"
+    private val Json = Json {
+        prettyPrint = true
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun refresh() {
-        isRefreshing.value = true
-        getRepoList { result ->
-            viewModelScope.launch(Dispatchers.IO) {
-                result
-                    .onSuccess { safeList ->
-                        val useModule = sharedPreferences.getBoolean("use_module", false)
-                        val listType = getHostListMode(sharedPreferences)
-                        val filteredList = safeList.filter { item ->
-                            when (item.type) {
-                                ItemType.list -> listType == "whitelist"
-                                ItemType.list_exclude -> listType == "blacklist"
-                                ItemType.ipset -> listType == "whitelist"
-                                ItemType.ipset_exclude -> listType == "blacklist"
-                                ItemType.nfqws -> useModule
-                                ItemType.byedpi -> !useModule
-                            }
-                        }
-                        hostLists.value = filteredList
-                        isUpdate.clear()
-                        val existingHashes = getInstalledLists().map { getFileSha256(File(it)) }
-                        for (item in filteredList) {
-                            isUpdate[item.name] = item.hash !in existingHashes
-                        }
+        viewModelScope.launch {
+            val serviceType = getServiceType(sharedPreferences)
+            val listType = getHostListMode(sharedPreferences)
+            getRepo(repoUrl) { item ->
+                when(repoTab) {
+                    RepoTab.bins -> when(item.type) {
+                        ItemType.bin -> true
+                        else -> false
                     }
-                    .onFailure { e ->
-                        _errorFlow.value = e
+                    RepoTab.lua_libs -> when(item.type) {
+                        ItemType.lua_lib -> true
+                        else -> false
                     }
+                    RepoTab.lists -> when (item.type) {
+                        ItemType.list -> listType == ListType.whitelist
+                        ItemType.list_exclude -> listType == ListType.blacklist
+                        else -> false
+                    }
+                    RepoTab.ipsets -> when (item.type) {
+                        ItemType.ipset -> listType == ListType.whitelist
+                        ItemType.ipset_exclude -> listType == ListType.blacklist
+                        else -> false
+                    }
+                    RepoTab.strategies -> when (item.type) {
+                        ItemType.nfqws -> serviceType == ServiceType.nfqws
+                        ItemType.nfqws2 -> serviceType == ServiceType.nfqws2
+                        ItemType.byedpi -> serviceType == ServiceType.byedpi
+                        else -> false
+                    }
+                }
             }
-            isRefreshing.value = false
+                .onStart { isRefreshing.value = true }
+                .flatMapConcat { (index, list) ->
+                    resolveDependencies(index, list)
+                }
+                .onEach { result ->
+                    _items.value = result
+                    isUpdate.clear()
+                    isUpdate.putAll(
+                        getInstalled().associate { item ->
+                            val repoItem = result.roots.associateBy { it.manifest.id }[item.id]
+                            item.id to (repoItem?.manifest?.version != item.version)
+                        }
+                    )
+                }
+                .catch { e -> _errorFlow.value = e }
+                .onCompletion { isRefreshing.value = false }
+                .collect()
         }
     }
 
@@ -94,92 +137,140 @@ abstract class BaseRepoViewModel(application: Application) : AndroidViewModel(ap
         _downloadErrorFlow.value = null
     }
 
-    fun isItemInstalled(item: RepoItemInfo): Boolean {
-        return getInstalledLists().any { File(it).name == item.name }
+    fun isItemInstalled(item: RepoItemFull): Boolean {
+        return getInstalled().any { it.id == item.manifest.id }
     }
 
-    fun install(item: RepoItemInfo) {
-        when (checkStoragePermission(context)) {
-            true -> {
-                isInstalling[item.name] = true
-                val downloadId = download(context, item.url)
-                registerDownloadListener(context, downloadId, { uri ->
-                    viewModelScope.launch(Dispatchers.IO) {
-                        val sourceFile = File(uri.path!!)
-                        val targetDir = when (item.type) {
-                            ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
-                            ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
-                            ItemType.list -> File(getZaprettPath(), "lists/include")
-                            ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
-                            ItemType.ipset -> File(getZaprettPath(), "ipset/include")
-                            ItemType.ipset_exclude -> File(getZaprettPath(), "ipset/exclude")
-                        }
-                        val targetFile = File(targetDir, uri.lastPathSegment!!)
-                        sourceFile.copyTo(targetFile, overwrite = true)
-                        sourceFile.delete()
-                        isInstalling[item.name] = false
-                        isUpdate[item.name] = false
-                        refresh()
-                    }
-                }, onError = {
-                    isInstalling[item.name] = false
-                    isUpdate[item.name] = false
-                    refresh()
-                    _downloadErrorFlow.value = it
-                })
+    private fun resolveDependencyPaths(allDeps: List<RepoItemFull>): Map<String, String> {
+        val baseDir = getZaprettPath()
+        return allDeps.associate { dep ->
+            val path = if (isDependencyInstalled(dep)) {
+                findManifestByData(dep)
+            } else {
+                getManifestExpectedPath(dep, baseDir)
             }
-            false -> _showPermissionDialog.value = true
+            dep.manifest.id to path
         }
+    }
+
+    fun install(item: RepoItemFull) {
+        val rootId = item.manifest.id
+        val deps = _items.value?.dependencies
+            ?.filter { rootId in it.dependencies }
+            ?.map { it.manifest }
+            .orEmpty()
+        val dependencyPaths = resolveDependencyPaths(deps)
+        val depsToDownload = deps
+            .filter { !isDependencyInstalled(it) }
+        val download = depsToDownload + item
+        if (checkStoragePermission(context)) {
+            download.forEach { item ->
+                isInstalling[item.manifest.id] = true
+                val downloadId = download(context, item.manifest.artifact.url)
+                downloadAndProcess(item, context, downloadId, dependencyPaths)
+
+            }
+        }
+        else _showPermissionDialog.value = true
     }
 
     fun hideNoPermissionDialog() {
         _showPermissionDialog.value = false
     }
 
-    fun update(item: RepoItemInfo) {
-        isUpdateInstalling[item.name] = true
-        val downloadId = download(context, item.url)
-        registerDownloadListener(
-            context,
-            downloadId,
-            onDownloaded = { uri ->
-                viewModelScope.launch(Dispatchers.IO) {
-                    val sourceFile = File(uri.path!!)
-                    val targetDir = when (item.type) {
-                        ItemType.byedpi -> File(getZaprettPath(), "strategies/byedpi")
-                        ItemType.nfqws -> File(getZaprettPath(), "strategies/nfqws")
-                        ItemType.list -> File(getZaprettPath(), "lists/include")
-                        ItemType.list_exclude -> File(getZaprettPath(), "lists/exclude")
-                        ItemType.ipset -> File(getZaprettPath(), "ipset/include")
-                        ItemType.ipset_exclude -> File(getZaprettPath(), "ipset/exclude")
-                    }
-                    val targetFile = File(targetDir, uri.lastPathSegment!!)
-                    sourceFile.copyTo(targetFile, overwrite = true)
-                    sourceFile.delete()
-                    isUpdateInstalling[item.name] = false
-                    isUpdate[item.name] = false
-                    refresh()
-                }
-            },
-            onError = { error ->
-                isUpdateInstalling[item.name] = false
-                isUpdate[item.name] = false
-                refresh()
-                _downloadErrorFlow.value = error
-            }
-        )
-    }
-
-    fun showRestartSnackbar(snackbarHostState: SnackbarHostState) {
-        viewModelScope.launch {
-            val result = snackbarHostState.showSnackbar(
-                context.getString(R.string.pls_restart_snack),
-                actionLabel = context.getString(R.string.btn_restart_service)
-            )
-            if (result == SnackbarResult.ActionPerformed) {
-                restartService {}
-                snackbarHostState.showSnackbar(context.getString(R.string.snack_reload))
+    fun update(item: RepoItemFull) {
+        val rootId = item.manifest.id
+        val deps = _items.value?.dependencies
+            ?.filter { rootId in it.dependencies }
+            ?.map { it.manifest }
+            .orEmpty()
+        val dependencyPaths = resolveDependencyPaths(deps)
+        val depsToDownload = deps
+            .filter { !isDependencyInstalled(it) || checkManifestVersion(it) }
+        val download = depsToDownload + item
+        if (checkStoragePermission(context)) {
+            download.forEach { item ->
+                isUpdateInstalling[item.manifest.id] = true
+                val downloadId = download(context, item.manifest.artifact.url)
+                downloadAndProcess(item, context, downloadId, dependencyPaths)
             }
         }
+        else _showPermissionDialog.value = true
+    }
+
+    fun downloadAndProcess(item: RepoItemFull, context: Context, downloadId: Long, dependencyPaths: Map<String, String> = emptyMap()) {
+        val index = item.index
+        val item = item.manifest
+        registerDownloadListener(context, downloadId, { uri ->
+            viewModelScope.launch(Dispatchers.IO) {
+                val baseDir = getZaprettPath()
+                val sourceFile = File(uri.path!!)
+
+                if (getFileSha256(sourceFile) == item.artifact.sha256) {
+                    val targetDirSuffix = when (index.type) {
+                        ItemType.bin -> "bin"
+                        ItemType.lua_lib -> "libs"
+                        ItemType.byedpi -> "strategies/byedpi"
+                        ItemType.nfqws -> "strategies/nfqws"
+                        ItemType.nfqws2 -> "strategies/nfqws2"
+                        ItemType.list -> "lists/include"
+                        ItemType.list_exclude -> "lists/exclude"
+                        ItemType.ipset -> "ipset/include"
+                        ItemType.ipset_exclude -> "ipset/exclude"
+                    }
+
+                    val targetFile = baseDir
+                        .resolve("files")
+                        .resolve(targetDirSuffix)
+                        .resolve(uri.lastPathSegment!!
+                            .replace(Regex("""-\d+(?=\.|$)"""), ""))
+
+                    targetFile.parentFile!!.mkdirs()
+                    sourceFile.copyTo(targetFile, overwrite = true)
+                    sourceFile.delete()
+
+                    val manifestFile = baseDir.resolve("manifests").resolve(targetDirSuffix).resolve("${targetFile.name.substringBeforeLast(".")}.json")
+                    manifestFile.parentFile!!.mkdirs()
+
+                    val resolvedDependencies = item.dependencies.mapNotNull { depUrl ->
+                        val depItem = _items.value?.roots?.find { it.index.manifest == depUrl }
+                            ?: _items.value?.dependencies?.map { it.manifest }?.find { it.index.manifest == depUrl }
+                        depItem?.let { dependencyPaths[it.manifest.id] }
+                    }
+
+                    manifestFile.writeText(
+                        Json.encodeToString(
+                            StorageData(
+                                item.schema,
+                                item.id,
+                                item.name,
+                                item.version,
+                                item.author,
+                                item.description,
+                                dependencies = resolvedDependencies,
+                                file = targetFile.path
+                            )
+                        )
+                    )
+                    isInstalling[item.id] = false
+                    isUpdateInstalling[item.id] = false
+                    isUpdate[item.id] = false
+                    refresh()
+                }
+                else {
+                    isInstalling[item.id] = false
+                    isUpdateInstalling[item.id] = false
+                    _downloadErrorFlow.value = context.getString(R.string.error_hash_mismatch)
+                    sourceFile.delete()
+                    refresh()
+                }
+            }
+        }, onError = {
+            isInstalling[item.id] = false
+            isUpdateInstalling[item.id] = false
+            isUpdate[item.id] = false
+            refresh()
+            _downloadErrorFlow.value = it
+        })
     }
 }

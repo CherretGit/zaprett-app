@@ -62,9 +62,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.ListType
+import com.cherret.zaprett.ui.component.GenerateManifestDialog
 import com.cherret.zaprett.ui.component.ListSwitchItem
 import com.cherret.zaprett.ui.viewmodel.IpsetViewModel
 import com.cherret.zaprett.utils.getHostListMode
+import com.cherret.zaprett.utils.getManifestsPath
+import com.cherret.zaprett.utils.getZaprettPath
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,10 +85,17 @@ fun IpsetsScreen(navController: NavController, viewModel: IpsetViewModel = viewM
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let {
-            if (getHostListMode(prefs) == "whitelist") viewModel.copySelectedFile(context, "/ipset/include", it)
-            else viewModel.copySelectedFile(context, "/ipset/exclude", it) }
+            val path = when (getHostListMode(prefs)) {
+                ListType.whitelist -> getZaprettPath().resolve("files/ipset/include")
+                ListType.blacklist -> getZaprettPath().resolve("files/ipset/exclude")
+            }
+            viewModel.prepareImport(context, path, uri)
+        }
     }
     val error by viewModel.errorFlow.collectAsState()
+    val showGenerateManifestDialog by viewModel.showGenerateManifestDialog.collectAsState()
+    val pendingName by viewModel.pendingFileName.collectAsState()
+    val pendingUri by viewModel.pendingFileUri.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -207,6 +218,17 @@ fun IpsetsScreen(navController: NavController, viewModel: IpsetViewModel = viewM
             }
         )
     }
+    if (showGenerateManifestDialog && pendingName != null && pendingUri != null) {
+        GenerateManifestDialog(
+            path = pendingName!!,
+            onConfirm = { manifest ->
+                val manifestPath = when (getHostListMode(prefs)) {
+                    ListType.whitelist -> getManifestsPath().resolve("ipset/include")
+                    ListType.blacklist -> getManifestsPath().resolve("ipset/exclude")
+                }
+                viewModel.import(context, manifestPath, manifest)
+            }, onDismiss = {viewModel.cancelImport() })
+    }
 }
 
 @Composable
@@ -248,7 +270,7 @@ private fun FloatingMenu(navController: NavController, launcher: ActivityResultL
 fun IpsetTypeChoose(viewModel: IpsetViewModel, prefs : SharedPreferences) {
     val listType = remember { mutableStateOf(getHostListMode(prefs))}
     val options = listOf(stringResource(R.string.title_whitelist), stringResource(R.string.title_blacklist))
-    val selectedIndex = if (listType.value == "whitelist") 0 else 1
+    val selectedIndex = if (listType.value == ListType.whitelist) 0 else 1
 
     SingleChoiceSegmentedButtonRow (
         modifier = Modifier
@@ -262,7 +284,7 @@ fun IpsetTypeChoose(viewModel: IpsetViewModel, prefs : SharedPreferences) {
                     count = options.size
                 ),
                 onClick = {
-                    listType.value = if (index == 0) "whitelist" else "blacklist"
+                    listType.value = if (index == 0) ListType.whitelist else ListType.blacklist
                     viewModel.setListType(listType.value)
                 },
                 selected = index == selectedIndex,

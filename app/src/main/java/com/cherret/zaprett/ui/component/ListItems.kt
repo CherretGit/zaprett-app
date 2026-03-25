@@ -16,9 +16,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -31,7 +33,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,17 +49,19 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.RepoItemFull
+import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.data.StrategyCheckResult
 import com.cherret.zaprett.data.StrategyTestingStatus
 import com.cherret.zaprett.ui.viewmodel.BaseRepoViewModel
-import com.cherret.zaprett.utils.RepoItemInfo
 import com.cherret.zaprett.utils.disableStrategy
 import com.cherret.zaprett.utils.enableStrategy
 import com.cherret.zaprett.utils.getActiveStrategy
 import kotlinx.coroutines.launch
 
 @Composable
-fun ListSwitchItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit, onDeleteClick: () -> Unit) {
+fun ListSwitchItem(item: StorageData, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit, onDeleteClick: () -> Unit) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -69,8 +75,35 @@ fun ListSwitchItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) 
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(text = item, modifier = Modifier.weight(1f))
-            Switch(checked = isChecked, onCheckedChange = onCheckedChange)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(text = item.name)
+                Text(text = stringResource(R.string.title_author, item.author))
+                Text(text = item.description)
+            }
+            Switch(
+                checked = isChecked,
+                onCheckedChange = onCheckedChange,
+                thumbContent = if (isChecked) {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(SwitchDefaults.IconSize)
+                        )
+                    }
+                } else {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(SwitchDefaults.IconSize)
+                        )
+                    }
+                }
+            )
         }
         HorizontalDivider(thickness = Dp.Hairline)
         Row(
@@ -78,7 +111,7 @@ fun ListSwitchItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) 
             horizontalArrangement = Arrangement.End
         ) {
             FilledTonalButton(
-                onClick = onDeleteClick,
+                onClick = { showDeleteDialog = true },
                 modifier = Modifier.padding(horizontal = 5.dp)
             ) {
                 Icon(
@@ -90,20 +123,41 @@ fun ListSwitchItem(item: String, isChecked: Boolean, onCheckedChange: (Boolean) 
             }
         }
     }
+    if (showDeleteDialog) {
+        AlertDialog(
+            title = { Text(stringResource(R.string.title_sure)) },
+            text = { Text(stringResource(R.string.description_delete_item)) },
+            onDismissRequest = { showDeleteDialog = false },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false} ) {
+                    Text(stringResource(R.string.btn_dismiss))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    onDeleteClick()
+                }) {
+                    Text(stringResource(R.string.btn_continue))
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun RepoItem(
-    item: RepoItemInfo,
+    item: RepoItemFull,
     viewModel: BaseRepoViewModel,
     isInstalling: Map<String, Boolean>,
     isUpdateInstalling: Map<String, Boolean>,
     isUpdate: Map<String, Boolean>,
     modifier: Modifier = Modifier
 ) {
+    val manifest = item.manifest
     val isInstalled = viewModel.isItemInstalled(item)
-    val installing = isInstalling[item.name] == true
-    val updating = isUpdateInstalling[item.name] == true
+    val installing = isInstalling[manifest.id] == true
+    val updating = isUpdateInstalling[manifest.id] == true
 
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
@@ -119,7 +173,7 @@ fun RepoItem(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text(text = item.name, modifier = Modifier.weight(1f))
+                Text(text = manifest.name, modifier = Modifier.weight(1f))
             }
 
             Row(
@@ -128,7 +182,7 @@ fun RepoItem(
                     .padding(start = 16.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.title_author, item.author),
+                    text = stringResource(R.string.title_author, manifest.author),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -139,7 +193,7 @@ fun RepoItem(
                     .padding(start = 16.dp)
             ) {
                 Text(
-                    text = item.description,
+                    text = manifest.description,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -150,7 +204,7 @@ fun RepoItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                if (isUpdate[item.name] == true && isInstalled) {
+                if (isUpdate[manifest.id] == true && isInstalled) {
                     FilledTonalButton(
                         onClick = { viewModel.update(item) },
                         enabled = !updating,
@@ -222,7 +276,9 @@ fun StrategySelectionItem(strategy : StrategyCheckResult, prefs : SharedPreferen
                 )
                 FilledTonalIconButton(
                     onClick = {
-                        if (getActiveStrategy(prefs).isNotEmpty()) disableStrategy(getActiveStrategy(prefs)[0], prefs)
+                        getActiveStrategy(prefs).getOrNull()?.file
+                            ?.takeIf { it.isNotEmpty() }
+                            ?.let { disableStrategy(it, prefs) }
                         enableStrategy(strategy.path, prefs)
                         scope.launch {
                             snackbarHostState.showSnackbar(

@@ -19,15 +19,17 @@ import com.cherret.zaprett.R
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.data.ServiceStatusUI
-import com.cherret.zaprett.utils.download
+import com.cherret.zaprett.data.ServiceType
+import com.cherret.zaprett.utils.DownloadUtils.download
+import com.cherret.zaprett.utils.DownloadUtils.installApk
+import com.cherret.zaprett.utils.DownloadUtils.registerDownloadListener
+import com.cherret.zaprett.utils.NetworkUtils.getUpdate
 import com.cherret.zaprett.utils.getActiveStrategy
-import com.cherret.zaprett.utils.getBinVersion
-import com.cherret.zaprett.utils.getChangelog
 import com.cherret.zaprett.utils.getModuleVersion
+import com.cherret.zaprett.utils.getNfqws2Version
+import com.cherret.zaprett.utils.getNfqwsVersion
+import com.cherret.zaprett.utils.getServiceType
 import com.cherret.zaprett.utils.getStatus
-import com.cherret.zaprett.utils.getUpdate
-import com.cherret.zaprett.utils.installApk
-import com.cherret.zaprett.utils.registerDownloadListener
 import com.cherret.zaprett.utils.restartService
 import com.cherret.zaprett.utils.startService
 import com.cherret.zaprett.utils.stopService
@@ -54,6 +56,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var nfqwsVer = mutableStateOf(context.getString(R.string.unknown_text))
         private set
 
+    var nfqws2Ver = mutableStateOf(context.getString(R.string.unknown_text))
+
     var byedpiVer = mutableStateOf("0.17.3")
         private set
 
@@ -74,21 +78,25 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     var showUpdateDialog = mutableStateOf(false)
 
-    fun checkForUpdate() {
+    suspend fun checkForUpdate() {
         if (prefs.getBoolean("auto_update", BuildConfig.auto_update)) {
-            getUpdate(prefs) {
-                if (it != null) {
-                    downloadUrl.value = it.downloadUrl.toString()
-                    getChangelog(it.changelogUrl.toString()) { log -> changeLog.value = log }
-                    newVersion.value = it.version
-                    updateAvailable.value = true
+            getUpdate(prefs)
+                .onSuccess { updateData ->
+                    if (updateData.updateInfo.versionCode > BuildConfig.VERSION_CODE) {
+                        downloadUrl.value = updateData.updateInfo.downloadUrl
+                        changeLog.value = updateData.changelog
+                        newVersion.value = updateData.updateInfo.version
+                        updateAvailable.value = true
+                    }
                 }
-            }
+                .onFailure { exception ->
+                    _errorFlow.value = exception.toString()
+                }
         }
     }
 
-    private fun updateServiceStatus(useModule: Boolean) {
-        if (useModule) {
+    private fun updateServiceStatus(serviceType: ServiceType) {
+        if (serviceType != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 _serviceStatus.value = if (isEnabled) {
                     ServiceStatusUI(R.string.status_enabled, Icons.Filled.CheckCircle)
@@ -108,14 +116,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun checkServiceStatus() {
         val updateOnBoot = prefs.getBoolean("update_on_boot", true)
         if (updateOnBoot) {
-            val useModule = prefs.getBoolean("use_module", false)
-            updateServiceStatus(useModule)
+            val serviceType = getServiceType(prefs)
+            updateServiceStatus(serviceType)
         }
     }
 
     fun onCardClick() {
-        val useModule = prefs.getBoolean("use_module", false)
-        updateServiceStatus(useModule)
+        val serviceType = getServiceType(prefs)
+        updateServiceStatus(serviceType)
     }
 
     fun startVpn() {
@@ -123,7 +131,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onBtnStartService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        if (prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 scope.launch {
                     snackbarHostState.showSnackbar(
@@ -139,7 +147,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             }
         } else {
             if (ByeDpiVpnService.status == ServiceStatus.Disconnected || ByeDpiVpnService.status == ServiceStatus.Failed) {
-                if (getActiveStrategy(prefs).isNotEmpty()) {
+                if (getActiveStrategy(prefs).isSuccess) {
                     scope.launch {
                         snackbarHostState.showSnackbar(context.getString(R.string.snack_starting_service))
                     }
@@ -166,7 +174,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onBtnStopService(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        if (prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 scope.launch {
                     snackbarHostState.showSnackbar(
@@ -200,7 +208,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onBtnRestart(snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        if (prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) != ServiceType.byedpi) {
             restartService { error ->
                 _errorFlow.value = error
                 onCardClick()
@@ -216,14 +224,21 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun checkModuleInfo() {
-        if (prefs.getBoolean("use_module", false)) {
+        if (getServiceType(prefs) != ServiceType.byedpi) {
             getModuleVersion { value ->
                 moduleVer.value = value
             }
-            getBinVersion { value ->
+            getNfqwsVersion { value ->
                 nfqwsVer.value = value
             }
-            serviceMode.intValue = R.string.service_mode_nfqws;
+            getNfqws2Version { value ->
+                nfqws2Ver.value = value
+            }
+            when(getServiceType(prefs)) {
+                ServiceType.nfqws -> serviceMode.intValue = R.string.service_mode_nfqws
+                ServiceType.nfqws2 -> serviceMode.intValue = R.string.service_mode_nfqws2
+                ServiceType.byedpi -> serviceMode.intValue = R.string.service_mode_ciadpi
+            }
         }
     }
 
@@ -243,7 +258,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 installApk(context, uri)
                 },
                 onError = {
-
+                    _errorFlow.value = it
                 })
         }
         else {
