@@ -23,7 +23,6 @@ import java.io.File
 import kotlin.emptyArray
 
 class StrategyViewModel(application: Application): BaseListsViewModel(application) {
-    private val sharedPreferences = application.getSharedPreferences("settings", Context.MODE_PRIVATE)
     private val strategyProvider: StrategyProvider
         get() = when(getServiceType(sharedPreferences)) {
             ServiceType.nfqws -> NfqwsStrategyProvider()

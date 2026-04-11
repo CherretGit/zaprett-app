@@ -3,6 +3,7 @@ package com.cherret.zaprett.utils
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.VpnService
+import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.core.content.ContextCompat
@@ -31,7 +32,9 @@ class QSTileService: TileService() {
     override fun onClick() {
         super.onClick()
         if (qsTile.state == Tile.STATE_INACTIVE) {
-            qsTile.subtitle = getString(R.string.qs_starting)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                qsTile.subtitle = getString(R.string.qs_starting)
+            }
             qsTile.state = Tile.STATE_UNAVAILABLE
             qsTile.updateTile()
             if (getServiceType(prefs) != ServiceType.byedpi){
@@ -40,14 +43,17 @@ class QSTileService: TileService() {
             else {
                 val prepareIntent = VpnService.prepare(applicationContext)
                 if (prepareIntent != null) {
-                    startActivityAndCollapse(prepareIntent)
+                    prepareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    applicationContext.startActivity(prepareIntent)
                 } else {
                     ContextCompat.startForegroundService(applicationContext, Intent(applicationContext, ByeDpiVpnService::class.java).apply { action = "START_VPN" })
                 }
             }
         }
         else {
-            qsTile.subtitle = getString(R.string.qs_stopping)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                qsTile.subtitle = getString(R.string.qs_stopping)
+            }
             qsTile.state = Tile.STATE_UNAVAILABLE
             qsTile.updateTile()
             if (getServiceType(prefs) != ServiceType.byedpi){
@@ -65,12 +71,16 @@ class QSTileService: TileService() {
             getStatus {
                 if (it) {
                     qsTile.label = getString(R.string.qs_name)
-                    qsTile.subtitle = getString(R.string.qs_working)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        qsTile.subtitle = getString(R.string.qs_working)
+                    }
                     qsTile.state = Tile.STATE_ACTIVE
                     qsTile.updateTile()
                 } else {
                     qsTile.label = getString(R.string.qs_name)
-                    qsTile.subtitle = getString(R.string.qs_not_working)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        qsTile.subtitle = getString(R.string.qs_not_working)
+                    }
                     qsTile.state = Tile.STATE_INACTIVE
                     qsTile.updateTile()
                 }
@@ -79,12 +89,16 @@ class QSTileService: TileService() {
         else {
             if (ByeDpiVpnService.status == ServiceStatus.Connected) {
                 qsTile.label = getString(R.string.qs_name)
-                qsTile.subtitle = getString(R.string.qs_working)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    qsTile.subtitle = getString(R.string.qs_working)
+                }
                 qsTile.state = Tile.STATE_ACTIVE
                 qsTile.updateTile()
             } else {
                 qsTile.label = getString(R.string.qs_name)
-                qsTile.subtitle = getString(R.string.qs_not_working)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    qsTile.subtitle = getString(R.string.qs_not_working)
+                }
                 qsTile.state = Tile.STATE_INACTIVE
                 qsTile.updateTile()
             }

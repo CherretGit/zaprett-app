@@ -79,6 +79,7 @@ fun IpsetsScreen(navController: NavController, viewModel: IpsetViewModel = viewM
     val snackbarHostState = remember { SnackbarHostState() }
     val allLists = viewModel.allItems
     val checked = viewModel.checked
+    val using = viewModel.using
     val isRefreshing = viewModel.isRefreshing
     val showPermissionDialog by viewModel.showNoPermissionDialog.collectAsState()
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -182,6 +183,7 @@ fun IpsetsScreen(navController: NavController, viewModel: IpsetViewModel = viewM
                                 ListSwitchItem (
                                     item = item,
                                     isChecked = checked[item] == true,
+                                    isUsing = using[item] == true,
                                     onCheckedChange = { isChecked ->
                                         viewModel.onCheckedChange(item, isChecked, snackbarHostState, scope)
                                     },

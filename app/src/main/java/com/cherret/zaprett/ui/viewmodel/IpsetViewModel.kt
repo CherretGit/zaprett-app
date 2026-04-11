@@ -20,7 +20,6 @@ import kotlinx.coroutines.CoroutineScope
 import java.io.File
 
 class IpsetViewModel(application: Application): BaseListsViewModel(application) {
-    private val sharedPreferences = application.getSharedPreferences("settings", Context.MODE_PRIVATE)
     override fun loadAllItems(): Array<StorageData> =
         if (getHostListMode(sharedPreferences) == ListType.whitelist) getAllIpsets()
         else getAllExcludeIpsets()

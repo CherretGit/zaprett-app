@@ -2,6 +2,7 @@ package com.cherret.zaprett.ui.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -18,6 +19,7 @@ import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.utils.checkStoragePermission
+import com.cherret.zaprett.utils.getActiveStrategy
 import com.cherret.zaprett.utils.restartService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +33,7 @@ import java.io.IOException
 
 abstract class BaseListsViewModel(application: Application) : AndroidViewModel(application) {
     val context = application
+    val sharedPreferences: SharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -41,6 +44,7 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     var activeItems by mutableStateOf<List<StorageData>>(emptyList())
         private set
     val checked = mutableStateMapOf<StorageData, Boolean>()
+    val using = mutableStateMapOf<StorageData, Boolean>()
     var isRefreshing by mutableStateOf(false)
         private set
     private val _pendingFileName = MutableStateFlow<String?>(null)
@@ -68,8 +72,11 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
                 allItems = loadAllItems().toList()
                 activeItems = loadActiveItems().toList()
                 checked.clear()
-                allItems.forEach { list ->
-                    checked[list] = activeItems.contains(list)
+                using.clear()
+                val strategy = getActiveStrategy(sharedPreferences).getOrNull()
+                allItems.forEach { item ->
+                    checked[item] = activeItems.contains(item)
+                    if (strategy != item) using[item] = strategy?.dependencies?.contains(item.manifestPath) == true
                 }
                 isRefreshing = false
             }

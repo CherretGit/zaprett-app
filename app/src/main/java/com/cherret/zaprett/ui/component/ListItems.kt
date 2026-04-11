@@ -60,7 +60,7 @@ import com.cherret.zaprett.utils.getActiveStrategy
 import kotlinx.coroutines.launch
 
 @Composable
-fun ListSwitchItem(item: StorageData, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit, onDeleteClick: () -> Unit) {
+fun ListSwitchItem(item: StorageData, isChecked: Boolean, isUsing: Boolean, onCheckedChange: (Boolean) -> Unit, onDeleteClick: () -> Unit) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
@@ -84,9 +84,10 @@ fun ListSwitchItem(item: StorageData, isChecked: Boolean, onCheckedChange: (Bool
                 Text(text = item.description)
             }
             Switch(
-                checked = isChecked,
+                checked = isChecked || isUsing,
                 onCheckedChange = onCheckedChange,
-                thumbContent = if (isChecked) {
+                enabled = !isUsing,
+                thumbContent = if (isChecked || isUsing) {
                     {
                         Icon(
                             imageVector = Icons.Filled.Check,

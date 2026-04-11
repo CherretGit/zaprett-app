@@ -174,6 +174,7 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
                                 ListSwitchItem(
                                     item = item,
                                     isChecked = checked[item] == true,
+                                    isUsing = false,
                                     onCheckedChange = { isChecked ->
                                         viewModel.onCheckedChange(item, isChecked, snackbarHostState, scope)
                                     },
