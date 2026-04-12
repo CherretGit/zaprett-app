@@ -1,10 +1,10 @@
 package com.cherret.zaprett.ui.viewmodel
 
 import android.app.Application
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.material3.SnackbarHostState
 import com.cherret.zaprett.byedpi.ByeDpiVpnService
+import com.cherret.zaprett.data.ListUiItem
 import com.cherret.zaprett.data.ServiceStatus
 import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.StorageData
@@ -37,8 +37,9 @@ class StrategyViewModel(application: Application): BaseListsViewModel(applicatio
         else emptyArray()
     }
 
-    override fun deleteItem(item: StorageData, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        val wasChecked = checked[item] == true
+    override fun deleteItem(item: ListUiItem, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+        val wasChecked = item.isChecked
+        val item = item.data
         disableStrategy(item.manifestPath, sharedPreferences)
         val successArtifact = File(item.file).delete()
         val successManifest = File(item.manifestPath).delete()
@@ -59,20 +60,20 @@ class StrategyViewModel(application: Application): BaseListsViewModel(applicatio
         refresh()
     }
 
-    override fun onCheckedChange(item: StorageData, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        checked[item] = isChecked
-        if (isChecked) {
-            checked.keys.forEach { key ->
-                checked[key] = false
-                disableStrategy(key.manifestPath, sharedPreferences)
+    override fun onCheckedChange(item: ListUiItem, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+        val currentItems = _listUiState.value.items
+        val updatedItems = currentItems.map {
+            val shouldBeSelected = it.data == item.data && isChecked
+            if (shouldBeSelected) {
+                enableStrategy(it.data.manifestPath, sharedPreferences)
+            } else {
+                disableStrategy(it.data.manifestPath, sharedPreferences)
             }
-            checked[item] = true
-            enableStrategy(item.manifestPath, sharedPreferences)
+            it.copy(isChecked = shouldBeSelected)
         }
-        else {
-            checked[item] = false
-            disableStrategy(item.manifestPath, sharedPreferences)
-        }
+        _listUiState.value = _listUiState.value.copy(
+            items = updatedItems
+        )
         if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 if (isEnabled) {

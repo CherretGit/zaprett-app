@@ -77,10 +77,7 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
     val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val allLists = viewModel.allItems
-    val checked = viewModel.checked
-    val using = viewModel.using
-    val isRefreshing = viewModel.isRefreshing
+    val state by viewModel.listUiState.collectAsState()
     val showPermissionDialog by viewModel.showNoPermissionDialog.collectAsState()
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -93,7 +90,6 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
             viewModel.prepareImport(context, path, uri)
         }
     }
-    val error by viewModel.errorFlow.collectAsState()
     val showGenerateManifestDialog by viewModel.showGenerateManifestDialog.collectAsState()
     val pendingName by viewModel.pendingFileName.collectAsState()
     val pendingUri by viewModel.pendingFileUri.collectAsState()
@@ -102,7 +98,7 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
         viewModel.refresh()
     }
 
-    if (error.isNotEmpty()) {
+    if (!state.error.isNullOrEmpty()) {
         AlertDialog(
             onDismissRequest = {
                 viewModel.clearError()
@@ -114,7 +110,7 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
             dismissButton = {
                 TextButton(onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip: ClipData = ClipData.newPlainText("Error log", error)
+                    val clip: ClipData = ClipData.newPlainText("Error log", state.error)
                     clipboard.setPrimaryClip(clip)
                     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
                         Toast.makeText(context, context.getString(R.string.log_copied), Toast.LENGTH_SHORT).show()
@@ -148,7 +144,7 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
         },
         content = { paddingValues ->
             PullToRefreshBox(
-                isRefreshing = isRefreshing,
+                isRefreshing = state.isRefreshing,
                 onRefresh = {
                     viewModel.refresh()
                 },
@@ -165,7 +161,7 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
                         ListTypeChoose(viewModel, prefs)
                     }
                     when {
-                        allLists.isEmpty() -> {
+                        state.items.isEmpty() -> {
                             item {
                                 Box(
                                     modifier = Modifier.fillParentMaxSize(),
@@ -179,11 +175,11 @@ fun HostsScreen(navController: NavController, viewModel: HostsViewModel = viewMo
                             }
                         }
                         else -> {
-                            items(allLists) { item ->
+                            items(state.items) { item ->
                                 ListSwitchItem (
-                                    item = item,
-                                    isChecked = checked[item] == true,
-                                    isUsing = using[item] == true,
+                                    item = item.data,
+                                    isChecked = item.isChecked,
+                                    isUsing = item.isUsing,
                                     onCheckedChange = { isChecked ->
                                         viewModel.onCheckedChange(item, isChecked, snackbarHostState, scope)
                                     },

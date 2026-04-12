@@ -71,9 +71,7 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
     val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val allLists = viewModel.allItems
-    val checked = viewModel.checked
-    val isRefreshing = viewModel.isRefreshing
+    val state by viewModel.listUiState.collectAsState()
     val showPermissionDialog by viewModel.showNoPermissionDialog.collectAsState()
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -87,7 +85,6 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
             viewModel.prepareImport(context, path, uri)
         }
     }
-    val error by viewModel.errorFlow.collectAsState()
     val showGenerateManifestDialog by viewModel.showGenerateManifestDialog.collectAsState()
     val pendingName by viewModel.pendingFileName.collectAsState()
     val pendingUri by viewModel.pendingFileUri.collectAsState()
@@ -96,7 +93,7 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
         viewModel.refresh()
     }
 
-    if (error.isNotEmpty()) {
+    if (!state.error.isNullOrEmpty()) {
         AlertDialog(
             onDismissRequest = {
                 viewModel.clearError()
@@ -108,7 +105,7 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
             dismissButton = {
                 TextButton(onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip: ClipData = ClipData.newPlainText("Error log", error)
+                    val clip: ClipData = ClipData.newPlainText("Error log", state.error)
                     clipboard.setPrimaryClip(clip)
                     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
                         Toast.makeText(context, context.getString(R.string.log_copied), Toast.LENGTH_SHORT).show()
@@ -142,7 +139,7 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
         },
         content = { paddingValues ->
             PullToRefreshBox(
-                isRefreshing = isRefreshing,
+                isRefreshing = state.isRefreshing,
                 onRefresh = {
                     viewModel.refresh()
                 },
@@ -156,7 +153,7 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
                     modifier = Modifier.navigationBarsPadding().fillMaxSize()
                 ) {
                     when {
-                        allLists.isEmpty() -> {
+                        state.items.isEmpty() -> {
                             item {
                                 Box(
                                     modifier = Modifier.fillParentMaxSize(),
@@ -170,10 +167,10 @@ fun StrategyScreen(navController: NavController, viewModel: StrategyViewModel = 
                             }
                         }
                         else -> {
-                            items(allLists) { item ->
+                            items(state.items) { item ->
                                 ListSwitchItem(
-                                    item = item,
-                                    isChecked = checked[item] == true,
+                                    item = item.data,
+                                    isChecked = item.isChecked,
                                     isUsing = false,
                                     onCheckedChange = { isChecked ->
                                         viewModel.onCheckedChange(item, isChecked, snackbarHostState, scope)

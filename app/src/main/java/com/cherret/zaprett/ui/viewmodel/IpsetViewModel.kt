@@ -1,9 +1,9 @@
 package com.cherret.zaprett.ui.viewmodel
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.material3.SnackbarHostState
 import com.cherret.zaprett.data.ListType
+import com.cherret.zaprett.data.ListUiItem
 import com.cherret.zaprett.data.ServiceType
 import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.utils.disableIpset
@@ -27,8 +27,9 @@ class IpsetViewModel(application: Application): BaseListsViewModel(application) 
         if (getHostListMode(sharedPreferences) == ListType.whitelist) getActiveIpsets(sharedPreferences)
         else getActiveExcludeIpsets(sharedPreferences)
 
-    override fun deleteItem(item: StorageData, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        val wasChecked = checked[item] == true
+    override fun deleteItem(item: ListUiItem, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+        val wasChecked = item.isChecked
+        val item = item.data
         disableIpset(item.manifestPath, sharedPreferences)
         val successArtifact = File(item.file).delete()
         val successManifest = File(item.manifestPath).delete()
@@ -44,9 +45,13 @@ class IpsetViewModel(application: Application): BaseListsViewModel(application) 
         refresh()
     }
 
-    override fun onCheckedChange(item: StorageData, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
-        checked[item] = isChecked
-        if (isChecked) enableIpset(item.manifestPath, sharedPreferences) else disableIpset(item.manifestPath, sharedPreferences)
+    override fun onCheckedChange(item: ListUiItem, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
+        if (isChecked) enableIpset(item.data.manifestPath, sharedPreferences) else disableIpset(item.data.manifestPath, sharedPreferences)
+        val updated = _listUiState.value.items.map {
+            if (it.data == item.data) it.copy(isChecked = isChecked)
+            else it
+        }
+        _listUiState.value = _listUiState.value.copy(items = updated)
         if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 if (isEnabled) {

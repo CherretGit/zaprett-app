@@ -10,13 +10,11 @@ import android.os.Environment
 import android.provider.OpenableColumns
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.cherret.zaprett.R
+import com.cherret.zaprett.data.ListUiItem
+import com.cherret.zaprett.data.ListUiState
 import com.cherret.zaprett.data.StorageData
 import com.cherret.zaprett.utils.checkStoragePermission
 import com.cherret.zaprett.utils.getActiveStrategy
@@ -39,21 +37,12 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
-    var allItems by mutableStateOf<List<StorageData>>(emptyList())
-        private set
-    var activeItems by mutableStateOf<List<StorageData>>(emptyList())
-        private set
-    val checked = mutableStateMapOf<StorageData, Boolean>()
-    val using = mutableStateMapOf<StorageData, Boolean>()
-    var isRefreshing by mutableStateOf(false)
-        private set
+    protected val _listUiState = MutableStateFlow(ListUiState())
+    val listUiState: StateFlow<ListUiState> = _listUiState.asStateFlow()
     private val _pendingFileName = MutableStateFlow<String?>(null)
     val pendingFileName: StateFlow<String?> = _pendingFileName.asStateFlow()
     private val _pendingFileUri = MutableStateFlow<Uri?>(null)
     val pendingFileUri: StateFlow<Uri?> = _pendingFileUri.asStateFlow()
-
-    private val _errorFlow = MutableStateFlow("")
-    val errorFlow = _errorFlow.asStateFlow()
 
     private var _showNoPermissionDialog = MutableStateFlow(false)
     val showNoPermissionDialog: StateFlow<Boolean> = _showNoPermissionDialog
@@ -62,23 +51,29 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
 
     abstract fun loadAllItems(): Array<StorageData>
     abstract fun loadActiveItems(): Array<StorageData>
-    abstract fun onCheckedChange(item: StorageData, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
-    abstract fun deleteItem(item: StorageData, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
+    abstract fun onCheckedChange(item: ListUiItem, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
+    abstract fun deleteItem(item: ListUiItem, snackbarHostState: SnackbarHostState, scope: CoroutineScope)
 
     fun refresh() {
         when (checkStoragePermission(context)) {
             true -> {
-                isRefreshing = true
-                allItems = loadAllItems().toList()
-                activeItems = loadActiveItems().toList()
-                checked.clear()
-                using.clear()
+                _listUiState.value = _listUiState.value.copy(
+                    isRefreshing = true
+                )
+                val allItems = loadAllItems().toList()
+                val activeItems = loadActiveItems().toList()
                 val strategy = getActiveStrategy(sharedPreferences).getOrNull()
-                allItems.forEach { item ->
-                    checked[item] = activeItems.contains(item)
-                    if (strategy != item) using[item] = strategy?.dependencies?.contains(item.manifestPath) == true
+                val items = allItems.map { item ->
+                    ListUiItem(
+                        data = item,
+                        isChecked = item in activeItems,
+                        isUsing = strategy?.dependencies?.contains(item.manifestPath) == true
+                    )
                 }
-                isRefreshing = false
+                _listUiState.value = _listUiState.value.copy(
+                    items = items,
+                    isRefreshing = false
+                )
             }
             false -> _showNoPermissionDialog.value = true
         }
@@ -96,7 +91,9 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
             )
             if (result == SnackbarResult.ActionPerformed) {
                 restartService { error ->
-                    _errorFlow.value = error
+                    _listUiState.value = _listUiState.value.copy(
+                        error = error
+                    )
                 }
                 snackbarHostState.showSnackbar(context.getString(R.string.snack_reload))
             }
@@ -104,7 +101,9 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     }
 
     fun clearError() {
-        _errorFlow.value = ""
+        _listUiState.value = _listUiState.value.copy(
+            error = null
+        )
     }
 
     fun prepareImport(context: Context, path: File, uri: Uri) {
@@ -120,7 +119,7 @@ abstract class BaseListsViewModel(application: Application) : AndroidViewModel(a
     fun cancelImport() {
         _pendingFileName.value = null
         _pendingFileUri.value = null
-        _showGenerateManifestDialog.value = true
+        _showGenerateManifestDialog.value = false
     }
 
     fun import(context: Context, manifestPath: File, manifest: StorageData) {
