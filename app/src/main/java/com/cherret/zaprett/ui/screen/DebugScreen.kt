@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.cherret.zaprett.R
 import com.cherret.zaprett.data.Setting
+import com.cherret.zaprett.ui.component.SettingDropDown
 import com.cherret.zaprett.ui.component.SettingsActionItem
 import com.cherret.zaprett.ui.component.SettingsItem
 import com.cherret.zaprett.ui.component.SettingsSection
@@ -107,6 +108,13 @@ fun DebugScreen(navController: NavController) {
                             SettingsActionItem(
                                 title = setting.title,
                                 setting.onClick
+                            )
+                        }
+                        is Setting.Dropdown -> {
+                            SettingDropDown(
+                                title = setting.title,
+                                selected = setting.selected,
+                                items = setting.items
                             )
                         }
                         is Setting.Section -> {
