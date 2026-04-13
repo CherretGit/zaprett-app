@@ -561,7 +561,7 @@ private fun AboutDialog(navController: NavController, onDismiss: () -> Unit) {
                     }
                     IconButton(onClick = {
                         val intent = Intent(Intent.ACTION_VIEW,
-                            "https://www.donationalerts.com/r/zaprett_app".toUri())
+                            "https://dalink.to/zaprett_app".toUri())
                         context.startActivity(intent)
                     }) {
                         Icon(Icons.Default.AttachMoney, "Donate")
