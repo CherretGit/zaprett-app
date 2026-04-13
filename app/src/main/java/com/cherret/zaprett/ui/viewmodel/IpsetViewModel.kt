@@ -47,11 +47,7 @@ class IpsetViewModel(application: Application): BaseListsViewModel(application) 
 
     override fun onCheckedChange(item: ListUiItem, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         if (isChecked) enableIpset(item.data.manifestPath, sharedPreferences) else disableIpset(item.data.manifestPath, sharedPreferences)
-        val updated = _listUiState.value.items.map {
-            if (it.data == item.data) it.copy(isChecked = isChecked)
-            else it
-        }
-        _listUiState.value = _listUiState.value.copy(items = updated)
+        refresh()
         if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 if (isEnabled) {

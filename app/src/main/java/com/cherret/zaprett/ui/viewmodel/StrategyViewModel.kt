@@ -62,18 +62,13 @@ class StrategyViewModel(application: Application): BaseListsViewModel(applicatio
 
     override fun onCheckedChange(item: ListUiItem, isChecked: Boolean, snackbarHostState: SnackbarHostState, scope: CoroutineScope) {
         val currentItems = _listUiState.value.items
-        val updatedItems = currentItems.map {
-            val shouldBeSelected = it.data == item.data && isChecked
-            if (shouldBeSelected) {
-                enableStrategy(it.data.manifestPath, sharedPreferences)
-            } else {
-                disableStrategy(it.data.manifestPath, sharedPreferences)
-            }
-            it.copy(isChecked = shouldBeSelected)
+        currentItems.forEach { item ->
+            disableStrategy(item.data.manifestPath, sharedPreferences)
         }
-        _listUiState.value = _listUiState.value.copy(
-            items = updatedItems
-        )
+        if (isChecked) {
+            enableStrategy(item.data.manifestPath, sharedPreferences)
+        }
+        refresh()
         if (getServiceType(sharedPreferences) != ServiceType.byedpi) {
             getStatus { isEnabled ->
                 if (isEnabled) {
