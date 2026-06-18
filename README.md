@@ -27,7 +27,7 @@
 
 ---
 
-#### Данное приложение является ремейком [приложения](https://github.com/egor-white/zaprett-app) от [egor-white](https://github.com/egor-white), разработка которого была прекращена в пользу этого приложения
+#### Данное приложение является ремейком [приложения](https://github.com/egor-white/zaprett) от [egor-white](https://github.com/egor-white), разработка которого была прекращена в пользу этого приложения
 
 ---
 
